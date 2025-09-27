@@ -603,8 +603,6 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
                 let _ = CloseHandle(child_stderr);
             }
         }
-        // free package SID when CreateProcessW fails
-        let _ = LocalFree(pkg_psid.0 as isize);
         return Err(AcError::LaunchFailed {
             stage: "CreateProcessW",
             hint: "extended startup with AC/LPAC",
