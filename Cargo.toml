@@ -1,0 +1,47 @@
+[package]
+name = "rappct"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Rust AppContainer / LPAC toolkit for Windows (profiles, capabilities, process launch, diagnostics)."
+repository = "https://example.com/rappct"
+keywords = ["windows", "appcontainer", "lpac", "sandbox", "security"]
+categories = ["os::windows-apis", "security", "api-bindings"]
+readme = "README.md"
+
+[features]
+default = []
+net = ["windows/Win32_NetworkManagement_WindowsFirewall"]
+introspection = ["dep:strsim"]
+tracing = ["dep:tracing"]
+
+[dependencies]
+thiserror = "1.0"
+# Keep windows crate features tight; expand as implementation grows
+windows = { version = "0.60", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Security_Authorization",
+    "Win32_System_Threading",
+    "Win32_System_JobObjects",
+    "Win32_System_WindowsProgramming",
+    "Win32_System_Environment",
+    "Win32_System_Memory",
+    "Win32_System_Com",
+    "Win32_System_Registry",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Pipes"
+] }
+# Suggestion helper for capability names (optional; not used yet in skeleton)
+strsim = { version = "0.11", optional = true }
+tracing = { version = "0.1", optional = true }
+
+[dev-dependencies]
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tempfile = "3"
+
+[lib]
+name = "rappct"
+path = "src/lib.rs"
