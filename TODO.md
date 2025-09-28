@@ -34,11 +34,12 @@
 - [x] Add minimal LPAC presets: `with_lpac_defaults()`
 
 ## v0.4 (tests & docs)
-- [ ] Integration tests for network isolation (loopback blocked by default)
-- [ ] Integration tests for ACL grant flows
+- [x] Integration tests for network isolation (loopback blocked by default)
+- [x] Integration tests for ACL grant flows
 - [x] README capability cheat sheet and migration notes (see README "Capability cheat sheet & migration notes")
 - [x] CI matrix: Windows Server 2019/2022, Windows 10/11
   - Windows Server 2019 (1809) x64, MSVC stable toolchain, feature sets: `default`, `net`, `introspection`
   - Windows Server 2022 (21H2) x64, MSVC stable toolchain, full feature combo `net,introspection,tracing`
   - Windows 10 22H2 x64, MSVC stable toolchain, run README examples + unit tests
   - Windows 11 23H2 x64, MSVC stable + nightly (for future async work), ensure `acrun --help`, `whoami --json`
+

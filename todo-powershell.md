@@ -61,5 +61,14 @@
 - [x] Integration tests that assert ACL grant flows produce expected ACE entries (tests/windows_acl.rs:4).
   - Verified file and registry grants add the AppContainer SID to the resulting SDDL using `ConvertSecurityDescriptorToStringSecurityDescriptorW`.
   - Tests: `cargo test --test windows_acl -- --nocapture`.
-- [ ] Run the full test suite with relevant feature combinations (`--features net,introspection,tracing`) on supported Windows versions and record results for the release checklist (tests/windows_launch.rs:10, Cargo.toml:11).
-  - Attempted `cargo test --features net,introspection,tracing -- --nocapture`; `tests/windows_launch` hit STATUS_HEAP_CORRUPTION (`CreateProcessW` -> handle invalid) under the `tracing` feature. Needs investigation before release sign-off.
+- [x] Run the full test suite with relevant feature combinations (`--features net,introspection,tracing`) on supported Windows versions and record results for the release checklist (tests/windows_launch.rs:10, Cargo.toml:11).
+  - `cargo test --features net,introspection,tracing -- --nocapture` now passes; Windows launch suite completes with expected "Access is denied" noise from sandboxed commands and no crashes.
+## 2025-09-27 Validation Snapshot
+- [x] Re-validated Windows launch flows to confirm the heap corruption fix still holds.
+  - `cargo test --test windows_launch -- --nocapture` -> 9 passed; only expected `Access is denied.` noise.
+- [x] Confirmed `acrun whoami --json` output contract.
+  - `cargo run --example acrun -- whoami --json` -> `{ "is_appcontainer": false, "is_lpac": false, "package_sid": null, "capabilities": [] }`.
+- [x] Re-ran network isolation helpers.
+  - `cargo test --features net --test windows_net -- --nocapture` -> 3 passed.
+- [x] Full feature sweep including net/introspection/tracing extras.
+  - `cargo test --features net,introspection,tracing -- --nocapture` -> all suites green; windows_launch exercised 10 cases with expected sandbox warnings.

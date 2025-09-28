@@ -2,7 +2,7 @@
 
 #[cfg(windows)]
 pub struct AttrList {
-    buf: Vec<u8>,
+    _buf: Vec<u8>,
     ptr: windows::Win32::System::Threading::LPPROC_THREAD_ATTRIBUTE_LIST,
 }
 
@@ -51,7 +51,7 @@ impl AttrList {
                 ptr.0,
                 size
             );
-            Ok(Self { buf, ptr })
+            Ok(Self { _buf: buf, ptr })
         }
     }
     pub fn as_mut_ptr(
@@ -81,3 +81,4 @@ impl AttrList {
         Err(crate::AcError::UnsupportedPlatform)
     }
 }
+

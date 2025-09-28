@@ -156,216 +156,263 @@ fn build_env_block(env: &[(std::ffi::OsString, std::ffi::OsString)]) -> Vec<u16>
 const SE_GROUP_ENABLED_CONST: u32 = 0x0000_0004;
 
 #[cfg(windows)]
-unsafe fn setup_attributes(
-    sec: &SecurityCapabilities,
-    stdio_handles: Option<&[HANDLE]>,
-) -> Result<(
-    AttrList,
-    SECURITY_CAPABILITIES,
-    Vec<PSID>,               // capability SIDs to free later
-    Vec<SID_AND_ATTRIBUTES>, // keep alive until CreateProcessW returns
-    PSID,                    // package SID to free later
-    bool,                    // lpac flag
-)> {
-    #[cfg(feature = "tracing")]
-    trace!(
-        "setup_attributes: lpac={}, caps_named_count={}, stdio_handles={}",
-        sec.lpac,
-        sec.caps.len(),
-        stdio_handles.map(|s| s.len()).unwrap_or(0)
-    );
-    #[cfg(feature = "tracing")]
-    if sec.caps.is_empty() {
-        trace!("setup_attributes: pure AppContainer (no capabilities)");
-    } else {
-        for cap in &sec.caps {
-            trace!("setup_attributes: capability SDDL={}", cap.sid_sddl);
-        }
-    }
-    // Package SID
-    let mut pkg_psid = PSID(std::ptr::null_mut());
-    let pkg_w: Vec<u16> = std::ffi::OsStr::new(sec.package.as_string())
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect();
-    if ConvertStringSidToSidW(PCWSTR(pkg_w.as_ptr()), &mut pkg_psid).is_err() {
-        return Err(AcError::LaunchFailed {
-            stage: "ConvertStringSidToSidW(package)",
-            hint: "invalid package SID",
-            source: Box::new(std::io::Error::last_os_error()),
-        });
-    }
+struct AttributeContext {
+    attr_list: AttrList,
+    _caps_struct: Box<SECURITY_CAPABILITIES>,
+    _cap_attrs: Vec<SID_AND_ATTRIBUTES>,
+    raw_caps: Vec<PSID>,
+    package_sid: PSID,
+    _handle_list: Option<Vec<HANDLE>>,
+    _lpac_policy: Option<Box<u32>>,
+}
 
-    // Capabilities: include capability SIDs only (group SIDs were filtered at derivation)
-    let mut raw_caps: Vec<PSID> = Vec::with_capacity(sec.caps.len());
-    let mut cap_attrs: Vec<SID_AND_ATTRIBUTES> = Vec::with_capacity(sec.caps.len());
-    for cap in &sec.caps {
-        let sddl_w: Vec<u16> = std::ffi::OsStr::new(&cap.sid_sddl)
+#[cfg(windows)]
+impl AttributeContext {
+    unsafe fn new(sec: &SecurityCapabilities, handle_list: Option<Vec<HANDLE>>) -> Result<Self> {
+        #[cfg(feature = "tracing")]
+        trace!(
+            "setup_attributes: lpac={}, caps_named_count={}, stdio_handles={}",
+            sec.lpac,
+            sec.caps.len(),
+            handle_list.as_ref().map(|s| s.len()).unwrap_or(0)
+        );
+        #[cfg(feature = "tracing")]
+        if sec.caps.is_empty() {
+            trace!("setup_attributes: pure AppContainer (no capabilities)");
+        } else {
+            for cap in &sec.caps {
+                trace!("setup_attributes: capability SDDL={}", cap.sid_sddl);
+            }
+        }
+
+        let mut pkg_psid = PSID(std::ptr::null_mut());
+        let pkg_w: Vec<u16> = std::ffi::OsStr::new(sec.package.as_string())
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
-        let mut psid = PSID(std::ptr::null_mut());
-        if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid).is_err() {
-            for p in raw_caps.iter() {
-                let _ = LocalFree(p.0 as isize);
-            }
-            let _ = LocalFree(pkg_psid.0 as isize);
+        if ConvertStringSidToSidW(PCWSTR(pkg_w.as_ptr()), &mut pkg_psid).is_err() {
             return Err(AcError::LaunchFailed {
-                stage: "ConvertStringSidToSidW(capability)",
-                hint: "invalid capability SID",
+                stage: "ConvertStringSidToSidW(package)",
+                hint: "invalid package SID",
                 source: Box::new(std::io::Error::last_os_error()),
             });
         }
-        raw_caps.push(psid);
-        cap_attrs.push(SID_AND_ATTRIBUTES {
-            Sid: psid,
-            Attributes: SE_GROUP_ENABLED_CONST,
+
+        let mut raw_caps: Vec<PSID> = Vec::with_capacity(sec.caps.len());
+        let mut cap_attrs: Vec<SID_AND_ATTRIBUTES> = Vec::with_capacity(sec.caps.len());
+        for cap in &sec.caps {
+            let sddl_w: Vec<u16> = std::ffi::OsStr::new(&cap.sid_sddl)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+            let mut psid = PSID(std::ptr::null_mut());
+            if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid).is_err() {
+                for sid in &raw_caps {
+                    let _ = LocalFree(sid.0 as isize);
+                }
+                let _ = LocalFree(pkg_psid.0 as isize);
+                return Err(AcError::LaunchFailed {
+                    stage: "ConvertStringSidToSidW(capability)",
+                    hint: "invalid capability SID",
+                    source: Box::new(std::io::Error::last_os_error()),
+                });
+            }
+            cap_attrs.push(SID_AND_ATTRIBUTES {
+                Sid: psid,
+                Attributes: SE_GROUP_ENABLED_CONST,
+            });
+            raw_caps.push(psid);
+        }
+
+        let mut caps_struct = Box::new(SECURITY_CAPABILITIES {
+            AppContainerSid: pkg_psid,
+            Capabilities: if cap_attrs.is_empty() {
+                std::ptr::null_mut()
+            } else {
+                cap_attrs.as_mut_ptr()
+            },
+            CapabilityCount: cap_attrs.len() as u32,
+            Reserved: 0,
         });
-    }
-
-    // SECURITY_CAPABILITIES structure
-    let mut caps_struct = SECURITY_CAPABILITIES {
-        AppContainerSid: pkg_psid,
-        Capabilities: if cap_attrs.is_empty() {
-            std::ptr::null_mut()
-        } else {
-            cap_attrs.as_mut_ptr()
-        },
-        CapabilityCount: cap_attrs.len() as u32,
-        Reserved: 0,
-    };
-    #[cfg(feature = "tracing")]
-    trace!(
-        "SECURITY_CAPABILITIES: pkg_sid_ptr={:p}, caps_ptr={:p}, cap_count={}",
-        caps_struct.AppContainerSid.0,
-        caps_struct.Capabilities,
-        caps_struct.CapabilityCount
-    );
-
-    // Attribute list
-    let mut attr_count = 1; // security capabilities
-    if sec.lpac {
-        attr_count += 1;
-    }
-    if stdio_handles.is_some() {
-        attr_count += 1;
-    }
-    #[cfg(feature = "tracing")]
-    debug!("AttrList: count={}", attr_count);
-    let mut attrs = AttrList::new(attr_count)?;
-
-    let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-    si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-    si_ex.lpAttributeList = attrs.as_mut_ptr();
-
-    let res = UpdateProcThreadAttribute(
-        si_ex.lpAttributeList,
-        0,
-        PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES as usize,
-        Some((&mut caps_struct) as *mut _ as *mut std::ffi::c_void),
-        std::mem::size_of::<SECURITY_CAPABILITIES>(),
-        None,
-        None,
-    );
-    #[cfg(feature = "tracing")]
-    trace!(
-        "UpdateProcThreadAttribute(security): attr_list_ptr={:p}, value_ptr={:p}, value_size={}",
-        si_ex.lpAttributeList.0,
-        &caps_struct as *const _,
-        std::mem::size_of::<SECURITY_CAPABILITIES>()
-    );
-    if res.is_err() {
         #[cfg(feature = "tracing")]
-        {
-            use windows::Win32::Foundation::GetLastError;
-            let gle = unsafe { GetLastError().0 };
-            error!("UpdateProcThreadAttribute(security) failed: GLE={}", gle);
-        }
-        for p in raw_caps.iter() {
-            let _ = LocalFree(p.0 as isize);
-        }
-        let _ = LocalFree(pkg_psid.0 as isize);
-        return Err(AcError::LaunchFailed {
-            stage: "UpdateProcThreadAttribute(security)",
-            hint: "attach SECURITY_CAPABILITIES",
-            source: Box::new(std::io::Error::last_os_error()),
-        });
-    }
+        trace!(
+            "SECURITY_CAPABILITIES: pkg_sid_ptr={:p}, caps_ptr={:p}, cap_count={}",
+            caps_struct.AppContainerSid.0,
+            caps_struct.Capabilities,
+            caps_struct.CapabilityCount
+        );
 
-    if sec.lpac {
-        let mut policy: u32 = PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT;
+        let mut attr_count = 1;
+        if sec.lpac {
+            attr_count += 1;
+        }
+        if handle_list.is_some() {
+            attr_count += 1;
+        }
+        #[cfg(feature = "tracing")]
+        debug!("AttrList: count={}", attr_count);
+        let mut attr_list = match AttrList::new(attr_count) {
+            Ok(list) => list,
+            Err(e) => {
+                for sid in &raw_caps {
+                    let _ = LocalFree(sid.0 as isize);
+                }
+                let _ = LocalFree(pkg_psid.0 as isize);
+                return Err(e);
+            }
+        };
+
+        let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
+        si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
+        si_ex.lpAttributeList = attr_list.as_mut_ptr();
+
         let res = UpdateProcThreadAttribute(
             si_ex.lpAttributeList,
             0,
-            PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY as usize,
-            Some((&mut policy) as *mut _ as *mut std::ffi::c_void),
-            std::mem::size_of::<u32>(),
+            PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES as usize,
+            Some(caps_struct.as_mut() as *mut _ as *const std::ffi::c_void),
+            std::mem::size_of::<SECURITY_CAPABILITIES>(),
             None,
             None,
         );
         #[cfg(feature = "tracing")]
         trace!(
-            "UpdateProcThreadAttribute(AAPolicy): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
+            "UpdateProcThreadAttribute(security): attr_list_ptr={:p}, value_ptr={:p}, value_size={}",
             si_ex.lpAttributeList.0,
-            &policy as *const _,
-            std::mem::size_of::<u32>()
+            caps_struct.as_ref() as *const _,
+            std::mem::size_of::<SECURITY_CAPABILITIES>()
         );
         if res.is_err() {
             #[cfg(feature = "tracing")]
             {
                 use windows::Win32::Foundation::GetLastError;
-                let gle = unsafe { GetLastError().0 };
-                error!("UpdateProcThreadAttribute(AAPolicy) failed: GLE={}", gle);
+                let gle = GetLastError().0;
+                error!("UpdateProcThreadAttribute(security) failed: GLE={}", gle);
             }
-            for p in raw_caps.iter() {
-                let _ = LocalFree(p.0 as isize);
+            for sid in &raw_caps {
+                let _ = LocalFree(sid.0 as isize);
             }
             let _ = LocalFree(pkg_psid.0 as isize);
             return Err(AcError::LaunchFailed {
-                stage: "UpdateProcThreadAttribute(lpac)",
-                hint: "opt-out AAP policy",
+                stage: "UpdateProcThreadAttribute(security)",
+                hint: "attach SECURITY_CAPABILITIES",
                 source: Box::new(std::io::Error::last_os_error()),
             });
         }
-    }
 
-    if let Some(hlist) = stdio_handles {
-        let res = UpdateProcThreadAttribute(
-            si_ex.lpAttributeList,
-            0,
-            PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
-            Some(hlist.as_ptr() as *mut std::ffi::c_void),
-            std::mem::size_of::<HANDLE>() * hlist.len(),
-            None,
-            None,
-        );
-        #[cfg(feature = "tracing")]
-        trace!(
-            "UpdateProcThreadAttribute(handles): attr_list_ptr={:p}, count={}, bytes={}",
-            si_ex.lpAttributeList.0,
-            hlist.len(),
-            std::mem::size_of::<HANDLE>() * hlist.len()
-        );
-        if res.is_err() {
+        let mut lpac_policy: Option<Box<u32>> = None;
+        if sec.lpac {
+            lpac_policy = Some(Box::new(PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT));
+            let res = UpdateProcThreadAttribute(
+                si_ex.lpAttributeList,
+                0,
+                PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY as usize,
+                lpac_policy
+                    .as_mut()
+                    .map(|p| &mut **p as *mut u32 as *const std::ffi::c_void),
+                std::mem::size_of::<u32>(),
+                None,
+                None,
+            );
+            #[cfg(feature = "tracing")]
+            trace!(
+                "UpdateProcThreadAttribute(AAPolicy): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
+                si_ex.lpAttributeList.0,
+                lpac_policy
+                    .as_ref()
+                    .map(|p| &**p as *const u32)
+                    .unwrap_or(std::ptr::null()),
+                std::mem::size_of::<u32>()
+            );
+            if res.is_err() {
+                #[cfg(feature = "tracing")]
+                {
+                    use windows::Win32::Foundation::GetLastError;
+                    let gle = GetLastError().0;
+                    error!("UpdateProcThreadAttribute(AAPolicy) failed: GLE={}", gle);
+                }
+                for sid in &raw_caps {
+                    let _ = LocalFree(sid.0 as isize);
+                }
+                let _ = LocalFree(pkg_psid.0 as isize);
+                return Err(AcError::LaunchFailed {
+                    stage: "UpdateProcThreadAttribute(lpac)",
+                    hint: "opt-out AAP policy",
+                    source: Box::new(std::io::Error::last_os_error()),
+                });
+            }
+        }
+
+        if let Some(ref handles) = handle_list {
+            let res = UpdateProcThreadAttribute(
+                si_ex.lpAttributeList,
+                0,
+                PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
+                Some(handles.as_ptr() as *const std::ffi::c_void),
+                std::mem::size_of::<HANDLE>() * handles.len(),
+                None,
+                None,
+            );
             #[cfg(feature = "tracing")]
             {
-                use windows::Win32::Foundation::GetLastError;
-                let gle = unsafe { GetLastError().0 };
-                error!("UpdateProcThreadAttribute(handles) failed: GLE={}", gle);
+                trace!(
+                    "UpdateProcThreadAttribute(handles): attr_list_ptr={:p}, count={}, bytes={}",
+                    si_ex.lpAttributeList.0,
+                    handles.len(),
+                    std::mem::size_of::<HANDLE>() * handles.len()
+                );
+                for (idx, handle) in handles.iter().enumerate() {
+                    trace!("inherit_handle[{}]=0x{:X}", idx, handle.0 as usize);
+                }
             }
-            for p in raw_caps.iter() {
-                let _ = LocalFree(p.0 as isize);
+            if res.is_err() {
+                #[cfg(feature = "tracing")]
+                {
+                    use windows::Win32::Foundation::GetLastError;
+                    let gle = GetLastError().0;
+                    error!("UpdateProcThreadAttribute(handles) failed: GLE={}", gle);
+                }
+                for sid in &raw_caps {
+                    let _ = LocalFree(sid.0 as isize);
+                }
+                let _ = LocalFree(pkg_psid.0 as isize);
+                return Err(AcError::LaunchFailed {
+                    stage: "UpdateProcThreadAttribute(handles)",
+                    hint: "inherit handles",
+                    source: Box::new(std::io::Error::last_os_error()),
+                });
             }
-            let _ = LocalFree(pkg_psid.0 as isize);
-            return Err(AcError::LaunchFailed {
-                stage: "UpdateProcThreadAttribute(handles)",
-                hint: "inherit handles",
-                source: Box::new(std::io::Error::last_os_error()),
-            });
         }
+
+        Ok(Self {
+            attr_list,
+            _caps_struct: caps_struct,
+            _cap_attrs: cap_attrs,
+            raw_caps,
+            package_sid: pkg_psid,
+            _handle_list: handle_list,
+            _lpac_policy: lpac_policy,
+        })
     }
 
-    Ok((attrs, caps_struct, raw_caps, cap_attrs, pkg_psid, sec.lpac))
+    fn as_mut_ptr(&mut self) -> windows::Win32::System::Threading::LPPROC_THREAD_ATTRIBUTE_LIST {
+        self.attr_list.as_mut_ptr()
+    }
+}
+
+#[cfg(windows)]
+impl Drop for AttributeContext {
+    fn drop(&mut self) {
+        unsafe {
+            for sid in self.raw_caps.drain(..) {
+                let _ = LocalFree(sid.0 as isize);
+            }
+            if !self.package_sid.0.is_null() {
+                let _ = LocalFree(self.package_sid.0 as isize);
+                self.package_sid = PSID(std::ptr::null_mut());
+            }
+        }
+    }
 }
 
 #[cfg(windows)]
@@ -524,16 +571,14 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     }
 
     // Attach attributes (security caps + lpac + handle list for pipes)
-    let handles_vec: Option<Vec<HANDLE>> =
+    let handles_for_attr: Option<Vec<HANDLE>> =
         if inherit_handles && matches!(opts.stdio, StdioConfig::Pipe) {
             Some(vec![child_stdin, child_stdout, child_stderr])
         } else {
             None
         };
-    let handle_slice = handles_vec.as_ref().map(|v| v.as_slice());
-    let (mut attrs, _caps_struct, raw_caps, _cap_attrs_guard, pkg_psid, _lpac) =
-        setup_attributes(sec, handle_slice)?;
-    si_ex.lpAttributeList = attrs.as_mut_ptr();
+    let mut attr_ctx = AttributeContext::new(sec, handles_for_attr)?;
+    si_ex.lpAttributeList = attr_ctx.as_mut_ptr();
 
     // CreateProcessW
     let mut pi: PROCESS_INFORMATION = std::mem::zeroed();
@@ -578,12 +623,6 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     )
     .is_ok();
 
-    // Free PSIDs allocated during attribute setup (capability and package SIDs)
-    for p in raw_caps.iter() {
-        let _ = LocalFree(p.0 as isize);
-    }
-    let _ = LocalFree(pkg_psid.0 as isize);
-
     if !ok {
         #[cfg(feature = "tracing")]
         {
@@ -609,6 +648,8 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             source: Box::new(std::io::Error::last_os_error()),
         });
     }
+
+    drop(attr_ctx); // release attribute resources once the process is created
 
     // parent closes child ends
     if inherit_handles {
