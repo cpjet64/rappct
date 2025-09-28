@@ -118,6 +118,23 @@ pub struct LoopbackAdd(pub AppContainerSid);
 
 /// Applies a loopback firewall exemption for the given AppContainer SID.
 /// Callers must acknowledge the operation with `LoopbackAdd::confirm_debug_only` first.
+///
+/// # Example
+/// ```no_run
+/// use rappct::{net, AppContainerProfile};
+///
+/// # fn main() -> rappct::Result<()> {
+/// let profile = AppContainerProfile::ensure(
+///     "rappct.example",
+///     "Example",
+///     Some("loopback demo"),
+/// )?;
+/// net::remove_loopback_exemption(&profile.sid).ok();
+/// net::add_loopback_exemption(net::LoopbackAdd(profile.sid.clone()).confirm_debug_only())?;
+/// profile.delete()?;
+/// # Ok(())
+/// # }
+/// ```
 pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
     let _ = &req;
     #[cfg(all(windows, feature = "net"))]
@@ -167,6 +184,23 @@ static CONFIRM_NEXT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBo
 impl LoopbackAdd {
     /// Confirms that the caller is intentionally requesting a loopback exemption.
     /// Without this acknowledgement `add_loopback_exemption` returns `AccessDenied`.
+    ///
+    /// Typical usage pairs the guard with `add_loopback_exemption`:
+    ///
+    /// ```no_run
+    /// use rappct::{net, AppContainerProfile};
+    ///
+    /// # fn main() -> rappct::Result<()> {
+    /// let profile = AppContainerProfile::ensure(
+    ///     "rappct.confirm",
+    ///     "Confirm",
+    ///     Some("loopback confirm"),
+    /// )?;
+    /// net::add_loopback_exemption(net::LoopbackAdd(profile.sid.clone()).confirm_debug_only())?;
+    /// profile.delete()?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn confirm_debug_only(self) -> Self {
         #[cfg(all(windows, feature = "net"))]
         {
