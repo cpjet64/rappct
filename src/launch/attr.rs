@@ -81,4 +81,3 @@ impl AttrList {
         Err(crate::AcError::UnsupportedPlatform)
     }
 }
-

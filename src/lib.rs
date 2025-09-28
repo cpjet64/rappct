@@ -30,14 +30,6 @@ pub use profile::{derive_sid_from_name, AppContainerProfile};
 pub fn supports_lpac() -> Result<()> {
     #[cfg(windows)]
     {
-        if let Ok(status) = std::env::var("RAPPCT_TEST_LPAC_STATUS") {
-            return if status.eq_ignore_ascii_case("ok") {
-                Ok(())
-            } else {
-                Err(AcError::UnsupportedLpac)
-            };
-        }
-
         // Use ntdll!RtlGetVersion to query build number reliably
         #[repr(C)]
         struct OSVERSIONINFOW {

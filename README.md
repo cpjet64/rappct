@@ -72,6 +72,8 @@ fn main() -> rappct::Result<()> {
 | Feature | Description |
 |---------|-------------|
 | `net` | Enable AppContainer enumeration and firewall loopback exemption helpers. |
+
+> ⚠️ The `net` feature changes global Windows Firewall state. Always call `LoopbackAdd::confirm_debug_only()` before `add_loopback_exemption`, and use `remove_loopback_exemption` to restore the original configuration when finished.
 | `introspection` | Toggle diagnostics, configuration validation, and capability suggestions. |
 | `tracing` | Emit structured tracing spans/logs; integrate with `tracing-subscriber`. |
 

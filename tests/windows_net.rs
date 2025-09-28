@@ -2,6 +2,8 @@
 use rappct::*;
 
 #[cfg(all(windows, feature = "net"))]
+use rappct::util::LocalFreeGuard;
+#[cfg(all(windows, feature = "net"))]
 use windows::core::PWSTR;
 #[cfg(all(windows, feature = "net"))]
 use windows::Win32::NetworkManagement::WindowsFirewall::NetworkIsolationGetAppContainerConfig;
@@ -9,12 +11,6 @@ use windows::Win32::NetworkManagement::WindowsFirewall::NetworkIsolationGetAppCo
 use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 #[cfg(all(windows, feature = "net"))]
 use windows::Win32::Security::SID_AND_ATTRIBUTES;
-
-#[cfg(all(windows, feature = "net"))]
-#[link(name = "Kernel32")]
-extern "system" {
-    fn LocalFree(h: isize) -> isize;
-}
 
 #[cfg(all(windows, feature = "net"))]
 fn pwstr_to_string(ptr: PWSTR) -> String {
@@ -51,11 +47,11 @@ fn loopback_config_sids() -> Result<Vec<String>> {
             let mut raw = PWSTR::null();
             ConvertSidToStringSidW(sa.Sid, &mut raw)
                 .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
-            out.push(pwstr_to_string(raw));
-            LocalFree(raw.0 as isize);
+            let guard = LocalFreeGuard::<u16>::new(raw.0);
+            out.push(unsafe { guard.to_string_lossy() });
         }
         if !arr.is_null() {
-            LocalFree(arr as isize);
+            let _ = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(arr);
         }
         Ok(out)
     }
@@ -76,6 +72,7 @@ fn loopback_requires_confirm() {
 
 #[cfg(all(windows, feature = "net"))]
 #[test]
+/// This test mutates the system loopback exemption list but restores the original entries.
 fn loopback_add_remove_roundtrip() {
     use std::collections::HashSet;
 
@@ -105,6 +102,12 @@ fn loopback_add_remove_roundtrip() {
         after_add.contains(sid_str),
         "loopback config missing SID after add"
     );
+    let mut expected_after_add = before.clone();
+    expected_after_add.insert(sid_str.to_string());
+    assert_eq!(
+        after_add, expected_after_add,
+        "loopback config changed unexpectedly when adding exemption"
+    );
 
     let res = net::add_loopback_exemption(net::LoopbackAdd(sid.clone()));
     match res {
@@ -122,6 +125,10 @@ fn loopback_add_remove_roundtrip() {
     assert!(
         !after_remove.contains(sid_str),
         "loopback config still contains SID after removal"
+    );
+    assert_eq!(
+        after_remove, before,
+        "loopback config drifted after roundtrip"
     );
 
     prof.delete().ok();

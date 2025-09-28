@@ -3,6 +3,8 @@
 //! - Resolve folder and named-object paths
 
 use crate::sid::AppContainerSid;
+#[cfg(windows)]
+use crate::util::{FreeSidGuard, LocalFreeGuard};
 use crate::{AcError, Result};
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
@@ -21,10 +23,6 @@ impl AppContainerProfile {
             use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, ERROR_INVALID_PARAMETER};
             use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
             use windows::Win32::Security::FreeSid;
-            #[link(name = "Kernel32")]
-            extern "system" {
-                fn LocalFree(h: isize) -> isize;
-            }
 
             #[link(name = "Userenv")]
             extern "system" {
@@ -76,8 +74,8 @@ impl AppContainerProfile {
 
                 let already_exists = HRESULT::from_win32(ERROR_ALREADY_EXISTS.0 as u32);
                 let invalid_parameter = HRESULT::from_win32(ERROR_INVALID_PARAMETER.0 as u32);
-                let sid_ptr = if hr.is_ok() {
-                    sid_ptr
+                let sid_guard = if hr.is_ok() {
+                    FreeSidGuard::new(windows::Win32::Security::PSID(sid_ptr))
                 } else if hr == already_exists || hr == invalid_parameter {
                     // Fallback to derive SID when profile already exists or metadata mismatches
                     let mut sid2 = std::ptr::null_mut();
@@ -91,7 +89,7 @@ impl AppContainerProfile {
                             hr2.0
                         )));
                     }
-                    sid2
+                    FreeSidGuard::new(windows::Win32::Security::PSID(sid2))
                 } else {
                     return Err(AcError::Win32(format!(
                         "CreateAppContainerProfile failed: 0x{:08X}",
@@ -101,23 +99,11 @@ impl AppContainerProfile {
 
                 // Convert to SDDL
                 let mut sddl_ptr = PWSTR::null();
-                if ConvertSidToStringSidW(windows::Win32::Security::PSID(sid_ptr), &mut sddl_ptr)
-                    .is_err()
-                {
-                    LocalFree(sid_ptr as _);
+                if ConvertSidToStringSidW(sid_guard.as_psid(), &mut sddl_ptr).is_err() {
                     return Err(AcError::Win32("ConvertSidToStringSidW failed".into()));
                 }
-                // Extract string and free
-                let sddl = {
-                    let mut len = 0usize;
-                    while *sddl_ptr.0.add(len) != 0 {
-                        len += 1;
-                    }
-                    let slice = std::slice::from_raw_parts(sddl_ptr.0, len);
-                    String::from_utf16_lossy(slice)
-                };
-                LocalFree(sddl_ptr.0 as _);
-                FreeSid(windows::Win32::Security::PSID(sid_ptr));
+                let sddl_guard = LocalFreeGuard::<u16>::new(sddl_ptr.0);
+                let sddl = sddl_guard.to_string_lossy();
 
                 return Ok(Self {
                     name: _name.to_string(),
@@ -180,10 +166,6 @@ impl AppContainerProfile {
             }
             use windows::core::{PCWSTR, PWSTR};
             use windows::Win32::System::Com::CoTaskMemFree;
-            #[link(name = "Kernel32")]
-            extern "system" {
-                fn LocalFree(h: isize) -> isize;
-            }
             unsafe {
                 // Derive package PSID from name for folder query
                 let name_w: Vec<u16> = std::ffi::OsStr::new(&self.name)
@@ -199,9 +181,9 @@ impl AppContainerProfile {
                         hr_sid.0
                     )));
                 }
+                let psid_guard = FreeSidGuard::new(psid);
                 let mut out: PWSTR = PWSTR::null();
-                let hr = GetAppContainerFolderPath(psid, &mut out);
-                LocalFree(psid.0 as isize);
+                let hr = GetAppContainerFolderPath(psid_guard.as_psid(), &mut out);
                 if hr.is_ok() {
                     // Convert returned PWSTR to PathBuf
                     let path = {
@@ -249,10 +231,6 @@ impl AppContainerProfile {
                     returnlength: *mut u32,
                 ) -> i32;
             }
-            #[link(name = "Kernel32")]
-            extern "system" {
-                fn LocalFree(h: isize) -> isize;
-            }
             unsafe {
                 // Convert SDDL to PSID
                 let sddl_w: Vec<u16> = std::ffi::OsStr::new(self.sid.as_string())
@@ -263,17 +241,17 @@ impl AppContainerProfile {
                 if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid).is_err() {
                     return Err(AcError::Win32("ConvertStringSidToSidW failed".into()));
                 }
+                let psid_guard = LocalFreeGuard::<std::ffi::c_void>::new(psid.0);
                 let mut needed: u32 = 0;
                 // First call to get required length (chars including NUL)
                 let _ = GetAppContainerNamedObjectPath(
                     HANDLE::default(),
-                    psid.0,
+                    psid_guard.as_ptr(),
                     0,
                     PWSTR::null(),
                     &mut needed,
                 );
                 if needed == 0 {
-                    LocalFree(psid.0 as isize);
                     return Err(AcError::Win32(
                         "GetAppContainerNamedObjectPath size query failed".into(),
                     ));
@@ -282,12 +260,11 @@ impl AppContainerProfile {
                 let mut retlen: u32 = 0;
                 let ok = GetAppContainerNamedObjectPath(
                     HANDLE::default(),
-                    psid.0,
+                    psid_guard.as_ptr(),
                     needed,
                     PWSTR(buf.as_mut_ptr()),
                     &mut retlen,
                 );
-                LocalFree(psid.0 as isize);
                 if ok == 0 {
                     return Err(AcError::Win32(
                         "GetAppContainerNamedObjectPath failed".into(),
@@ -319,11 +296,6 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
         }
         use windows::core::{PCWSTR, PWSTR};
         use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
-        use windows::Win32::Security::FreeSid;
-        #[link(name = "Kernel32")]
-        extern "system" {
-            fn LocalFree(h: isize) -> isize;
-        }
         unsafe {
             let name_w: Vec<u16> = std::ffi::OsStr::new(name)
                 .encode_wide()
@@ -338,23 +310,13 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
                     hr.0
                 )));
             }
+            let sid_guard = FreeSidGuard::new(windows::Win32::Security::PSID(sid_ptr));
             let mut sddl_ptr = PWSTR::null();
-            if ConvertSidToStringSidW(windows::Win32::Security::PSID(sid_ptr), &mut sddl_ptr)
-                .is_err()
-            {
-                FreeSid(windows::Win32::Security::PSID(sid_ptr));
+            if ConvertSidToStringSidW(sid_guard.as_psid(), &mut sddl_ptr).is_err() {
                 return Err(AcError::Win32("ConvertSidToStringSidW failed".into()));
             }
-            let sddl = {
-                let mut len = 0usize;
-                while *sddl_ptr.0.add(len) != 0 {
-                    len += 1;
-                }
-                let slice = std::slice::from_raw_parts(sddl_ptr.0, len);
-                String::from_utf16_lossy(slice)
-            };
-            LocalFree(sddl_ptr.0 as _);
-            FreeSid(windows::Win32::Security::PSID(sid_ptr));
+            let sddl_guard = LocalFreeGuard::<u16>::new(sddl_ptr.0);
+            let sddl = sddl_guard.to_string_lossy();
             Ok(AppContainerSid::from_sddl(sddl))
         }
     }

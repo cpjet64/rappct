@@ -1,6 +1,8 @@
 //! Network isolation helpers (skeleton). Feature: `net`
 
 use crate::sid::AppContainerSid;
+#[cfg(all(windows, feature = "net"))]
+use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
 
 #[cfg(all(windows, feature = "net"))]
@@ -11,12 +13,6 @@ use windows::core::PWSTR;
 
 #[cfg(all(windows, feature = "net"))]
 use windows::Win32::Security::PSID;
-
-#[cfg(all(windows, feature = "net"))]
-#[link(name = "Kernel32")]
-extern "system" {
-    fn LocalFree(h: isize) -> isize;
-}
 
 #[cfg(all(windows, feature = "net"))]
 unsafe fn pwstr_to_string(ptr: PWSTR) -> String {
@@ -36,9 +32,8 @@ unsafe fn psid_to_string(psid: PSID) -> Result<String> {
     let mut raw = PWSTR::null();
     ConvertSidToStringSidW(psid, &mut raw)
         .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
-    let value = pwstr_to_string(raw);
-    LocalFree(raw.0 as isize);
-    Ok(value)
+    let guard = LocalFreeGuard::<u16>::new(raw.0);
+    Ok(unsafe { guard.to_string_lossy() })
 }
 
 pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
@@ -90,17 +85,19 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
             )));
         }
         if !cfg_arr.is_null() {
-            let cfg_slice = std::slice::from_raw_parts(cfg_arr, cfg_count as usize);
+            let cfg_guard = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cfg_arr);
+            let cfg_slice = std::slice::from_raw_parts(
+                cfg_guard.as_ptr() as *const SID_AND_ATTRIBUTES,
+                cfg_count as usize,
+            );
             for sa in cfg_slice {
                 let sid_str = psid_to_string(sa.Sid)?;
                 if !sid_set.contains(&sid_str) {
-                    LocalFree(cfg_arr as isize);
                     return Err(AcError::Win32(format!(
                         "Firewall config SID {sid_str} missing from enumeration"
                     )));
                 }
             }
-            LocalFree(cfg_arr as isize);
         }
 
         Ok(out)
@@ -116,8 +113,11 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
 }
 
 /// Safety latch: force explicit acknowledgement before applying loopback exemptions.
+/// Marker type used to acknowledge loopback firewall exemptions in development builds.
 pub struct LoopbackAdd(pub AppContainerSid);
 
+/// Applies a loopback firewall exemption for the given AppContainer SID.
+/// Callers must acknowledge the operation with `LoopbackAdd::confirm_debug_only` first.
 pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
     let _ = &req;
     #[cfg(all(windows, feature = "net"))]
@@ -144,6 +144,7 @@ pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
     }
 }
 
+/// Removes any loopback exemption previously granted to the provided AppContainer SID.
 pub fn remove_loopback_exemption(sid: &AppContainerSid) -> Result<()> {
     let _ = sid;
     #[cfg(all(windows, feature = "net"))]
@@ -164,6 +165,8 @@ pub fn remove_loopback_exemption(sid: &AppContainerSid) -> Result<()> {
 static CONFIRM_NEXT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 impl LoopbackAdd {
+    /// Confirms that the caller is intentionally requesting a loopback exemption.
+    /// Without this acknowledgement `add_loopback_exemption` returns `AccessDenied`.
     pub fn confirm_debug_only(self) -> Self {
         #[cfg(all(windows, feature = "net"))]
         {
@@ -191,8 +194,17 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
             "NetworkIsolationGetAppContainerConfig failed: {err}"
         )));
     }
-    let mut vec: Vec<SID_AND_ATTRIBUTES> = if !cur_arr.is_null() {
-        std::slice::from_raw_parts(cur_arr, cur_count as usize).to_vec()
+    let current_guard = if !cur_arr.is_null() {
+        Some(LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cur_arr))
+    } else {
+        None
+    };
+    let mut vec: Vec<SID_AND_ATTRIBUTES> = if let Some(ref guard) = current_guard {
+        std::slice::from_raw_parts(
+            guard.as_ptr() as *const SID_AND_ATTRIBUTES,
+            cur_count as usize,
+        )
+        .to_vec()
     } else {
         Vec::new()
     };
@@ -204,7 +216,8 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
     let mut psid_raw = PSID::default();
     ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
         .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e}")))?;
-    let target = psid_raw;
+    let psid_guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
+    let target = PSID(psid_guard.as_ptr());
 
     if allow {
         let mut exists = false;
@@ -221,14 +234,13 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
             });
         }
     } else {
-        vec.retain(|sa| EqualSid(sa.Sid, target).is_err());
+        vec.retain(|sa| match EqualSid(sa.Sid, target) {
+            Ok(true) => false,
+            _ => true,
+        });
     }
 
     let err2 = NetworkIsolationSetAppContainerConfig(&vec);
-    if !cur_arr.is_null() {
-        LocalFree(cur_arr as isize);
-    }
-    LocalFree(psid_raw.0 as isize);
     if err2 != 0 {
         return Err(AcError::Win32(format!(
             "NetworkIsolationSetAppContainerConfig failed: {err2}"

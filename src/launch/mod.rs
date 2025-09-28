@@ -9,7 +9,8 @@ use crate::{AcError, Result};
 #[cfg(windows)]
 use crate::launch::attr::AttrList;
 #[cfg(windows)]
-use crate::util::OwnedHandle;
+#[cfg(windows)]
+use crate::util::{LocalFreeGuard, OwnedHandle};
 
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
@@ -20,6 +21,8 @@ use tracing::{debug, error, trace};
 use windows::core::{PCWSTR, PWSTR};
 #[cfg(windows)]
 use windows::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE, TRUE};
+#[cfg(windows)]
+use windows::Win32::Foundation::{SetHandleInformation, HANDLE_FLAG_INHERIT};
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
 #[cfg(windows)]
@@ -32,6 +35,14 @@ use windows::Win32::Storage::FileSystem::{
     FILE_SHARE_WRITE, OPEN_EXISTING,
 };
 #[cfg(windows)]
+use windows::Win32::System::JobObjects::{
+    AssignProcessToJobObject, CreateJobObjectW, JobObjectCpuRateControlInformation,
+    JobObjectExtendedLimitInformation, SetInformationJobObject,
+    JOBOBJECT_CPU_RATE_CONTROL_INFORMATION, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+    JOB_OBJECT_CPU_RATE_CONTROL_ENABLE, JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP,
+    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY,
+};
+#[cfg(windows)]
 use windows::Win32::System::Pipes::CreatePipe;
 #[cfg(windows)]
 use windows::Win32::System::Threading::{
@@ -42,20 +53,6 @@ use windows::Win32::System::Threading::{
 };
 #[cfg(windows)]
 use windows::Win32::System::WindowsProgramming::PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT;
-#[link(name = "Kernel32")]
-extern "system" {
-    fn LocalFree(h: isize) -> isize;
-}
-#[cfg(windows)]
-use windows::Win32::Foundation::{SetHandleInformation, HANDLE_FLAG_INHERIT};
-#[cfg(windows)]
-use windows::Win32::System::JobObjects::{
-    AssignProcessToJobObject, CreateJobObjectW, JobObjectCpuRateControlInformation,
-    JobObjectExtendedLimitInformation, SetInformationJobObject,
-    JOBOBJECT_CPU_RATE_CONTROL_INFORMATION, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
-    JOB_OBJECT_CPU_RATE_CONTROL_ENABLE, JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP,
-    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY,
-};
 
 #[derive(Clone, Copy, Debug)]
 pub enum StdioConfig {
@@ -125,10 +122,10 @@ impl JobGuard {
     }
 }
 
-pub fn launch_in_container(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<Launched> {
+pub fn launch_in_container(_sec: &SecurityCapabilities, _opts: &LaunchOptions) -> Result<Launched> {
     #[cfg(windows)]
     {
-        unsafe { launch_impl(sec, opts).map(|io| Launched { pid: io.pid }) }
+        unsafe { launch_impl(_sec, _opts).map(|io| Launched { pid: io.pid }) }
     }
     #[cfg(not(windows))]
     {
@@ -160,8 +157,8 @@ struct AttributeContext {
     attr_list: AttrList,
     _caps_struct: Box<SECURITY_CAPABILITIES>,
     _cap_attrs: Vec<SID_AND_ATTRIBUTES>,
-    raw_caps: Vec<PSID>,
-    package_sid: PSID,
+    _cap_sid_guards: Vec<LocalFreeGuard<std::ffi::c_void>>,
+    package_sid_guard: LocalFreeGuard<std::ffi::c_void>,
     _handle_list: Option<Vec<HANDLE>>,
     _lpac_policy: Option<Box<u32>>,
 }
@@ -185,47 +182,48 @@ impl AttributeContext {
             }
         }
 
-        let mut pkg_psid = PSID(std::ptr::null_mut());
         let pkg_w: Vec<u16> = std::ffi::OsStr::new(sec.package.as_string())
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
-        if ConvertStringSidToSidW(PCWSTR(pkg_w.as_ptr()), &mut pkg_psid).is_err() {
+        let mut pkg_psid_raw = PSID(std::ptr::null_mut());
+        if ConvertStringSidToSidW(PCWSTR(pkg_w.as_ptr()), &mut pkg_psid_raw).is_err() {
             return Err(AcError::LaunchFailed {
                 stage: "ConvertStringSidToSidW(package)",
                 hint: "invalid package SID",
                 source: Box::new(std::io::Error::last_os_error()),
             });
         }
+        let package_sid_guard = LocalFreeGuard::<std::ffi::c_void>::new(pkg_psid_raw.0);
+        let package_sid = PSID(package_sid_guard.as_ptr());
 
-        let mut raw_caps: Vec<PSID> = Vec::with_capacity(sec.caps.len());
+        let mut cap_sid_guards: Vec<LocalFreeGuard<std::ffi::c_void>> =
+            Vec::with_capacity(sec.caps.len());
         let mut cap_attrs: Vec<SID_AND_ATTRIBUTES> = Vec::with_capacity(sec.caps.len());
         for cap in &sec.caps {
             let sddl_w: Vec<u16> = std::ffi::OsStr::new(&cap.sid_sddl)
                 .encode_wide()
                 .chain(std::iter::once(0))
                 .collect();
-            let mut psid = PSID(std::ptr::null_mut());
-            if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid).is_err() {
-                for sid in &raw_caps {
-                    let _ = LocalFree(sid.0 as isize);
-                }
-                let _ = LocalFree(pkg_psid.0 as isize);
+            let mut psid_raw = PSID(std::ptr::null_mut());
+            if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw).is_err() {
                 return Err(AcError::LaunchFailed {
                     stage: "ConvertStringSidToSidW(capability)",
                     hint: "invalid capability SID",
                     source: Box::new(std::io::Error::last_os_error()),
                 });
             }
+            let guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
+            let sid_handle = PSID(guard.as_ptr());
             cap_attrs.push(SID_AND_ATTRIBUTES {
-                Sid: psid,
+                Sid: sid_handle,
                 Attributes: SE_GROUP_ENABLED_CONST,
             });
-            raw_caps.push(psid);
+            cap_sid_guards.push(guard);
         }
 
         let mut caps_struct = Box::new(SECURITY_CAPABILITIES {
-            AppContainerSid: pkg_psid,
+            AppContainerSid: package_sid,
             Capabilities: if cap_attrs.is_empty() {
                 std::ptr::null_mut()
             } else {
@@ -251,16 +249,7 @@ impl AttributeContext {
         }
         #[cfg(feature = "tracing")]
         debug!("AttrList: count={}", attr_count);
-        let mut attr_list = match AttrList::new(attr_count) {
-            Ok(list) => list,
-            Err(e) => {
-                for sid in &raw_caps {
-                    let _ = LocalFree(sid.0 as isize);
-                }
-                let _ = LocalFree(pkg_psid.0 as isize);
-                return Err(e);
-            }
-        };
+        let mut attr_list = AttrList::new(attr_count)?;
 
         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
@@ -289,10 +278,6 @@ impl AttributeContext {
                 let gle = GetLastError().0;
                 error!("UpdateProcThreadAttribute(security) failed: GLE={}", gle);
             }
-            for sid in &raw_caps {
-                let _ = LocalFree(sid.0 as isize);
-            }
-            let _ = LocalFree(pkg_psid.0 as isize);
             return Err(AcError::LaunchFailed {
                 stage: "UpdateProcThreadAttribute(security)",
                 hint: "attach SECURITY_CAPABILITIES",
@@ -331,10 +316,6 @@ impl AttributeContext {
                     let gle = GetLastError().0;
                     error!("UpdateProcThreadAttribute(AAPolicy) failed: GLE={}", gle);
                 }
-                for sid in &raw_caps {
-                    let _ = LocalFree(sid.0 as isize);
-                }
-                let _ = LocalFree(pkg_psid.0 as isize);
                 return Err(AcError::LaunchFailed {
                     stage: "UpdateProcThreadAttribute(lpac)",
                     hint: "opt-out AAP policy",
@@ -372,10 +353,6 @@ impl AttributeContext {
                     let gle = GetLastError().0;
                     error!("UpdateProcThreadAttribute(handles) failed: GLE={}", gle);
                 }
-                for sid in &raw_caps {
-                    let _ = LocalFree(sid.0 as isize);
-                }
-                let _ = LocalFree(pkg_psid.0 as isize);
                 return Err(AcError::LaunchFailed {
                     stage: "UpdateProcThreadAttribute(handles)",
                     hint: "inherit handles",
@@ -388,8 +365,8 @@ impl AttributeContext {
             attr_list,
             _caps_struct: caps_struct,
             _cap_attrs: cap_attrs,
-            raw_caps,
-            package_sid: pkg_psid,
+            _cap_sid_guards: cap_sid_guards,
+            package_sid_guard,
             _handle_list: handle_list,
             _lpac_policy: lpac_policy,
         })
@@ -403,15 +380,7 @@ impl AttributeContext {
 #[cfg(windows)]
 impl Drop for AttributeContext {
     fn drop(&mut self) {
-        unsafe {
-            for sid in self.raw_caps.drain(..) {
-                let _ = LocalFree(sid.0 as isize);
-            }
-            if !self.package_sid.0.is_null() {
-                let _ = LocalFree(self.package_sid.0 as isize);
-                self.package_sid = PSID(std::ptr::null_mut());
-            }
-        }
+        // Guards drop automatically
     }
 }
 

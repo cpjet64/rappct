@@ -1,6 +1,8 @@
 //! Capability mapping and builders.
 
 use crate::sid::{AppContainerSid, SidAndAttributes};
+#[cfg(windows)]
+use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
@@ -78,10 +80,6 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
                 CapabilitySidCount: *mut u32,
             ) -> i32;
         }
-        #[link(name = "Kernel32")]
-        extern "system" {
-            fn LocalFree(h: isize) -> isize;
-        }
         let mut out: Vec<SidAndAttributes> = Vec::new();
         unsafe {
             for &name in names {
@@ -138,39 +136,36 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
                 for i in 0..group_count as isize {
                     let sid_ptr = *group_sids.offset(i) as *mut std::ffi::c_void;
                     if !sid_ptr.is_null() {
-                        LocalFree(sid_ptr as _);
+                        let _guard = LocalFreeGuard::<std::ffi::c_void>::new(sid_ptr);
                     }
                 }
                 // Convert capability SIDs
                 for i in 0..cap_count as isize {
                     let sid_ptr = *cap_sids.offset(i) as *mut std::ffi::c_void;
-                    let mut sddl = PWSTR::null();
-                    if ConvertSidToStringSidW(windows::Win32::Security::PSID(sid_ptr), &mut sddl)
-                        .is_ok()
-                    {
-                        let s = {
-                            let mut len = 0usize;
-                            while *sddl.0.add(len) != 0 {
-                                len += 1;
-                            }
-                            String::from_utf16_lossy(std::slice::from_raw_parts(sddl.0, len))
-                        };
-                        LocalFree(sddl.0 as _);
-                        out.push(SidAndAttributes {
-                            sid_sddl: s,
-                            attributes: SE_GROUP_ENABLED_CONST,
-                        });
-                    }
                     if !sid_ptr.is_null() {
-                        LocalFree(sid_ptr as _);
+                        let sid_guard = LocalFreeGuard::<std::ffi::c_void>::new(sid_ptr);
+                        let mut sddl = PWSTR::null();
+                        if ConvertSidToStringSidW(
+                            windows::Win32::Security::PSID(sid_guard.as_ptr()),
+                            &mut sddl,
+                        )
+                        .is_ok()
+                        {
+                            let sddl_guard = LocalFreeGuard::<u16>::new(sddl.0);
+                            let s = sddl_guard.to_string_lossy();
+                            out.push(SidAndAttributes {
+                                sid_sddl: s,
+                                attributes: SE_GROUP_ENABLED_CONST,
+                            });
+                        }
                     }
                 }
                 // Free arrays
                 if !group_sids.is_null() {
-                    LocalFree(group_sids as _);
+                    let _ = LocalFreeGuard::<*mut std::ffi::c_void>::new(group_sids);
                 }
                 if !cap_sids.is_null() {
-                    LocalFree(cap_sids as _);
+                    let _ = LocalFreeGuard::<*mut std::ffi::c_void>::new(cap_sids);
                 }
             }
         }

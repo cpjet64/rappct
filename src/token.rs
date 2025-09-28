@@ -1,6 +1,8 @@
 //! Token introspection (skeleton).
 
 use crate::sid::AppContainerSid;
+#[cfg(windows)]
+use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
 
 #[cfg(windows)]
@@ -28,12 +30,6 @@ extern "system" {
         DesiredAccess: u32,
         TokenHandle: *mut windows::Win32::Foundation::HANDLE,
     ) -> i32;
-}
-
-#[cfg(windows)]
-#[link(name = "Kernel32")]
-extern "system" {
-    fn LocalFree(h: isize) -> isize;
 }
 
 #[cfg(windows)]
@@ -206,16 +202,8 @@ unsafe fn sid_to_string(psid: windows::Win32::Security::PSID) -> Result<String> 
     let mut out = windows::core::PWSTR::null();
     ConvertSidToStringSidW(psid, &mut out)
         .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {}", e)))?;
-    let value = {
-        let mut len = 0usize;
-        while *out.0.add(len) != 0 {
-            len += 1;
-        }
-        let slice = std::slice::from_raw_parts(out.0, len);
-        String::from_utf16_lossy(slice)
-    };
-    LocalFree(out.0 as isize);
-    Ok(value)
+    let guard = LocalFreeGuard::<u16>::new(out.0);
+    Ok(unsafe { guard.to_string_lossy() })
 }
 
 #[cfg(windows)]

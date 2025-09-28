@@ -1,4 +1,3 @@
-use rappct::sid::AppContainerSid;
 #[cfg(windows)]
 use rappct::*;
 
