@@ -11,14 +11,14 @@ use windows::Win32::Security::PSID;
 
 #[cfg(windows)]
 #[link(name = "Advapi32")]
-extern "system" {
+unsafe extern "system" {
     fn OpenProcessToken(ProcessHandle: HANDLE, DesiredAccess: u32, TokenHandle: *mut HANDLE)
         -> i32;
 }
 
 #[cfg(windows)]
 #[link(name = "Kernel32")]
-extern "system" {
+unsafe extern "system" {
     fn LocalFree(h: isize) -> isize;
 }
 

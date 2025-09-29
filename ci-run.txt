@@ -1,5 +1,5 @@
 test-windows
-cancelled now in 1m 40s
+failed 1 minute ago in 1m 20s
 Search logs
 1s
 Current runner version: '2.328.0'
@@ -18,7 +18,7 @@ Complete job name: test-windows
 Run actions/checkout@v4
 Syncing repository: cpjet64/rappct
 Getting Git version info
-Temporarily overriding HOME='D:\a\_temp\37700b67-4ea4-4276-9f8e-901e7f11f7de' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\5d1ac745-1d7c-4e3a-a3e2-bb39bbf1a48f' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 Deleting the contents of 'D:\a\rappct\rappct'
@@ -31,7 +31,7 @@ Determining the checkout info
 "C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
 Checking out the ref
 "C:\Program Files\Git\bin\git.exe" log -1 --format=%H
-eaa344f13e0eaf91b48836ee6b103e767a749ce2
+bca1c5e507fe6ec080e932cd8f2e3757572ac5fe
 15s
 Run dtolnay/rust-toolchain@stable
 Run : parse toolchain version
@@ -69,7 +69,7 @@ commit-date: 2025-09-14
 host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
-21s
+9s
 Run rustc -Vv && cargo -V
 rustc 1.90.0 (1159e78c4 2025-09-14)
 binary: rustc
@@ -79,57 +79,57 @@ host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
 cargo 1.90.0 (840b83a10 2025-07-30)
-49s
+45s
 Run if [[ "" == "" ]]; then
     Updating crates.io index
  Downloading crates ...
-  Downloaded serde_core v1.0.228
-  Downloaded windows-targets v0.53.4
-  Downloaded windows-result v0.3.4
-  Downloaded windows-future v0.1.1
-  Downloaded windows-core v0.60.1
-  Downloaded serde v1.0.228
-  Downloaded memchr v2.7.6
-  Downloaded clap_derive v4.5.47
-  Downloaded clap_builder v4.5.48
-  Downloaded windows-strings v0.3.1
-  Downloaded serde_json v1.0.145
   Downloaded getrandom v0.3.3
-  Downloaded unicode-ident v1.0.19
-  Downloaded tempfile v3.23.0
+  Downloaded windows-result v0.3.4
+  Downloaded windows-targets v0.53.4
+  Downloaded windows-strings v0.3.1
+  Downloaded windows-core v0.60.1
+  Downloaded ryu v1.0.20
   Downloaded serde_derive v1.0.228
+  Downloaded clap_builder v4.5.48
   Downloaded syn v2.0.106
-  Downloaded clap_lex v0.7.5
-  Downloaded anstyle-wincon v3.0.10
-  Downloaded windows-numerics v0.1.1
+  Downloaded memchr v2.7.6
+  Downloaded proc-macro2 v1.0.101
+  Downloaded serde v1.0.228
+  Downloaded colorchoice v1.0.4
+  Downloaded unicode-ident v1.0.19
+  Downloaded serde_json v1.0.145
+  Downloaded is_terminal_polyfill v1.70.1
+  Downloaded fastrand v2.3.0
+  Downloaded clap_derive v4.5.47
+  Downloaded cfg-if v1.0.3
+  Downloaded windows-link v0.1.3
   Downloaded windows-interface v0.59.2
+  Downloaded windows-future v0.1.1
   Downloaded utf8parse v0.2.2
   Downloaded thiserror-impl v1.0.69
   Downloaded thiserror v1.0.69
+  Downloaded serde_core v1.0.228
+  Downloaded heck v0.5.0
+  Downloaded anstyle-wincon v3.0.10
+  Downloaded anstyle-parse v0.2.7
+  Downloaded windows-numerics v0.1.1
+  Downloaded windows-link v0.2.0
+  Downloaded windows-implement v0.59.0
   Downloaded strsim v0.11.1
   Downloaded quote v1.0.41
   Downloaded once_cell_polyfill v1.70.1
-  Downloaded itoa v1.0.15
-  Downloaded is_terminal_polyfill v1.70.1
-  Downloaded heck v0.5.0
-  Downloaded colorchoice v1.0.4
+  Downloaded once_cell v1.21.3
   Downloaded clap v4.5.48
-  Downloaded cfg-if v1.0.3
-  Downloaded anstyle-parse v0.2.7
+  Downloaded anstyle-query v1.1.4
   Downloaded anstyle v1.0.11
   Downloaded anstream v0.6.20
-  Downloaded windows-link v0.2.0
-  Downloaded windows-link v0.1.3
-  Downloaded windows-implement v0.59.0
   Downloaded windows-collections v0.1.1
-  Downloaded ryu v1.0.20
-  Downloaded proc-macro2 v1.0.101
-  Downloaded once_cell v1.21.3
-  Downloaded fastrand v2.3.0
+  Downloaded tempfile v3.23.0
+  Downloaded itoa v1.0.15
+  Downloaded clap_lex v0.7.5
   Downloaded windows_x86_64_msvc v0.53.0
-  Downloaded anstyle-query v1.1.4
-  Downloaded windows-sys v0.61.1
   Downloaded windows-sys v0.60.2
+  Downloaded windows-sys v0.61.1
   Downloaded windows v0.60.0
    Compiling proc-macro2 v1.0.101
    Compiling unicode-ident v1.0.19
@@ -137,232 +137,67 @@ Run if [[ "" == "" ]]; then
    Compiling windows_x86_64_msvc v0.53.0
    Compiling windows-link v0.1.3
    Compiling windows-targets v0.53.4
+   Compiling windows-strings v0.3.1
    Compiling windows-result v0.3.4
    Compiling syn v2.0.106
-   Compiling windows-strings v0.3.1
    Compiling windows-sys v0.60.2
-   Compiling serde_core v1.0.228
+   Compiling utf8parse v0.2.2
    Compiling anstyle v1.0.11
    Compiling once_cell_polyfill v1.70.1
-   Compiling utf8parse v0.2.2
-   Compiling anstyle-parse v0.2.7
+   Compiling serde_core v1.0.228
    Compiling anstyle-wincon v3.0.10
+   Compiling anstyle-parse v0.2.7
    Compiling anstyle-query v1.1.4
+   Compiling colorchoice v1.0.4
    Compiling is_terminal_polyfill v1.70.1
    Compiling thiserror v1.0.69
    Compiling getrandom v0.3.3
-   Compiling colorchoice v1.0.4
    Compiling anstream v0.6.20
-   Compiling windows-interface v0.59.2
    Compiling windows-implement v0.59.0
+   Compiling windows-interface v0.59.2
+   Compiling thiserror-impl v1.0.69
    Compiling windows-core v0.60.1
    Compiling windows-numerics v0.1.1
    Compiling windows-collections v0.1.1
    Compiling windows-future v0.1.1
-   Compiling thiserror-impl v1.0.69
-   Compiling heck v0.5.0
    Compiling windows-link v0.2.0
-   Compiling cfg-if v1.0.3
-   Compiling serde v1.0.228
-   Compiling clap_lex v0.7.5
    Compiling serde_json v1.0.145
+   Compiling clap_lex v0.7.5
+   Compiling serde v1.0.228
+   Compiling heck v0.5.0
+   Compiling cfg-if v1.0.3
    Compiling strsim v0.11.1
+   Compiling clap_derive v4.5.47
    Compiling clap_builder v4.5.48
    Compiling windows-sys v0.61.1
-   Compiling clap_derive v4.5.47
    Compiling windows v0.60.0
    Compiling serde_derive v1.0.228
-   Compiling fastrand v2.3.0
    Compiling itoa v1.0.15
    Compiling ryu v1.0.20
    Compiling once_cell v1.21.3
    Compiling memchr v2.7.6
+   Compiling fastrand v2.3.0
    Compiling tempfile v3.23.0
    Compiling clap v4.5.48
    Compiling rappct v0.9.0 (D:\a\rappct\rappct)
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-  --> src\token.rs:84:11
+error: extern blocks must be unsafe
+  --> tests\windows_acl.rs:29:1
    |
-84 |       match GetTokenInformation(
-   |  ___________^
-85 | |         token,
-86 | |         class,
-87 | |         Some((&mut value) as *mut _ as *mut _),
-88 | |         std::mem::size_of::<u32>() as u32,
-89 | |         &mut retlen,
-90 | |     ) {
-   | |_____^ call to unsafe function
-   |
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-  --> src\token.rs:81:1
-   |
-81 | unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bool> {
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   = note: `-D unsafe-op-in-unsafe-fn` implied by `-D warnings`
-   = help: to override `-D warnings` add `#[allow(unsafe_op_in_unsafe_fn)]`
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:108:23
-    |
-108 |     if let Err(err) = GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) {
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\token.rs:106:1
-    |
-106 | unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid>> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:123:5
-    |
-123 | /     GetTokenInformation(
-124 | |         token,
-125 | |         TokenAppContainerSid,
-126 | |         Some(buffer.as_mut_ptr() as *mut _),
-127 | |         needed,
-128 | |         &mut needed,
-129 | |     )
-    | |_____^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\token.rs:138:15
-    |
-138 |     let sid = (*info_ptr).TokenAppContainer;
-    |               ^^^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-error[E0133]: call to unsafe function `token::sid_to_string` is unsafe and requires unsafe block
-   --> src\token.rs:142:22
-    |
-142 |     let sid_string = sid_to_string(sid)?;
-    |                      ^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:149:23
-    |
-149 |     if let Err(err) = GetTokenInformation(token, TokenCapabilities, None, 0, &mut needed) {
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\token.rs:147:1
-    |
-147 | unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:164:5
-    |
-164 | /     GetTokenInformation(
-165 | |         token,
-166 | |         TokenCapabilities,
-167 | |         Some(buffer.as_mut_ptr() as *mut _),
-168 | |         needed,
-169 | |         &mut needed,
-170 | |     )
-    | |_____^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\token.rs:179:17
-    |
-179 |     let count = (*groups).GroupCount as usize;
-    |                 ^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
-   --> src\token.rs:184:17
-    |
-184 |     let slice = std::slice::from_raw_parts((*groups).Groups.as_ptr(), count);
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\token.rs:184:44
-    |
-184 |     let slice = std::slice::from_raw_parts((*groups).Groups.as_ptr(), count);
-    |                                            ^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-error[E0133]: call to unsafe function `token::sid_to_string` is unsafe and requires unsafe block
-   --> src\token.rs:189:23
-    |
-189 |         let sid_str = sid_to_string(entry.Sid)?;
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::ConvertSidToStringSidW` is unsafe and requires unsafe block
-   --> src\token.rs:203:5
-    |
-203 |     ConvertSidToStringSidW(psid, &mut out)
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\token.rs:196:1
-    |
-196 | unsafe fn sid_to_string(psid: windows::Win32::Security::PSID) -> Result<String> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
-   --> src\token.rs:205:17
-    |
-205 |     let guard = LocalFreeGuard::<u16>::new(out.0);
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\util.rs:104:19
-    |
-104 |             while *self.ptr.add(len) != 0 {
-    |                   ^^^^^^^^^^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\util.rs:99:9
-    |
- 99 |         pub unsafe fn to_string_lossy(&self) -> String {
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-error[E0133]: call to unsafe function `std::ptr::mut_ptr::<impl *mut T>::add` is unsafe and requires unsafe block
-   --> src\util.rs:104:20
-    |
-104 |             while *self.ptr.add(len) != 0 {
-    |                    ^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
-   --> src\util.rs:107:25
-    |
-107 |             let slice = std::slice::from_raw_parts(self.ptr, len);
-    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-For more information about this error, try `rustc --explain E0133`.
-error: could not compile `rappct` (lib) due to 16 previous errors
+29 | / extern "system" {
+30 | |     fn LocalFree(h: isize) -> isize;
+31 | | }
+   | |_^
+
+error: could not compile `rappct` (test "windows_acl") due to 1 previous error
 warning: build failed, waiting for other jobs to finish...
-Error: The operation was canceled.
-5s
+Error: Process completed with exit code 101.
+0s
+0s
+2s
 Post job cleanup.
 "C:\Program Files\Git\bin\git.exe" version
 git version 2.51.0.windows.1
-Temporarily overriding HOME='D:\a\_temp\2b2a670a-a4ef-4d84-9995-e8ae19d8e21d' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\9aaa7f05-3ddd-44a2-9067-11598d06c506' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 "C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
@@ -373,12 +208,12 @@ http.https://github.com/.extraheader
 "C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
 0s
 Cleaning up orphan processes
-Terminate orphan process: pid (2164) (vctip)
+Terminate orphan process: pid (7512) (vctip)
 
 
 
 test-windows (introspection)
-failed now in 1m 27s
+cancelled 1 minute ago in 1m 20s
 Search logs
 1s
 Current runner version: '2.328.0'
@@ -397,7 +232,7 @@ Complete job name: test-windows (introspection)
 Run actions/checkout@v4
 Syncing repository: cpjet64/rappct
 Getting Git version info
-Temporarily overriding HOME='D:\a\_temp\0ccb0e01-f6ee-4b0c-ad03-f9b6e4535374' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\53f08bc1-e0ca-451d-90fe-fbc5deb965dd' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 Deleting the contents of 'D:\a\rappct\rappct'
@@ -410,8 +245,8 @@ Determining the checkout info
 "C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
 Checking out the ref
 "C:\Program Files\Git\bin\git.exe" log -1 --format=%H
-eaa344f13e0eaf91b48836ee6b103e767a749ce2
-15s
+bca1c5e507fe6ec080e932cd8f2e3757572ac5fe
+13s
 Run dtolnay/rust-toolchain@stable
 Run : parse toolchain version
 Run : construct rustup command line
@@ -430,11 +265,11 @@ info: installing component 'rustc'
   stable-x86_64-pc-windows-msvc installed - rustc 1.90.0 (1159e78c4 2025-09-14)
 
 Run rustup default stable
-info: using existing install for 'stable-x86_64-pc-windows-msvc'
-info: default toolchain set to 'stable-x86_64-pc-windows-msvc'
 
   stable-x86_64-pc-windows-msvc unchanged - rustc 1.90.0 (1159e78c4 2025-09-14)
 
+info: using existing install for 'stable-x86_64-pc-windows-msvc'
+info: default toolchain set to 'stable-x86_64-pc-windows-msvc'
 Run : create cachekey
 Run : disable incremental compilation
 Run : enable colors in Cargo output
@@ -448,7 +283,7 @@ commit-date: 2025-09-14
 host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
-10s
+9s
 Run rustc -Vv && cargo -V
 rustc 1.90.0 (1159e78c4 2025-09-14)
 binary: rustc
@@ -462,302 +297,184 @@ cargo 1.90.0 (840b83a10 2025-07-30)
 Run if [[ "introspection" == "" ]]; then
     Updating crates.io index
  Downloading crates ...
-  Downloaded fastrand v2.3.0
-  Downloaded windows-interface v0.59.2
+  Downloaded anstyle v1.0.11
+  Downloaded ryu v1.0.20
+  Downloaded windows-targets v0.53.4
   Downloaded windows-strings v0.3.1
+  Downloaded tempfile v3.23.0
+  Downloaded proc-macro2 v1.0.101
+  Downloaded serde_core v1.0.228
+  Downloaded quote v1.0.41
+  Downloaded once_cell v1.21.3
+  Downloaded heck v0.5.0
+  Downloaded fastrand v2.3.0
+  Downloaded syn v2.0.106
+  Downloaded clap_derive v4.5.47
+  Downloaded anstream v0.6.20
+  Downloaded windows-result v0.3.4
   Downloaded windows-link v0.1.3
   Downloaded windows_x86_64_msvc v0.53.0
-  Downloaded windows-targets v0.53.4
-  Downloaded windows-result v0.3.4
-  Downloaded windows-core v0.60.1
-  Downloaded windows-link v0.2.0
-  Downloaded thiserror-impl v1.0.69
-  Downloaded quote v1.0.41
-  Downloaded syn v2.0.106
+  Downloaded windows-implement v0.59.0
   Downloaded memchr v2.7.6
-  Downloaded proc-macro2 v1.0.101
-  Downloaded getrandom v0.3.3
-  Downloaded clap_derive v4.5.47
+  Downloaded windows-future v0.1.1
+  Downloaded serde v1.0.228
+  Downloaded windows-collections v0.1.1
+  Downloaded thiserror-impl v1.0.69
+  Downloaded thiserror v1.0.69
+  Downloaded serde_json v1.0.145
+  Downloaded strsim v0.11.1
+  Downloaded is_terminal_polyfill v1.70.1
+  Downloaded clap_lex v0.7.5
   Downloaded clap v4.5.48
   Downloaded cfg-if v1.0.3
-  Downloaded windows-collections v0.1.1
-  Downloaded utf8parse v0.2.2
-  Downloaded once_cell v1.21.3
-  Downloaded windows-numerics v0.1.1
-  Downloaded strsim v0.11.1
-  Downloaded clap_lex v0.7.5
-  Downloaded windows-implement v0.59.0
-  Downloaded thiserror v1.0.69
-  Downloaded tempfile v3.23.0
-  Downloaded serde_core v1.0.228
-  Downloaded serde v1.0.228
-  Downloaded colorchoice v1.0.4
-  Downloaded anstyle-parse v0.2.7
-  Downloaded anstyle v1.0.11
-  Downloaded anstream v0.6.20
-  Downloaded serde_derive v1.0.228
-  Downloaded ryu v1.0.20
-  Downloaded once_cell_polyfill v1.70.1
-  Downloaded itoa v1.0.15
-  Downloaded is_terminal_polyfill v1.70.1
   Downloaded anstyle-wincon v3.0.10
   Downloaded anstyle-query v1.1.4
-  Downloaded windows-future v0.1.1
+  Downloaded anstyle-parse v0.2.7
+  Downloaded windows-numerics v0.1.1
+  Downloaded windows-link v0.2.0
+  Downloaded windows-interface v0.59.2
+  Downloaded windows-core v0.60.1
+  Downloaded utf8parse v0.2.2
   Downloaded unicode-ident v1.0.19
-  Downloaded heck v0.5.0
-  Downloaded windows-sys v0.60.2
-  Downloaded serde_json v1.0.145
+  Downloaded serde_derive v1.0.228
+  Downloaded getrandom v0.3.3
   Downloaded clap_builder v4.5.48
+  Downloaded once_cell_polyfill v1.70.1
+  Downloaded itoa v1.0.15
+  Downloaded colorchoice v1.0.4
+  Downloaded windows-sys v0.60.2
   Downloaded windows-sys v0.61.1
   Downloaded windows v0.60.0
    Compiling proc-macro2 v1.0.101
-   Compiling unicode-ident v1.0.19
    Compiling quote v1.0.41
+   Compiling unicode-ident v1.0.19
    Compiling windows_x86_64_msvc v0.53.0
    Compiling windows-link v0.1.3
    Compiling windows-targets v0.53.4
-   Compiling windows-strings v0.3.1
    Compiling windows-result v0.3.4
+   Compiling windows-strings v0.3.1
    Compiling syn v2.0.106
    Compiling windows-sys v0.60.2
    Compiling anstyle v1.0.11
-   Compiling utf8parse v0.2.2
    Compiling serde_core v1.0.228
    Compiling once_cell_polyfill v1.70.1
-   Compiling anstyle-wincon v3.0.10
+   Compiling utf8parse v0.2.2
    Compiling anstyle-parse v0.2.7
+   Compiling anstyle-wincon v3.0.10
    Compiling anstyle-query v1.1.4
    Compiling thiserror v1.0.69
    Compiling is_terminal_polyfill v1.70.1
-   Compiling colorchoice v1.0.4
    Compiling strsim v0.11.1
+   Compiling colorchoice v1.0.4
    Compiling getrandom v0.3.3
    Compiling anstream v0.6.20
    Compiling windows-interface v0.59.2
    Compiling windows-implement v0.59.0
    Compiling windows-core v0.60.1
+   Compiling windows-numerics v0.1.1
    Compiling windows-future v0.1.1
    Compiling windows-collections v0.1.1
-   Compiling windows-numerics v0.1.1
    Compiling thiserror-impl v1.0.69
    Compiling serde v1.0.228
+   Compiling heck v0.5.0
+   Compiling clap_lex v0.7.5
+   Compiling cfg-if v1.0.3
    Compiling windows-link v0.2.0
    Compiling serde_json v1.0.145
-   Compiling cfg-if v1.0.3
-   Compiling clap_lex v0.7.5
-   Compiling heck v0.5.0
-   Compiling clap_derive v4.5.47
-   Compiling clap_builder v4.5.48
    Compiling windows-sys v0.61.1
+   Compiling clap_builder v4.5.48
+   Compiling clap_derive v4.5.47
    Compiling windows v0.60.0
    Compiling serde_derive v1.0.228
-   Compiling ryu v1.0.20
-   Compiling once_cell v1.21.3
-   Compiling itoa v1.0.15
-   Compiling fastrand v2.3.0
    Compiling memchr v2.7.6
+   Compiling once_cell v1.21.3
+   Compiling ryu v1.0.20
+   Compiling fastrand v2.3.0
+   Compiling itoa v1.0.15
    Compiling tempfile v3.23.0
    Compiling clap v4.5.48
    Compiling rappct v0.9.0 (D:\a\rappct\rappct)
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-  --> src\token.rs:84:11
+error: extern blocks must be unsafe
+  --> tests\windows_acl.rs:29:1
    |
-84 |       match GetTokenInformation(
-   |  ___________^
-85 | |         token,
-86 | |         class,
-87 | |         Some((&mut value) as *mut _ as *mut _),
-88 | |         std::mem::size_of::<u32>() as u32,
-89 | |         &mut retlen,
-90 | |     ) {
-   | |_____^ call to unsafe function
+29 | / extern "system" {
+30 | |     fn LocalFree(h: isize) -> isize;
+31 | | }
+   | |_^
+
+error: extern blocks must be unsafe
+  --> tests\windows_launch.rs:14:1
    |
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-  --> src\token.rs:81:1
+14 | / extern "system" {
+15 | |     fn OpenProcessToken(ProcessHandle: HANDLE, DesiredAccess: u32, TokenHandle: *mut HANDLE)
+16 | |         -> i32;
+17 | | }
+   | |_^
+
+error: extern blocks must be unsafe
+  --> tests\windows_launch.rs:21:1
    |
-81 | unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bool> {
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   = note: `-D unsafe-op-in-unsafe-fn` implied by `-D warnings`
-   = help: to override `-D warnings` add `#[allow(unsafe_op_in_unsafe_fn)]`
+21 | / extern "system" {
+22 | |     fn LocalFree(h: isize) -> isize;
+23 | | }
+   | |_^
 
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:108:23
+error[E0599]: no method named `unwrap` found for struct `rappct::SecurityCapabilitiesBuilder` in the current scope
+   --> tests\windows_launch.rs:195:10
     |
-108 |     if let Err(err) = GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) {
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+193 |       let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
+    |  ________________-
+194 | |         .with_known(&[KnownCapability::InternetClient])
+195 | |         .unwrap()
+    | |         -^^^^^^ method not found in `rappct::SecurityCapabilitiesBuilder`
+    | |_________|
     |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\token.rs:106:1
-    |
-106 | unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid>> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:123:5
-    |
-123 | /     GetTokenInformation(
-124 | |         token,
-125 | |         TokenAppContainerSid,
-126 | |         Some(buffer.as_mut_ptr() as *mut _),
-127 | |         needed,
-128 | |         &mut needed,
-129 | |     )
-    | |_____^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\token.rs:138:15
-    |
-138 |     let sid = (*info_ptr).TokenAppContainer;
-    |               ^^^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-
-error[E0133]: call to unsafe function `token::sid_to_string` is unsafe and requires unsafe block
-   --> src\token.rs:142:22
-    |
-142 |     let sid_string = sid_to_string(sid)?;
-    |                      ^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:149:23
-    |
-149 |     if let Err(err) = GetTokenInformation(token, TokenCapabilities, None, 0, &mut needed) {
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\token.rs:147:1
-    |
-147 | unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:164:5
-    |
-164 | /     GetTokenInformation(
-165 | |         token,
-166 | |         TokenCapabilities,
-167 | |         Some(buffer.as_mut_ptr() as *mut _),
-168 | |         needed,
-169 | |         &mut needed,
-170 | |     )
-    | |_____^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\token.rs:179:17
-    |
-179 |     let count = (*groups).GroupCount as usize;
-    |                 ^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-
-error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
-   --> src\token.rs:184:17
-    |
-184 |     let slice = std::slice::from_raw_parts((*groups).Groups.as_ptr(), count);
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\token.rs:184:44
-    |
-184 |     let slice = std::slice::from_raw_parts((*groups).Groups.as_ptr(), count);
-    |                                            ^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-
-error[E0133]: call to unsafe function `token::sid_to_string` is unsafe and requires unsafe block
-   --> src\token.rs:189:23
-    |
-189 |         let sid_str = sid_to_string(entry.Sid)?;
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::ConvertSidToStringSidW` is unsafe and requires unsafe block
-   --> src\token.rs:203:5
-    |
-203 |     ConvertSidToStringSidW(psid, &mut out)
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\token.rs:196:1
-    |
-196 | unsafe fn sid_to_string(psid: windows::Win32::Security::PSID) -> Result<String> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
-   --> src\token.rs:205:17
-    |
-205 |     let guard = LocalFreeGuard::<u16>::new(out.0);
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\util.rs:104:19
-    |
-104 |             while *self.ptr.add(len) != 0 {
-    |                   ^^^^^^^^^^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\util.rs:99:9
-    |
- 99 |         pub unsafe fn to_string_lossy(&self) -> String {
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `std::ptr::mut_ptr::<impl *mut T>::add` is unsafe and requires unsafe block
-   --> src\util.rs:104:20
-    |
-104 |             while *self.ptr.add(len) != 0 {
-    |                    ^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
-   --> src\util.rs:107:25
-    |
-107 |             let slice = std::slice::from_raw_parts(self.ptr, len);
-    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-For more information about this error, try `rustc --explain E0133`.
-error: could not compile `rappct` (lib) due to 16 previous errors
+error: could not compile `rappct` (test "windows_acl") due to 1 previous error
 warning: build failed, waiting for other jobs to finish...
+error[E0599]: no method named `unwrap` found for struct `rappct::SecurityCapabilitiesBuilder` in the current scope
+   --> tests\windows_launch.rs:435:10
+    |
+433 |       let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
+    |  ________________-
+434 | |         .with_known(&[KnownCapability::InternetClient])
+435 | |         .unwrap()
+    | |         -^^^^^^ method not found in `rappct::SecurityCapabilitiesBuilder`
+    | |_________|
+    |
+
+error[E0599]: no method named `unwrap` found for struct `rappct::SecurityCapabilitiesBuilder` in the current scope
+   --> tests\windows_launch.rs:470:10
+    |
+468 |       let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
+    |  ________________-
+469 | |         .with_known(&[KnownCapability::InternetClient])
+470 | |         .unwrap()
+    | |         -^^^^^^ method not found in `rappct::SecurityCapabilitiesBuilder`
+    | |_________|
+    |
+
+error[E0599]: no method named `unwrap` found for struct `rappct::SecurityCapabilitiesBuilder` in the current scope
+   --> tests\windows_launch.rs:503:10
+    |
+501 |       let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
+    |  ________________-
+502 | |         .with_known(&[KnownCapability::InternetClient])
+503 | |         .unwrap()
+    | |         -^^^^^^ method not found in `rappct::SecurityCapabilitiesBuilder`
+    | |_________|
+    |
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `rappct` (test "windows_launch") due to 6 previous errors
 Error: Process completed with exit code 101.
-3s
+0s
+0s
+2s
 Post job cleanup.
 "C:\Program Files\Git\bin\git.exe" version
 git version 2.51.0.windows.1
-Temporarily overriding HOME='D:\a\_temp\fd0f681b-9b75-4a03-988e-7fc53eefb327' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\7909dcc1-13a6-4ee5-9688-ef5a282a2016' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 "C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
@@ -768,14 +485,14 @@ http.https://github.com/.extraheader
 "C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
 0s
 Cleaning up orphan processes
-Terminate orphan process: pid (1232) (vctip)
+Terminate orphan process: pid (4072) (vctip)
 
 
 
 test-windows (net)
-cancelled now in 1m 41s
+cancelled 1 minute ago in 1m 37s
 Search logs
-1s
+2s
 Current runner version: '2.328.0'
 Runner Image Provisioner
 Operating System
@@ -788,11 +505,11 @@ Getting action download info
 Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
 Download action repository 'dtolnay/rust-toolchain@stable' (SHA:5d458579430fc14a04a08a1e7d3694f545e91ce6)
 Complete job name: test-windows (net)
-10s
+8s
 Run actions/checkout@v4
 Syncing repository: cpjet64/rappct
 Getting Git version info
-Temporarily overriding HOME='D:\a\_temp\af51780b-7905-4006-97e3-c81050454707' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\9da5c7ca-7ceb-4385-926d-bf58d29f9237' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 Deleting the contents of 'D:\a\rappct\rappct'
@@ -805,8 +522,8 @@ Determining the checkout info
 "C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
 Checking out the ref
 "C:\Program Files\Git\bin\git.exe" log -1 --format=%H
-eaa344f13e0eaf91b48836ee6b103e767a749ce2
-19s
+bca1c5e507fe6ec080e932cd8f2e3757572ac5fe
+1m 18s
 Run dtolnay/rust-toolchain@stable
 Run : parse toolchain version
 Run : construct rustup command line
@@ -816,142 +533,20 @@ Run rustup toolchain install stable --profile minimal --no-self-update
 info: syncing channel updates for 'stable-x86_64-pc-windows-msvc'
 info: latest update on 2025-09-18, rust version 1.90.0 (1159e78c4 2025-09-14)
 info: downloading component 'cargo'
+info: retrying download for 'https://static.rust-lang.org/dist/2025-09-18/cargo-1.90.0-x86_64-pc-windows-msvc.tar.xz'
 info: downloading component 'rust-std'
+info: retrying download for 'https://static.rust-lang.org/dist/2025-09-18/rust-std-1.90.0-x86_64-pc-windows-msvc.tar.xz'
 info: downloading component 'rustc'
-info: installing component 'cargo'
-info: installing component 'rust-std'
-info: installing component 'rustc'
-
-  stable-x86_64-pc-windows-msvc installed - rustc 1.90.0 (1159e78c4 2025-09-14)
-
-Run rustup default stable
-info: using existing install for 'stable-x86_64-pc-windows-msvc'
-info: default toolchain set to 'stable-x86_64-pc-windows-msvc'
-
-  stable-x86_64-pc-windows-msvc unchanged - rustc 1.90.0 (1159e78c4 2025-09-14)
-
-Run : create cachekey
-Run : disable incremental compilation
-Run : enable colors in Cargo output
-Run : enable Cargo sparse registry
-Run : work around spurious network errors in curl 8.0
-Run rustc +stable --version --verbose
-rustc 1.90.0 (1159e78c4 2025-09-14)
-binary: rustc
-commit-hash: 1159e78c4747b02ef996e55082b704c09b970588
-commit-date: 2025-09-14
-host: x86_64-pc-windows-msvc
-release: 1.90.0
-LLVM version: 20.1.8
-18s
-Run rustc -Vv && cargo -V
-rustc 1.90.0 (1159e78c4 2025-09-14)
-binary: rustc
-commit-hash: 1159e78c4747b02ef996e55082b704c09b970588
-commit-date: 2025-09-14
-host: x86_64-pc-windows-msvc
-release: 1.90.0
-LLVM version: 20.1.8
-cargo 1.90.0 (840b83a10 2025-07-30)
-44s
-Run if [[ "net" == "" ]]; then
-    Updating crates.io index
- Downloading crates ...
-  Downloaded utf8parse v0.2.2
-  Downloaded windows-numerics v0.1.1
-  Downloaded tempfile v3.23.0
-  Downloaded windows-result v0.3.4
-  Downloaded windows-targets v0.53.4
-  Downloaded windows-implement v0.59.0
-  Downloaded windows-strings v0.3.1
-  Downloaded serde_derive v1.0.228
-  Downloaded serde v1.0.228
-  Downloaded serde_json v1.0.145
-  Downloaded memchr v2.7.6
-  Downloaded syn v2.0.106
-  Downloaded getrandom v0.3.3
-  Downloaded proc-macro2 v1.0.101
-  Downloaded windows-core v0.60.1
-  Downloaded windows-collections v0.1.1
-  Downloaded thiserror v1.0.69
-  Downloaded strsim v0.11.1
-  Downloaded once_cell_polyfill v1.70.1
-  Downloaded itoa v1.0.15
-  Downloaded heck v0.5.0
-  Downloaded colorchoice v1.0.4
-  Downloaded clap_builder v4.5.48
-  Downloaded cfg-if v1.0.3
-  Downloaded windows-interface v0.59.2
-  Downloaded unicode-ident v1.0.19
-  Downloaded quote v1.0.41
-  Downloaded fastrand v2.3.0
-  Downloaded anstyle-wincon v3.0.10
-  Downloaded windows-link v0.2.0
-  Downloaded windows-link v0.1.3
-  Downloaded windows-future v0.1.1
-  Downloaded thiserror-impl v1.0.69
-  Downloaded serde_core v1.0.228
-  Downloaded clap v4.5.48
-  Downloaded anstyle-query v1.1.4
-  Downloaded is_terminal_polyfill v1.70.1
-  Downloaded anstyle v1.0.11
-  Downloaded anstream v0.6.20
-  Downloaded ryu v1.0.20
-  Downloaded once_cell v1.21.3
-  Downloaded clap_lex v0.7.5
-  Downloaded clap_derive v4.5.47
-  Downloaded anstyle-parse v0.2.7
-  Downloaded windows_x86_64_msvc v0.53.0
-  Downloaded windows-sys v0.60.2
-  Downloaded windows-sys v0.61.1
-  Downloaded windows v0.60.0
-   Compiling proc-macro2 v1.0.101
-   Compiling unicode-ident v1.0.19
-   Compiling quote v1.0.41
-   Compiling windows_x86_64_msvc v0.53.0
-   Compiling windows-link v0.1.3
-   Compiling windows-targets v0.53.4
-   Compiling windows-strings v0.3.1
-   Compiling windows-result v0.3.4
-   Compiling syn v2.0.106
-   Compiling windows-sys v0.60.2
-   Compiling utf8parse v0.2.2
-   Compiling serde_core v1.0.228
-   Compiling anstyle v1.0.11
-   Compiling once_cell_polyfill v1.70.1
-   Compiling anstyle-wincon v3.0.10
-   Compiling anstyle-parse v0.2.7
-   Compiling anstyle-query v1.1.4
-   Compiling thiserror v1.0.69
-   Compiling is_terminal_polyfill v1.70.1
-   Compiling getrandom v0.3.3
-   Compiling colorchoice v1.0.4
-   Compiling anstream v0.6.20
-   Compiling windows-interface v0.59.2
-   Compiling windows-implement v0.59.0
-   Compiling windows-core v0.60.1
-   Compiling windows-numerics v0.1.1
-   Compiling windows-collections v0.1.1
-   Compiling windows-future v0.1.1
-   Compiling thiserror-impl v1.0.69
-   Compiling serde_json v1.0.145
-   Compiling heck v0.5.0
-   Compiling serde v1.0.228
-   Compiling windows-link v0.2.0
-   Compiling cfg-if v1.0.3
-   Compiling clap_lex v0.7.5
-   Compiling strsim v0.11.1
-   Compiling clap_builder v4.5.48
-   Compiling windows-sys v0.61.1
-   Compiling clap_derive v4.5.47
-   Compiling windows v0.60.0
-   Compiling serde_derive v1.0.228
 Error: The operation was canceled.
-5s
+0s
+0s
+0s
+0s
+7s
 Post job cleanup.
 "C:\Program Files\Git\bin\git.exe" version
 git version 2.51.0.windows.1
-Temporarily overriding HOME='D:\a\_temp\4fdcd245-66a2-4b59-a959-85df2b27b485' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\8d01e334-534d-4983-b38f-f7fb331046e6' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 "C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
@@ -966,7 +561,7 @@ Cleaning up orphan processes
 
 
 test-windows (introspection,net)
-cancelled now in 1m 36s
+cancelled 1 minute ago in 1m 28s
 Search logs
 1s
 Current runner version: '2.328.0'
@@ -981,11 +576,11 @@ Getting action download info
 Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
 Download action repository 'dtolnay/rust-toolchain@stable' (SHA:5d458579430fc14a04a08a1e7d3694f545e91ce6)
 Complete job name: test-windows (introspection,net)
-6s
+11s
 Run actions/checkout@v4
 Syncing repository: cpjet64/rappct
 Getting Git version info
-Temporarily overriding HOME='D:\a\_temp\eacf3f60-bfca-4805-a9a4-d1cc8302893e' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\934497bd-9745-4756-b161-e60dffcd5c77' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 Deleting the contents of 'D:\a\rappct\rappct'
@@ -998,8 +593,8 @@ Determining the checkout info
 "C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
 Checking out the ref
 "C:\Program Files\Git\bin\git.exe" log -1 --format=%H
-eaa344f13e0eaf91b48836ee6b103e767a749ce2
-17s
+bca1c5e507fe6ec080e932cd8f2e3757572ac5fe
+16s
 Run dtolnay/rust-toolchain@stable
 Run : parse toolchain version
 Run : construct rustup command line
@@ -1036,7 +631,7 @@ commit-date: 2025-09-14
 host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
-13s
+11s
 Run rustc -Vv && cargo -V
 rustc 1.90.0 (1159e78c4 2025-09-14)
 binary: rustc
@@ -1046,92 +641,92 @@ host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
 cargo 1.90.0 (840b83a10 2025-07-30)
-50s
+42s
 Run if [[ "introspection,net" == "" ]]; then
     Updating crates.io index
  Downloading crates ...
-  Downloaded tempfile v3.23.0
-  Downloaded windows-link v0.2.0
+  Downloaded cfg-if v1.0.3
+  Downloaded windows-link v0.1.3
   Downloaded windows-targets v0.53.4
-  Downloaded windows-strings v0.3.1
+  Downloaded windows-interface v0.59.2
   Downloaded windows-core v0.60.1
   Downloaded unicode-ident v1.0.19
-  Downloaded ryu v1.0.20
-  Downloaded clap_builder v4.5.48
   Downloaded clap v4.5.48
-  Downloaded anstyle-parse v0.2.7
-  Downloaded thiserror-impl v1.0.69
-  Downloaded serde v1.0.228
-  Downloaded once_cell v1.21.3
-  Downloaded memchr v2.7.6
-  Downloaded colorchoice v1.0.4
-  Downloaded anstyle-wincon v3.0.10
-  Downloaded serde_json v1.0.145
-  Downloaded anstyle-query v1.1.4
-  Downloaded windows-result v0.3.4
-  Downloaded windows-numerics v0.1.1
-  Downloaded windows-interface v0.59.2
-  Downloaded windows-future v0.1.1
-  Downloaded windows-collections v0.1.1
-  Downloaded syn v2.0.106
-  Downloaded thiserror v1.0.69
   Downloaded serde_core v1.0.228
-  Downloaded proc-macro2 v1.0.101
-  Downloaded heck v0.5.0
-  Downloaded fastrand v2.3.0
-  Downloaded cfg-if v1.0.3
-  Downloaded anstyle v1.0.11
-  Downloaded windows-link v0.1.3
-  Downloaded utf8parse v0.2.2
-  Downloaded strsim v0.11.1
+  Downloaded clap_builder v4.5.48
+  Downloaded ryu v1.0.20
+  Downloaded tempfile v3.23.0
+  Downloaded syn v2.0.106
   Downloaded serde_derive v1.0.228
   Downloaded quote v1.0.41
+  Downloaded serde v1.0.228
+  Downloaded memchr v2.7.6
+  Downloaded serde_json v1.0.145
+  Downloaded proc-macro2 v1.0.101
+  Downloaded once_cell v1.21.3
+  Downloaded heck v0.5.0
+  Downloaded getrandom v0.3.3
+  Downloaded windows-implement v0.59.0
+  Downloaded windows-future v0.1.1
+  Downloaded thiserror v1.0.69
+  Downloaded strsim v0.11.1
   Downloaded once_cell_polyfill v1.70.1
   Downloaded itoa v1.0.15
-  Downloaded getrandom v0.3.3
-  Downloaded windows_x86_64_msvc v0.53.0
-  Downloaded anstream v0.6.20
-  Downloaded windows-implement v0.59.0
   Downloaded is_terminal_polyfill v1.70.1
+  Downloaded colorchoice v1.0.4
   Downloaded clap_lex v0.7.5
   Downloaded clap_derive v4.5.47
-  Downloaded windows-sys v0.61.1
+  Downloaded anstyle-wincon v3.0.10
+  Downloaded anstyle-query v1.1.4
+  Downloaded anstyle-parse v0.2.7
+  Downloaded windows-strings v0.3.1
+  Downloaded windows-result v0.3.4
+  Downloaded windows-numerics v0.1.1
+  Downloaded windows-link v0.2.0
+  Downloaded utf8parse v0.2.2
+  Downloaded windows_x86_64_msvc v0.53.0
+  Downloaded thiserror-impl v1.0.69
+  Downloaded anstream v0.6.20
+  Downloaded windows-collections v0.1.1
+  Downloaded fastrand v2.3.0
+  Downloaded anstyle v1.0.11
   Downloaded windows-sys v0.60.2
+  Downloaded windows-sys v0.61.1
   Downloaded windows v0.60.0
    Compiling proc-macro2 v1.0.101
-   Compiling unicode-ident v1.0.19
    Compiling quote v1.0.41
+   Compiling unicode-ident v1.0.19
    Compiling windows_x86_64_msvc v0.53.0
    Compiling windows-link v0.1.3
    Compiling windows-targets v0.53.4
-   Compiling windows-strings v0.3.1
    Compiling windows-result v0.3.4
+   Compiling windows-strings v0.3.1
    Compiling syn v2.0.106
    Compiling windows-sys v0.60.2
-   Compiling utf8parse v0.2.2
    Compiling anstyle v1.0.11
    Compiling serde_core v1.0.228
+   Compiling utf8parse v0.2.2
    Compiling once_cell_polyfill v1.70.1
    Compiling anstyle-wincon v3.0.10
    Compiling anstyle-parse v0.2.7
    Compiling anstyle-query v1.1.4
-   Compiling colorchoice v1.0.4
    Compiling thiserror v1.0.69
+   Compiling strsim v0.11.1
    Compiling getrandom v0.3.3
    Compiling is_terminal_polyfill v1.70.1
-   Compiling strsim v0.11.1
+   Compiling colorchoice v1.0.4
    Compiling anstream v0.6.20
    Compiling windows-interface v0.59.2
    Compiling windows-implement v0.59.0
    Compiling windows-core v0.60.1
-   Compiling windows-future v0.1.1
-   Compiling windows-numerics v0.1.1
    Compiling windows-collections v0.1.1
+   Compiling windows-numerics v0.1.1
+   Compiling windows-future v0.1.1
    Compiling thiserror-impl v1.0.69
-   Compiling cfg-if v1.0.3
-   Compiling serde v1.0.228
    Compiling windows-link v0.2.0
+   Compiling cfg-if v1.0.3
    Compiling serde_json v1.0.145
+   Compiling serde v1.0.228
    Compiling clap_lex v0.7.5
    Compiling heck v0.5.0
    Compiling clap_derive v4.5.47
@@ -1139,348 +734,19 @@ Run if [[ "introspection,net" == "" ]]; then
    Compiling windows-sys v0.61.1
    Compiling windows v0.60.0
    Compiling serde_derive v1.0.228
-   Compiling memchr v2.7.6
    Compiling itoa v1.0.15
    Compiling ryu v1.0.20
    Compiling once_cell v1.21.3
    Compiling fastrand v2.3.0
-   Compiling tempfile v3.23.0
-   Compiling clap v4.5.48
-   Compiling rappct v0.9.0 (D:\a\rappct\rappct)
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-  --> src\net.rs:23:11
-   |
-23 |     while *ptr.0.add(len) != 0 {
-   |           ^^^^^^^^^^^^^^^ dereference of raw pointer
-   |
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-   = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-  --> src\net.rs:18:1
-   |
-18 | unsafe fn pwstr_to_string(ptr: PWSTR) -> String {
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   = note: `-D unsafe-op-in-unsafe-fn` implied by `-D warnings`
-   = help: to override `-D warnings` add `#[allow(unsafe_op_in_unsafe_fn)]`
-
-error[E0133]: call to unsafe function `std::ptr::mut_ptr::<impl *mut T>::add` is unsafe and requires unsafe block
-  --> src\net.rs:23:12
-   |
-23 |     while *ptr.0.add(len) != 0 {
-   |            ^^^^^^^^^^^^^^ call to unsafe function
-   |
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
-  --> src\net.rs:26:30
-   |
-26 |     String::from_utf16_lossy(std::slice::from_raw_parts(ptr.0, len))
-   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-   |
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::ConvertSidToStringSidW` is unsafe and requires unsafe block
-  --> src\net.rs:33:5
-   |
-33 |     ConvertSidToStringSidW(psid, &mut raw)
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-   |
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-  --> src\net.rs:30:1
-   |
-30 | unsafe fn psid_to_string(psid: PSID) -> Result<String> {
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
-  --> src\net.rs:35:17
-   |
-35 |     let guard = LocalFreeGuard::<u16>::new(raw.0);
-   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-   |
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::NetworkManagement::WindowsFirewall::NetworkIsolationGetAppContainerConfig` is unsafe and requires unsafe block
-   --> src\net.rs:227:15
-    |
-227 |     let err = NetworkIsolationGetAppContainerConfig(&mut cur_count, &mut cur_arr);
-    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\net.rs:217:1
-    |
-217 | unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
-   --> src\net.rs:234:14
-    |
-234 |         Some(LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cur_arr))
-    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
-   --> src\net.rs:239:9
-    |
-239 | /         std::slice::from_raw_parts(
-240 | |             guard.as_ptr() as *const SID_AND_ATTRIBUTES,
-241 | |             cur_count as usize,
-242 | |         )
-    | |_________^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::ConvertStringSidToSidW` is unsafe and requires unsafe block
-   --> src\net.rs:250:5
-    |
-250 |     ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
-   --> src\net.rs:252:22
-    |
-252 |     let psid_guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
-    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::Security::EqualSid` is unsafe and requires unsafe block
-   --> src\net.rs:258:16
-    |
-258 |             if EqualSid(sa.Sid, target).is_ok() {
-    |                ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::Security::EqualSid` is unsafe and requires unsafe block
-   --> src\net.rs:270:26
-    |
-270 |         vec.retain(|sa| !EqualSid(sa.Sid, target).is_ok());
-    |                          ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::NetworkManagement::WindowsFirewall::NetworkIsolationSetAppContainerConfig` is unsafe and requires unsafe block
-   --> src\net.rs:273:16
-    |
-273 |     let err2 = NetworkIsolationSetAppContainerConfig(&vec);
-    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-  --> src\token.rs:84:11
-   |
-84 |       match GetTokenInformation(
-   |  ___________^
-85 | |         token,
-86 | |         class,
-87 | |         Some((&mut value) as *mut _ as *mut _),
-88 | |         std::mem::size_of::<u32>() as u32,
-89 | |         &mut retlen,
-90 | |     ) {
-   | |_____^ call to unsafe function
-   |
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-  --> src\token.rs:81:1
-   |
-81 | unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bool> {
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:108:23
-    |
-108 |     if let Err(err) = GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) {
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\token.rs:106:1
-    |
-106 | unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid>> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:123:5
-    |
-123 | /     GetTokenInformation(
-124 | |         token,
-125 | |         TokenAppContainerSid,
-126 | |         Some(buffer.as_mut_ptr() as *mut _),
-127 | |         needed,
-128 | |         &mut needed,
-129 | |     )
-    | |_____^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\token.rs:138:15
-    |
-138 |     let sid = (*info_ptr).TokenAppContainer;
-    |               ^^^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-
-error[E0133]: call to unsafe function `token::sid_to_string` is unsafe and requires unsafe block
-   --> src\token.rs:142:22
-    |
-142 |     let sid_string = sid_to_string(sid)?;
-    |                      ^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:149:23
-    |
-149 |     if let Err(err) = GetTokenInformation(token, TokenCapabilities, None, 0, &mut needed) {
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\token.rs:147:1
-    |
-147 | unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
-   --> src\token.rs:164:5
-    |
-164 | /     GetTokenInformation(
-165 | |         token,
-166 | |         TokenCapabilities,
-167 | |         Some(buffer.as_mut_ptr() as *mut _),
-168 | |         needed,
-169 | |         &mut needed,
-170 | |     )
-    | |_____^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\token.rs:179:17
-    |
-179 |     let count = (*groups).GroupCount as usize;
-    |                 ^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-
-error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
-   --> src\token.rs:184:17
-    |
-184 |     let slice = std::slice::from_raw_parts((*groups).Groups.as_ptr(), count);
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\token.rs:184:44
-    |
-184 |     let slice = std::slice::from_raw_parts((*groups).Groups.as_ptr(), count);
-    |                                            ^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-
-error[E0133]: call to unsafe function `token::sid_to_string` is unsafe and requires unsafe block
-   --> src\token.rs:189:23
-    |
-189 |         let sid_str = sid_to_string(entry.Sid)?;
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::ConvertSidToStringSidW` is unsafe and requires unsafe block
-   --> src\token.rs:203:5
-    |
-203 |     ConvertSidToStringSidW(psid, &mut out)
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\token.rs:196:1
-    |
-196 | unsafe fn sid_to_string(psid: windows::Win32::Security::PSID) -> Result<String> {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
-   --> src\token.rs:205:17
-    |
-205 |     let guard = LocalFreeGuard::<u16>::new(out.0);
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
-   --> src\util.rs:104:19
-    |
-104 |             while *self.ptr.add(len) != 0 {
-    |                   ^^^^^^^^^^^^^^^^^^ dereference of raw pointer
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\util.rs:99:9
-    |
- 99 |         pub unsafe fn to_string_lossy(&self) -> String {
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0133]: call to unsafe function `std::ptr::mut_ptr::<impl *mut T>::add` is unsafe and requires unsafe block
-   --> src\util.rs:104:20
-    |
-104 |             while *self.ptr.add(len) != 0 {
-    |                    ^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
-   --> src\util.rs:107:25
-    |
-107 |             let slice = std::slice::from_raw_parts(self.ptr, len);
-    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-
-For more information about this error, try `rustc --explain E0133`.
-error: could not compile `rappct` (lib) due to 29 previous errors
-warning: build failed, waiting for other jobs to finish...
+   Compiling memchr v2.7.6
 Error: The operation was canceled.
-6s
+0s
+0s
+5s
 Post job cleanup.
 "C:\Program Files\Git\bin\git.exe" version
 git version 2.51.0.windows.1
-Temporarily overriding HOME='D:\a\_temp\bb56581a-2aa0-4121-9da9-c128bc391950' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\02323537-9630-424d-a994-efd505164e19' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 "C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
@@ -1491,4 +757,3 @@ http.https://github.com/.extraheader
 "C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
 0s
 Cleaning up orphan processes
-Terminate orphan process: pid (3872) (vctip)

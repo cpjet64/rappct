@@ -26,7 +26,7 @@ use windows::Win32::System::Registry::{
 
 #[cfg(windows)]
 #[link(name = "Kernel32")]
-extern "system" {
+unsafe extern "system" {
     fn LocalFree(h: isize) -> isize;
 }
 
