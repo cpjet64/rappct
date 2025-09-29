@@ -5,6 +5,11 @@ use crate::sid::AppContainerSid;
 use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
 
+/// Target resource for granting AppContainer or capability access.
+///
+/// Notes:
+/// - `RegistryKey` supports only `HKCU` and `HKLM` roots (case-insensitive shorthands
+///   `HKCU\\`/`HKLM\\` and full names `HKEY_CURRENT_USER\\`/`HKEY_LOCAL_MACHINE\\`).
 #[derive(Clone, Debug)]
 pub enum ResourcePath {
     File(std::path::PathBuf),
@@ -64,10 +69,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
     };
 
     // Convert SDDL to PSID
-    let wide: Vec<u16> = std::ffi::OsStr::new(sid_sddl)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect();
+    let wide: Vec<u16> = crate::util::to_utf16(sid_sddl);
     let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
     if ConvertStringSidToSidW(PCWSTR(wide.as_ptr()), &mut psid).is_err() {
         return Err(AcError::Win32("ConvertStringSidToSidW failed".into()));
@@ -89,9 +91,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
     match target {
         ResourcePath::File(path) => {
             ea.grfInheritance = ACE_FLAGS(0);
-            let path_w: Vec<u16> = std::os::windows::ffi::OsStrExt::encode_wide(path.as_os_str())
-                .chain(std::iter::once(0))
-                .collect();
+            let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
             let st = GetNamedSecurityInfoW(
@@ -140,9 +140,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
         }
         ResourcePath::Directory(path) => {
             ea.grfInheritance = ACE_FLAGS(0x3u32); // SUB_CONTAINERS_AND_OBJECTS_INHERIT
-            let path_w: Vec<u16> = std::os::windows::ffi::OsStrExt::encode_wide(path.as_os_str())
-                .chain(std::iter::once(0))
-                .collect();
+            let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
             let st = GetNamedSecurityInfoW(
@@ -204,10 +202,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 } else {
                     return None;
                 };
-                let w: Vec<u16> = std::ffi::OsStr::new(rest)
-                    .encode_wide()
-                    .chain(std::iter::once(0))
-                    .collect();
+                let w: Vec<u16> = crate::util::to_utf16(rest);
                 Some((root, w))
             }
             let Some((root, subkey_w)) = parse_root(&spec) else {

@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, feat/**, fix/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        features: ["", "introspection", "net", "introspection,net"]
+    env:
+      RUST_BACKTRACE: 1
+      RUSTFLAGS: -D warnings
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Show toolchain
+        run: rustc -Vv && cargo -V
+      - name: Test (${{ matrix.features }})
+        shell: bash
+        run: |
+          if [[ "${{ matrix.features }}" == "" ]]; then
+            cargo test --all-targets
+          else
+            cargo test --all-targets --features "${{ matrix.features }}"
+          fi
+

@@ -2,7 +2,35 @@
 //!
 //! Windows implementations for AppContainer profiles, capabilities, secure process launch (AC/LPAC),
 //! token introspection, ACLs, optional network isolation helpers, and diagnostics.
-//! See `TODO.md` for the roadmap and `RULES.md` for engineering rules.
+//!
+//! Quick example: launch with pipes and job limits
+//!
+//! ```no_run
+//! use rappct::{
+//!     AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
+//!     launch::LaunchOptions, launch::StdioConfig, launch::JobLimits,
+//!     launch_in_container,
+//! };
+//! # fn main() -> rappct::Result<()> {
+//! let profile = AppContainerProfile::ensure("rappct.sample", "rappct", Some("demo"))?;
+//! let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
+//!     .with_known(&[KnownCapability::InternetClient])
+//!     .build()?;
+//! let opts = LaunchOptions {
+//!     exe: "C:/Windows/System32/cmd.exe".into(),
+//!     cmdline: Some(" /C echo hello".into()),
+//!     stdio: StdioConfig::Pipe,
+//!     join_job: Some(JobLimits { memory_bytes: Some(32 * 1024 * 1024), cpu_rate_percent: None, kill_on_job_close: true }),
+//!     ..Default::default()
+//! };
+//! let child = launch_in_container(&caps, &opts)?;
+//! # let _ = child.pid; profile.delete()?; Ok(()) }
+//! ```
+//!
+//! Testing note: in CI or local tests you can force LPAC support detection via the
+//! `RAPPCT_TEST_LPAC_STATUS` environment variable (`ok` or `unsupported`).
+//!
+//! Refer to `CONTRIBUTING.md` for engineering conventions and contribution guidance.
 
 mod error;
 pub use error::{AcError, Result};
@@ -30,6 +58,14 @@ pub use profile::{derive_sid_from_name, AppContainerProfile};
 pub fn supports_lpac() -> Result<()> {
     #[cfg(windows)]
     {
+        // Test/CI override: allow forcing LPAC support status
+        if let Ok(val) = std::env::var("RAPPCT_TEST_LPAC_STATUS") {
+            match val.as_str() {
+                "ok" => return Ok(()),
+                "unsupported" => return Err(AcError::UnsupportedLpac),
+                _ => {}
+            }
+        }
         // Use ntdll!RtlGetVersion to query build number reliably
         #[repr(C)]
         struct OSVERSIONINFOW {

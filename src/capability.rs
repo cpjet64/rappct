@@ -85,10 +85,7 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
             for &name in names {
                 #[cfg(feature = "tracing")]
                 tracing::trace!("derive_named_capability_sids: name={}", name);
-                let wide: Vec<u16> = std::ffi::OsStr::new(name)
-                    .encode_wide()
-                    .chain(std::iter::once(0))
-                    .collect();
+                let wide: Vec<u16> = crate::util::to_utf16(name);
                 let mut group_sids: *mut *mut std::ffi::c_void = std::ptr::null_mut();
                 let mut group_count: u32 = 0;
                 let mut cap_sids: *mut *mut std::ffi::c_void = std::ptr::null_mut();
@@ -197,25 +194,25 @@ impl SecurityCapabilitiesBuilder {
             lpac: false,
         }
     }
-    pub fn with_known(mut self, caps: &[KnownCapability]) -> Result<Self> {
+    pub fn with_known(mut self, caps: &[KnownCapability]) -> Self {
         let names = known_caps_to_named(caps);
         self.caps_named
             .extend(names.into_iter().map(|s| s.to_string()));
-        Ok(self)
+        self
     }
-    pub fn with_named(mut self, names: &[&str]) -> Result<Self> {
+    pub fn with_named(mut self, names: &[&str]) -> Self {
         if names.is_empty() {
-            return Ok(self);
+            return self;
         }
         self.caps_named.extend(names.iter().map(|s| s.to_string()));
-        Ok(self)
+        self
     }
     /// Opinionated minimal LPAC defaults (skeleton). Add "registryRead", "lpacCom".
-    pub fn with_lpac_defaults(mut self) -> Result<Self> {
+    pub fn with_lpac_defaults(mut self) -> Self {
         self.lpac = true;
         self.caps_named.push("registryRead".to_string());
         self.caps_named.push("lpacCom".to_string());
-        Ok(self)
+        self
     }
     pub fn lpac(mut self, enabled: bool) -> Self {
         self.lpac = enabled;
@@ -284,9 +281,7 @@ mod builder_tests {
     #[test]
     fn lpac_defaults_enable_flag_and_append_registry_and_lpaccom() {
         let sid = sample_sid();
-        let builder = SecurityCapabilitiesBuilder::new(&sid)
-            .with_lpac_defaults()
-            .expect("lpac defaults");
+        let builder = SecurityCapabilitiesBuilder::new(&sid).with_lpac_defaults();
         assert!(builder.lpac_enabled_for_test());
         let names: Vec<&str> = builder
             .named_caps_for_test()
@@ -304,9 +299,7 @@ mod builder_tests {
                 KnownCapability::InternetClient,
                 KnownCapability::InternetClientServer,
             ])
-            .expect("with known")
-            .with_lpac_defaults()
-            .expect("lpac defaults");
+            .with_lpac_defaults();
         let names: Vec<&str> = builder
             .named_caps_for_test()
             .iter()

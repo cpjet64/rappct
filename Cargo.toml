@@ -1,10 +1,10 @@
 [package]
 name = "rappct"
-version = "0.1.0"
+version = "0.9.0"
 edition = "2021"
 license = "MIT"
 description = "Rust AppContainer / LPAC toolkit for Windows (profiles, capabilities, process launch, diagnostics)."
-repository = "https://example.com/rappct"
+repository = "https://github.com/cpjet64/rappct"
 keywords = ["windows", "appcontainer", "lpac", "sandbox", "security"]
 categories = ["os::windows-apis", "security", "api-bindings"]
 readme = "README.md"

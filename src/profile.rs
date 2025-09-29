@@ -42,20 +42,9 @@ impl AppContainerProfile {
 
             unsafe {
                 // Prepare wide strings; keep them alive across FFI calls by binding
-                let name_w: Vec<u16> = std::ffi::OsStr::new(_name)
-                    .encode_wide()
-                    .chain(std::iter::once(0))
-                    .collect();
-                let display_w: Vec<u16> = std::ffi::OsStr::new(_display)
-                    .encode_wide()
-                    .chain(std::iter::once(0))
-                    .collect();
-                let desc_storage: Option<Vec<u16>> = _description.map(|d| {
-                    std::ffi::OsStr::new(d)
-                        .encode_wide()
-                        .chain(std::iter::once(0))
-                        .collect()
-                });
+                let name_w: Vec<u16> = crate::util::to_utf16(_name);
+                let display_w: Vec<u16> = crate::util::to_utf16(_display);
+                let desc_storage: Option<Vec<u16>> = _description.map(|d| crate::util::to_utf16(d));
                 let desc_ptr = desc_storage
                     .as_ref()
                     .map(|buf| PCWSTR(buf.as_ptr()))
@@ -99,9 +88,11 @@ impl AppContainerProfile {
 
                 // Convert to SDDL
                 let mut sddl_ptr = PWSTR::null();
-                if ConvertSidToStringSidW(sid_guard.as_psid(), &mut sddl_ptr).is_err() {
-                    return Err(AcError::Win32("ConvertSidToStringSidW failed".into()));
-                }
+                ConvertSidToStringSidW(sid_guard.as_psid(), &mut sddl_ptr)
+                    .map_err(|e| AcError::Win32(format!(
+                        "ConvertSidToStringSidW failed: {}",
+                        e
+                    )))?;
                 let sddl_guard = LocalFreeGuard::<u16>::new(sddl_ptr.0);
                 let sddl = sddl_guard.to_string_lossy();
 
@@ -126,10 +117,7 @@ impl AppContainerProfile {
                     pszAppContainerName: windows::core::PCWSTR,
                 ) -> windows::core::HRESULT;
             }
-            let name_w: Vec<u16> = std::ffi::OsStr::new(&self.name)
-                .encode_wide()
-                .chain(std::iter::once(0))
-                .collect();
+            let name_w: Vec<u16> = crate::util::to_utf16(&self.name);
             unsafe {
                 let hr = DeleteAppContainerProfile(PCWSTR(name_w.as_ptr()));
                 if !hr.is_ok() {
@@ -168,10 +156,7 @@ impl AppContainerProfile {
             use windows::Win32::System::Com::CoTaskMemFree;
             unsafe {
                 // Derive package PSID from name for folder query
-                let name_w: Vec<u16> = std::ffi::OsStr::new(&self.name)
-                    .encode_wide()
-                    .chain(std::iter::once(0))
-                    .collect();
+                let name_w: Vec<u16> = crate::util::to_utf16(&self.name);
                 let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
                 let hr_sid =
                     DeriveAppContainerSidFromAppContainerName(PCWSTR(name_w.as_ptr()), &mut psid);
@@ -233,10 +218,7 @@ impl AppContainerProfile {
             }
             unsafe {
                 // Convert SDDL to PSID
-                let sddl_w: Vec<u16> = std::ffi::OsStr::new(self.sid.as_string())
-                    .encode_wide()
-                    .chain(std::iter::once(0))
-                    .collect();
+                let sddl_w: Vec<u16> = crate::util::to_utf16(self.sid.as_string());
                 let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
                 if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid).is_err() {
                     return Err(AcError::Win32("ConvertStringSidToSidW failed".into()));
@@ -297,10 +279,7 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
         use windows::core::{PCWSTR, PWSTR};
         use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
         unsafe {
-            let name_w: Vec<u16> = std::ffi::OsStr::new(name)
-                .encode_wide()
-                .chain(std::iter::once(0))
-                .collect();
+            let name_w: Vec<u16> = crate::util::to_utf16(name);
             let mut sid_ptr = std::ptr::null_mut();
             let hr =
                 DeriveAppContainerSidFromAppContainerName(PCWSTR(name_w.as_ptr()), &mut sid_ptr);

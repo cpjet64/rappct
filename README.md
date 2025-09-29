@@ -71,9 +71,7 @@ fn main() -> rappct::Result<()> {
 
 | Feature | Description |
 |---------|-------------|
-| `net` | Enable AppContainer enumeration and firewall loopback exemption helpers. |
-
-> ⚠️ The `net` feature changes global Windows Firewall state. Always call `LoopbackAdd::confirm_debug_only()` before `add_loopback_exemption`, and use `remove_loopback_exemption` to restore the original configuration when finished.
+| `net` | Enable AppContainer enumeration and firewall loopback exemption helpers.<br><br>⚠️ This feature changes global Windows Firewall state. Always call `LoopbackAdd::confirm_debug_only()` before `add_loopback_exemption`, and use `remove_loopback_exemption` to restore the original configuration when finished. |
 | `introspection` | Toggle diagnostics, configuration validation, and capability suggestions. |
 | `tracing` | Emit structured tracing spans/logs; integrate with `tracing-subscriber`. |
 
@@ -87,13 +85,13 @@ feature is not compiled in.
   standard firewall policy.
 - When something fails due to missing capabilities or OS prerequisites, rappct surfaces detailed error messages instead
   of falling back silently. Use `supports_lpac()` to guard LPAC-specific code paths.
+  For tests/CI, you can set `RAPPCT_TEST_LPAC_STATUS=ok|unsupported` to force detection.
 
 ## Repository Layout
 
 - `src/` &mdash; core library modules (capabilities, launch, ACLs, diagnostics).
 - `examples/` &mdash; runnable samples such as `acrun` for quick CLI exploration.
 - `tests/` &mdash; integration tests covering launch/ACL/token behaviours on Windows.
-- `todo-*.md`, `TODO.md` &mdash; internal planning artifacts.
 
 ## Development Workflow
 
@@ -104,7 +102,7 @@ cargo test --all-targets --all-features
 ```
 
 Run Windows-specific scenarios in an elevated PowerShell session when the tests require loopback exemptions or ACL
-adjustments. Keep an eye on `TODO.md` and `todo-*.md` for the current roadmap.
+adjustments.
 
 ## Contributing
 

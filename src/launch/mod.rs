@@ -9,7 +9,6 @@ use crate::{AcError, Result};
 #[cfg(windows)]
 use crate::launch::attr::AttrList;
 #[cfg(windows)]
-#[cfg(windows)]
 use crate::util::{LocalFreeGuard, OwnedHandle};
 
 #[cfg(windows)]
@@ -182,10 +181,7 @@ impl AttributeContext {
             }
         }
 
-        let pkg_w: Vec<u16> = std::ffi::OsStr::new(sec.package.as_string())
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect();
+        let pkg_w: Vec<u16> = crate::util::to_utf16(sec.package.as_string());
         let mut pkg_psid_raw = PSID(std::ptr::null_mut());
         if ConvertStringSidToSidW(PCWSTR(pkg_w.as_ptr()), &mut pkg_psid_raw).is_err() {
             return Err(AcError::LaunchFailed {
@@ -201,10 +197,7 @@ impl AttributeContext {
             Vec::with_capacity(sec.caps.len());
         let mut cap_attrs: Vec<SID_AND_ATTRIBUTES> = Vec::with_capacity(sec.caps.len());
         for cap in &sec.caps {
-            let sddl_w: Vec<u16> = std::ffi::OsStr::new(&cap.sid_sddl)
-                .encode_wide()
-                .chain(std::iter::once(0))
-                .collect();
+            let sddl_w: Vec<u16> = crate::util::to_utf16(&cap.sid_sddl);
             let mut psid_raw = PSID(std::ptr::null_mut());
             if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw).is_err() {
                 return Err(AcError::LaunchFailed {
@@ -403,15 +396,9 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     let env_block = opts.env.as_ref().map(|e| build_env_block(e));
 
     // Command
-    let exe_w: Vec<u16> = std::os::windows::ffi::OsStrExt::encode_wide(opts.exe.as_os_str())
-        .chain(std::iter::once(0))
-        .collect();
+    let exe_w: Vec<u16> = crate::util::to_utf16_os(opts.exe.as_os_str());
     let mut args_w = make_cmd_args(&opts.cmdline);
-    let cwd_w = opts.cwd.as_ref().map(|p| {
-        std::os::windows::ffi::OsStrExt::encode_wide(p.as_os_str())
-            .chain(std::iter::once(0))
-            .collect::<Vec<u16>>()
-    });
+    let cwd_w = opts.cwd.as_ref().map(|p| crate::util::to_utf16_os(p.as_os_str()));
 
     // stdio: Inherit/Null or Pipes
     let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
@@ -431,10 +418,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             let mut sa: SECURITY_ATTRIBUTES = std::mem::zeroed();
             sa.nLength = std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32;
             sa.bInheritHandle = TRUE;
-            let nul: Vec<u16> = std::ffi::OsStr::new("NUL")
-                .encode_wide()
-                .chain(std::iter::once(0))
-                .collect();
+            let nul: Vec<u16> = crate::util::to_utf16("NUL");
             let h_in = CreateFileW(
                 PCWSTR(nul.as_ptr()),
                 FILE_GENERIC_READ.0,
@@ -533,9 +517,9 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             child_stdin = r_in;
             child_stdout = w_out;
             child_stderr = w_err;
-            parent_stdin = Some(OwnedHandle(w_in));
-            parent_stdout = Some(OwnedHandle(r_out));
-            parent_stderr = Some(OwnedHandle(r_err));
+            parent_stdin = Some(unsafe { OwnedHandle::from_raw(w_in) });
+            parent_stdout = Some(unsafe { OwnedHandle::from_raw(r_out) });
+            parent_stderr = Some(unsafe { OwnedHandle::from_raw(r_err) });
         }
     }
 

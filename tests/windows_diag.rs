@@ -13,7 +13,6 @@ fn diag_no_warnings_for_basic_appcontainer() {
             .expect("ensure profile");
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
     let opts = rappct::launch::LaunchOptions::default();
