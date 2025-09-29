@@ -26,7 +26,6 @@ fn api_reexports_are_accessible() {
     let builder = SecurityCapabilitiesBuilder::new(&sid);
     let caps = builder
         .with_named(&[])
-        .expect("with_named")
         .build()
         .expect("build empty capability set");
     let opts = LaunchOptions::default();

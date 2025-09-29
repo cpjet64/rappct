@@ -40,7 +40,6 @@ fn launch_ac_cmd_exits() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
     let opts = LaunchOptions {
@@ -63,9 +62,7 @@ fn launch_lpac_cmd_exits_if_supported() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .with_lpac_defaults()
-        .unwrap()
         .lpac(true)
         .build()
         .expect("build caps");
@@ -96,7 +93,6 @@ fn launch_appcontainer_token_matches_profile() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
     let expected_caps: Vec<String> = caps.caps.iter().map(|c| c.sid_sddl.clone()).collect();
@@ -308,7 +304,6 @@ fn launch_ac_with_job_limits() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
     let opts = LaunchOptions {
@@ -344,7 +339,6 @@ fn launch_job_limits_reported_by_query() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
     let memory_limit: usize = 8 * 1024 * 1024;

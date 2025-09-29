@@ -2,7 +2,6 @@
 
 #[cfg(windows)]
 pub mod win {
-    use std::ffi::c_void;
     use std::os::windows::ffi::OsStrExt;
 
     use windows::core::PWSTR;
@@ -16,6 +15,11 @@ pub mod win {
             .encode_wide()
             .chain(std::iter::once(0))
             .collect()
+    }
+
+    /// Converts a platform string (OsStr) into a null-terminated UTF-16 buffer.
+    pub fn to_utf16_os(s: &std::ffi::OsStr) -> Vec<u16> {
+        s.encode_wide().chain(std::iter::once(0)).collect()
     }
 
     /// Owned Win32 `HANDLE` that closes on drop.
@@ -40,10 +44,13 @@ pub mod win {
         }
 
         pub fn into_file(self) -> std::fs::File {
-            use std::os::windows::io::FromRawHandle;
+            use std::os::windows::io::{FromRawHandle, RawHandle};
             let handle = self.0;
+            // Prevent Drop from closing the handle twice
             std::mem::forget(self);
-            unsafe { std::fs::File::from_raw_handle(handle.0 as *mut _) }
+            // SAFETY: We transfer ownership of the HANDLE to a File. RawHandle on Windows
+            // is a *mut c_void and can be constructed from the underlying HANDLE value.
+            unsafe { std::fs::File::from_raw_handle(handle.0 as isize as RawHandle) }
         }
     }
 
@@ -145,9 +152,14 @@ pub mod win {
     pub fn to_utf16(_s: &str) -> Vec<u16> {
         Vec::new()
     }
+    pub fn to_utf16_os(_s: &std::ffi::OsStr) -> Vec<u16> {
+        Vec::new()
+    }
 }
 
 #[cfg(not(windows))]
 pub use win::to_utf16;
 #[cfg(windows)]
-pub use win::{to_utf16, FreeSidGuard, LocalFreeGuard, OwnedHandle};
+pub use win::{to_utf16, to_utf16_os, FreeSidGuard, LocalFreeGuard, OwnedHandle};
+#[cfg(not(windows))]
+pub use win::to_utf16_os;

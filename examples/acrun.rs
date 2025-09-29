@@ -90,7 +90,7 @@ fn main() -> rappct::Result<()> {
         Cmd::Launch { name, exe, lpac } => {
             let p = AppContainerProfile::ensure(&name, &name, None)?;
             let caps = SecurityCapabilitiesBuilder::new(&p.sid)
-                .with_known(&[KnownCapability::InternetClient])?
+                .with_known(&[KnownCapability::InternetClient])
                 .lpac(lpac)
                 .build()?;
             let child = launch_in_container(

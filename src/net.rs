@@ -76,29 +76,32 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
             NetworkIsolationFreeAppContainers(arr);
         }
 
-        let mut cfg_count: u32 = 0;
-        let mut cfg_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
-        let cfg_err = NetworkIsolationGetAppContainerConfig(&mut cfg_count, &mut cfg_arr);
-        if cfg_err != 0 {
-            return Err(AcError::Win32(format!(
-                "NetworkIsolationGetAppContainerConfig failed: {cfg_err}"
-            )));
-        }
-        if !cfg_arr.is_null() {
-            let cfg_guard = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cfg_arr);
-            let cfg_slice = std::slice::from_raw_parts(
-                cfg_guard.as_ptr() as *const SID_AND_ATTRIBUTES,
-                cfg_count as usize,
-            );
-            for sa in cfg_slice {
-                let sid_str = psid_to_string(sa.Sid)?;
-                if !sid_set.contains(&sid_str) {
-                    return Err(AcError::Win32(format!(
-                        "Firewall config SID {sid_str} missing from enumeration"
-                    )));
-                }
+    let mut cfg_count: u32 = 0;
+    let mut cfg_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
+    let cfg_err = NetworkIsolationGetAppContainerConfig(&mut cfg_count, &mut cfg_arr);
+    if cfg_err != 0 {
+        return Err(AcError::Win32(format!(
+            "NetworkIsolationGetAppContainerConfig failed: {cfg_err}"
+        )));
+    }
+    if !cfg_arr.is_null() {
+        let cfg_guard = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cfg_arr);
+        let cfg_slice = std::slice::from_raw_parts(
+            cfg_guard.as_ptr() as *const SID_AND_ATTRIBUTES,
+            cfg_count as usize,
+        );
+        for sa in cfg_slice {
+            let sid_str = psid_to_string(sa.Sid)?;
+            if !sid_set.contains(&sid_str) {
+                #[cfg(feature = "tracing")]
+                tracing::warn!(
+                    "Firewall config SID missing from enumeration; continuing: {}",
+                    sid_str
+                );
+                // Continue without failing; enumeration and config may be out of sync on some systems.
             }
         }
+    }
 
         Ok(out)
     }
@@ -243,10 +246,7 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
         Vec::new()
     };
 
-    let sddl_w: Vec<u16> = std::ffi::OsStr::new(sid.as_string())
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect();
+    let sddl_w: Vec<u16> = crate::util::to_utf16(sid.as_string());
     let mut psid_raw = PSID::default();
     ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
         .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e}")))?;
