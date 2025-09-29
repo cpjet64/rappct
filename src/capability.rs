@@ -4,8 +4,6 @@ use crate::sid::{AppContainerSid, SidAndAttributes};
 #[cfg(windows)]
 use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
-#[cfg(windows)]
-use std::os::windows::ffi::OsStrExt;
 
 // windows::Win32::Security::SE_GROUP_ENABLED is not consistently available across crate versions.
 // Use the documented value directly.

@@ -215,7 +215,6 @@ impl LoopbackAdd {
 
 #[cfg(all(windows, feature = "net"))]
 unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
-    use std::os::windows::ffi::OsStrExt;
     use windows::core::PCWSTR;
     use windows::Win32::NetworkManagement::WindowsFirewall::{
         NetworkIsolationGetAppContainerConfig, NetworkIsolationSetAppContainerConfig,

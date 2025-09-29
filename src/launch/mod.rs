@@ -11,8 +11,6 @@ use crate::launch::attr::AttrList;
 #[cfg(windows)]
 use crate::util::{LocalFreeGuard, OwnedHandle};
 
-#[cfg(windows)]
-use std::os::windows::ffi::OsStrExt;
 
 #[cfg(feature = "tracing")]
 use tracing::{debug, error, trace};

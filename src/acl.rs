@@ -54,7 +54,6 @@ pub fn grant_to_capability(
 
 #[cfg(windows)]
 unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) -> Result<()> {
-    use std::os::windows::ffi::OsStrExt;
     use windows::core::{PCWSTR, PWSTR};
     use windows::Win32::Foundation::HANDLE;
     use windows::Win32::Security::Authorization::{

@@ -6,8 +6,6 @@ use crate::sid::AppContainerSid;
 #[cfg(windows)]
 use crate::util::{FreeSidGuard, LocalFreeGuard};
 use crate::{AcError, Result};
-#[cfg(windows)]
-use std::os::windows::ffi::OsStrExt;
 
 pub struct AppContainerProfile {
     pub name: String,
@@ -22,7 +20,6 @@ impl AppContainerProfile {
             use windows::core::{HRESULT, PCWSTR, PWSTR};
             use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, ERROR_INVALID_PARAMETER};
             use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
-            use windows::Win32::Security::FreeSid;
 
             #[link(name = "Userenv")]
             extern "system" {
