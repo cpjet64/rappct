@@ -1,5 +1,5 @@
 test-windows
-failed 1 minute ago in 1m 20s
+failed now in 1m 18s
 Search logs
 1s
 Current runner version: '2.328.0'
@@ -14,11 +14,11 @@ Getting action download info
 Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
 Download action repository 'dtolnay/rust-toolchain@stable' (SHA:5d458579430fc14a04a08a1e7d3694f545e91ce6)
 Complete job name: test-windows
-6s
+4s
 Run actions/checkout@v4
 Syncing repository: cpjet64/rappct
 Getting Git version info
-Temporarily overriding HOME='D:\a\_temp\5d1ac745-1d7c-4e3a-a3e2-bb39bbf1a48f' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\e2b6eaf0-b778-460e-bf6a-88a23e4c7552' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 Deleting the contents of 'D:\a\rappct\rappct'
@@ -31,8 +31,8 @@ Determining the checkout info
 "C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
 Checking out the ref
 "C:\Program Files\Git\bin\git.exe" log -1 --format=%H
-bca1c5e507fe6ec080e932cd8f2e3757572ac5fe
-15s
+198cf987a0d5e0d63c071cdabd41f84358d6fe56
+16s
 Run dtolnay/rust-toolchain@stable
 Run : parse toolchain version
 Run : construct rustup command line
@@ -47,21 +47,21 @@ info: downloading component 'rustc'
 info: installing component 'cargo'
 info: installing component 'rust-std'
 info: installing component 'rustc'
-
   stable-x86_64-pc-windows-msvc installed - rustc 1.90.0 (1159e78c4 2025-09-14)
-
 Run rustup default stable
 info: using existing install for 'stable-x86_64-pc-windows-msvc'
 info: default toolchain set to 'stable-x86_64-pc-windows-msvc'
-
   stable-x86_64-pc-windows-msvc unchanged - rustc 1.90.0 (1159e78c4 2025-09-14)
-
 Run : create cachekey
+  
 Run : disable incremental compilation
+  
 Run : enable colors in Cargo output
 Run : enable Cargo sparse registry
+  
 Run : work around spurious network errors in curl 8.0
 Run rustc +stable --version --verbose
+  
 rustc 1.90.0 (1159e78c4 2025-09-14)
 binary: rustc
 commit-hash: 1159e78c4747b02ef996e55082b704c09b970588
@@ -71,6 +71,7 @@ release: 1.90.0
 LLVM version: 20.1.8
 9s
 Run rustc -Vv && cargo -V
+  
 rustc 1.90.0 (1159e78c4 2025-09-14)
 binary: rustc
 commit-hash: 1159e78c4747b02ef996e55082b704c09b970588
@@ -79,57 +80,58 @@ host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
 cargo 1.90.0 (840b83a10 2025-07-30)
-45s
+44s
 Run if [[ "" == "" ]]; then
+  
     Updating crates.io index
  Downloading crates ...
-  Downloaded getrandom v0.3.3
-  Downloaded windows-result v0.3.4
+  Downloaded anstyle-parse v0.2.7
+  Downloaded thiserror v1.0.69
+  Downloaded windows-numerics v0.1.1
   Downloaded windows-targets v0.53.4
-  Downloaded windows-strings v0.3.1
-  Downloaded windows-core v0.60.1
-  Downloaded ryu v1.0.20
-  Downloaded serde_derive v1.0.228
-  Downloaded clap_builder v4.5.48
-  Downloaded syn v2.0.106
-  Downloaded memchr v2.7.6
-  Downloaded proc-macro2 v1.0.101
-  Downloaded serde v1.0.228
-  Downloaded colorchoice v1.0.4
+  Downloaded windows-result v0.3.4
   Downloaded unicode-ident v1.0.19
+  Downloaded serde_derive v1.0.228
+  Downloaded memchr v2.7.6
+  Downloaded serde_core v1.0.228
+  Downloaded serde v1.0.228
+  Downloaded clap_builder v4.5.48
+  Downloaded tempfile v3.23.0
+  Downloaded ryu v1.0.20
   Downloaded serde_json v1.0.145
-  Downloaded is_terminal_polyfill v1.70.1
-  Downloaded fastrand v2.3.0
-  Downloaded clap_derive v4.5.47
-  Downloaded cfg-if v1.0.3
-  Downloaded windows-link v0.1.3
+  Downloaded getrandom v0.3.3
   Downloaded windows-interface v0.59.2
+  Downloaded windows-implement v0.59.0
+  Downloaded windows-core v0.60.1
+  Downloaded once_cell_polyfill v1.70.1
+  Downloaded syn v2.0.106
+  Downloaded once_cell v1.21.3
+  Downloaded heck v0.5.0
+  Downloaded fastrand v2.3.0
+  Downloaded colorchoice v1.0.4
+  Downloaded clap_lex v0.7.5
+  Downloaded windows-strings v0.3.1
+  Downloaded windows-link v0.2.0
   Downloaded windows-future v0.1.1
+  Downloaded quote v1.0.41
+  Downloaded itoa v1.0.15
+  Downloaded is_terminal_polyfill v1.70.1
+  Downloaded anstyle v1.0.11
+  Downloaded windows-link v0.1.3
+  Downloaded windows-collections v0.1.1
   Downloaded utf8parse v0.2.2
   Downloaded thiserror-impl v1.0.69
-  Downloaded thiserror v1.0.69
-  Downloaded serde_core v1.0.228
-  Downloaded heck v0.5.0
-  Downloaded anstyle-wincon v3.0.10
-  Downloaded anstyle-parse v0.2.7
-  Downloaded windows-numerics v0.1.1
-  Downloaded windows-link v0.2.0
-  Downloaded windows-implement v0.59.0
-  Downloaded strsim v0.11.1
-  Downloaded quote v1.0.41
-  Downloaded once_cell_polyfill v1.70.1
-  Downloaded once_cell v1.21.3
+  Downloaded proc-macro2 v1.0.101
+  Downloaded clap_derive v4.5.47
   Downloaded clap v4.5.48
+  Downloaded anstyle-wincon v3.0.10
   Downloaded anstyle-query v1.1.4
-  Downloaded anstyle v1.0.11
   Downloaded anstream v0.6.20
-  Downloaded windows-collections v0.1.1
-  Downloaded tempfile v3.23.0
-  Downloaded itoa v1.0.15
-  Downloaded clap_lex v0.7.5
+  Downloaded strsim v0.11.1
+  Downloaded cfg-if v1.0.3
   Downloaded windows_x86_64_msvc v0.53.0
-  Downloaded windows-sys v0.60.2
   Downloaded windows-sys v0.61.1
+  Downloaded windows-sys v0.60.2
   Downloaded windows v0.60.0
    Compiling proc-macro2 v1.0.101
    Compiling unicode-ident v1.0.19
@@ -137,58 +139,79 @@ Run if [[ "" == "" ]]; then
    Compiling windows_x86_64_msvc v0.53.0
    Compiling windows-link v0.1.3
    Compiling windows-targets v0.53.4
-   Compiling windows-strings v0.3.1
    Compiling windows-result v0.3.4
    Compiling syn v2.0.106
+   Compiling windows-strings v0.3.1
    Compiling windows-sys v0.60.2
    Compiling utf8parse v0.2.2
-   Compiling anstyle v1.0.11
    Compiling once_cell_polyfill v1.70.1
+   Compiling anstyle v1.0.11
    Compiling serde_core v1.0.228
    Compiling anstyle-wincon v3.0.10
    Compiling anstyle-parse v0.2.7
    Compiling anstyle-query v1.1.4
    Compiling colorchoice v1.0.4
+   Compiling getrandom v0.3.3
    Compiling is_terminal_polyfill v1.70.1
    Compiling thiserror v1.0.69
-   Compiling getrandom v0.3.3
    Compiling anstream v0.6.20
    Compiling windows-implement v0.59.0
    Compiling windows-interface v0.59.2
-   Compiling thiserror-impl v1.0.69
    Compiling windows-core v0.60.1
-   Compiling windows-numerics v0.1.1
    Compiling windows-collections v0.1.1
+   Compiling windows-numerics v0.1.1
    Compiling windows-future v0.1.1
+   Compiling thiserror-impl v1.0.69
+   Compiling cfg-if v1.0.3
+   Compiling heck v0.5.0
+   Compiling strsim v0.11.1
    Compiling windows-link v0.2.0
-   Compiling serde_json v1.0.145
    Compiling clap_lex v0.7.5
    Compiling serde v1.0.228
-   Compiling heck v0.5.0
-   Compiling cfg-if v1.0.3
-   Compiling strsim v0.11.1
-   Compiling clap_derive v4.5.47
+   Compiling serde_json v1.0.145
    Compiling clap_builder v4.5.48
    Compiling windows-sys v0.61.1
+   Compiling clap_derive v4.5.47
    Compiling windows v0.60.0
    Compiling serde_derive v1.0.228
-   Compiling itoa v1.0.15
    Compiling ryu v1.0.20
+   Compiling itoa v1.0.15
+   Compiling fastrand v2.3.0
    Compiling once_cell v1.21.3
    Compiling memchr v2.7.6
-   Compiling fastrand v2.3.0
    Compiling tempfile v3.23.0
    Compiling clap v4.5.48
    Compiling rappct v0.9.0 (D:\a\rappct\rappct)
-error: extern blocks must be unsafe
-  --> tests\windows_acl.rs:29:1
+error[E0133]: call to unsafe function `set_var` is unsafe and requires unsafe block
+  --> tests\windows_core.rs:59:5
    |
-29 | / extern "system" {
-30 | |     fn LocalFree(h: isize) -> isize;
-31 | | }
-   | |_^
-
-error: could not compile `rappct` (test "windows_acl") due to 1 previous error
+59 |     std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "ok");
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+error[E0133]: call to unsafe function `remove_var` is unsafe and requires unsafe block
+  --> tests\windows_core.rs:61:5
+   |
+61 |     std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+error[E0133]: call to unsafe function `set_var` is unsafe and requires unsafe block
+  --> tests\windows_core.rs:71:5
+   |
+71 |     std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "unsupported");
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+error[E0133]: call to unsafe function `remove_var` is unsafe and requires unsafe block
+  --> tests\windows_core.rs:73:5
+   |
+73 |     std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+For more information about this error, try `rustc --explain E0133`.
+error: could not compile `rappct` (test "windows_core") due to 4 previous errors
 warning: build failed, waiting for other jobs to finish...
 Error: Process completed with exit code 101.
 0s
@@ -197,7 +220,7 @@ Error: Process completed with exit code 101.
 Post job cleanup.
 "C:\Program Files\Git\bin\git.exe" version
 git version 2.51.0.windows.1
-Temporarily overriding HOME='D:\a\_temp\9aaa7f05-3ddd-44a2-9067-11598d06c506' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\a4950dd7-4d29-477e-8b2e-1c8b0fe84599' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 "C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
@@ -208,12 +231,12 @@ http.https://github.com/.extraheader
 "C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
 0s
 Cleaning up orphan processes
-Terminate orphan process: pid (7512) (vctip)
+Terminate orphan process: pid (2944) (vctip)
 
 
 
 test-windows (introspection)
-cancelled 1 minute ago in 1m 20s
+cancelled now in 1m 35s
 Search logs
 1s
 Current runner version: '2.328.0'
@@ -228,11 +251,11 @@ Getting action download info
 Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
 Download action repository 'dtolnay/rust-toolchain@stable' (SHA:5d458579430fc14a04a08a1e7d3694f545e91ce6)
 Complete job name: test-windows (introspection)
-6s
+8s
 Run actions/checkout@v4
 Syncing repository: cpjet64/rappct
 Getting Git version info
-Temporarily overriding HOME='D:\a\_temp\53f08bc1-e0ca-451d-90fe-fbc5deb965dd' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\866ff71a-e958-4a3c-bca8-f709a2daa1dd' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 Deleting the contents of 'D:\a\rappct\rappct'
@@ -245,8 +268,8 @@ Determining the checkout info
 "C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
 Checking out the ref
 "C:\Program Files\Git\bin\git.exe" log -1 --format=%H
-bca1c5e507fe6ec080e932cd8f2e3757572ac5fe
-13s
+198cf987a0d5e0d63c071cdabd41f84358d6fe56
+19s
 Run dtolnay/rust-toolchain@stable
 Run : parse toolchain version
 Run : construct rustup command line
@@ -265,11 +288,11 @@ info: installing component 'rustc'
   stable-x86_64-pc-windows-msvc installed - rustc 1.90.0 (1159e78c4 2025-09-14)
 
 Run rustup default stable
+info: using existing install for 'stable-x86_64-pc-windows-msvc'
+info: default toolchain set to 'stable-x86_64-pc-windows-msvc'
 
   stable-x86_64-pc-windows-msvc unchanged - rustc 1.90.0 (1159e78c4 2025-09-14)
 
-info: using existing install for 'stable-x86_64-pc-windows-msvc'
-info: default toolchain set to 'stable-x86_64-pc-windows-msvc'
 Run : create cachekey
 Run : disable incremental compilation
 Run : enable colors in Cargo output
@@ -283,7 +306,7 @@ commit-date: 2025-09-14
 host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
-9s
+18s
 Run rustc -Vv && cargo -V
 rustc 1.90.0 (1159e78c4 2025-09-14)
 binary: rustc
@@ -293,61 +316,61 @@ host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
 cargo 1.90.0 (840b83a10 2025-07-30)
-48s
+39s
 Run if [[ "introspection" == "" ]]; then
     Updating crates.io index
  Downloading crates ...
-  Downloaded anstyle v1.0.11
-  Downloaded ryu v1.0.20
+  Downloaded heck v0.5.0
+  Downloaded windows-future v0.1.1
   Downloaded windows-targets v0.53.4
   Downloaded windows-strings v0.3.1
+  Downloaded windows-core v0.60.1
   Downloaded tempfile v3.23.0
-  Downloaded proc-macro2 v1.0.101
   Downloaded serde_core v1.0.228
-  Downloaded quote v1.0.41
-  Downloaded once_cell v1.21.3
-  Downloaded heck v0.5.0
-  Downloaded fastrand v2.3.0
   Downloaded syn v2.0.106
-  Downloaded clap_derive v4.5.47
-  Downloaded anstream v0.6.20
-  Downloaded windows-result v0.3.4
-  Downloaded windows-link v0.1.3
-  Downloaded windows_x86_64_msvc v0.53.0
-  Downloaded windows-implement v0.59.0
-  Downloaded memchr v2.7.6
-  Downloaded windows-future v0.1.1
+  Downloaded serde_derive v1.0.228
   Downloaded serde v1.0.228
-  Downloaded windows-collections v0.1.1
-  Downloaded thiserror-impl v1.0.69
-  Downloaded thiserror v1.0.69
+  Downloaded clap_builder v4.5.48
+  Downloaded memchr v2.7.6
+  Downloaded quote v1.0.41
   Downloaded serde_json v1.0.145
-  Downloaded strsim v0.11.1
+  Downloaded getrandom v0.3.3
+  Downloaded once_cell v1.21.3
+  Downloaded windows-result v0.3.4
+  Downloaded windows-numerics v0.1.1
+  Downloaded windows-implement v0.59.0
+  Downloaded windows-collections v0.1.1
+  Downloaded utf8parse v0.2.2
+  Downloaded thiserror v1.0.69
+  Downloaded ryu v1.0.20
+  Downloaded once_cell_polyfill v1.70.1
   Downloaded is_terminal_polyfill v1.70.1
+  Downloaded fastrand v2.3.0
   Downloaded clap_lex v0.7.5
+  Downloaded anstream v0.6.20
+  Downloaded windows-link v0.2.0
+  Downloaded windows-link v0.1.3
+  Downloaded windows-interface v0.59.2
+  Downloaded unicode-ident v1.0.19
+  Downloaded strsim v0.11.1
+  Downloaded proc-macro2 v1.0.101
+  Downloaded colorchoice v1.0.4
+  Downloaded clap_derive v4.5.47
   Downloaded clap v4.5.48
+  Downloaded anstyle-query v1.1.4
+  Downloaded anstyle v1.0.11
+  Downloaded thiserror-impl v1.0.69
+  Downloaded itoa v1.0.15
   Downloaded cfg-if v1.0.3
   Downloaded anstyle-wincon v3.0.10
-  Downloaded anstyle-query v1.1.4
   Downloaded anstyle-parse v0.2.7
-  Downloaded windows-numerics v0.1.1
-  Downloaded windows-link v0.2.0
-  Downloaded windows-interface v0.59.2
-  Downloaded windows-core v0.60.1
-  Downloaded utf8parse v0.2.2
-  Downloaded unicode-ident v1.0.19
-  Downloaded serde_derive v1.0.228
-  Downloaded getrandom v0.3.3
-  Downloaded clap_builder v4.5.48
-  Downloaded once_cell_polyfill v1.70.1
-  Downloaded itoa v1.0.15
-  Downloaded colorchoice v1.0.4
-  Downloaded windows-sys v0.60.2
+  Downloaded windows_x86_64_msvc v0.53.0
   Downloaded windows-sys v0.61.1
+  Downloaded windows-sys v0.60.2
   Downloaded windows v0.60.0
    Compiling proc-macro2 v1.0.101
-   Compiling quote v1.0.41
    Compiling unicode-ident v1.0.19
+   Compiling quote v1.0.41
    Compiling windows_x86_64_msvc v0.53.0
    Compiling windows-link v0.1.3
    Compiling windows-targets v0.53.4
@@ -356,125 +379,44 @@ Run if [[ "introspection" == "" ]]; then
    Compiling syn v2.0.106
    Compiling windows-sys v0.60.2
    Compiling anstyle v1.0.11
-   Compiling serde_core v1.0.228
    Compiling once_cell_polyfill v1.70.1
+   Compiling serde_core v1.0.228
    Compiling utf8parse v0.2.2
    Compiling anstyle-parse v0.2.7
    Compiling anstyle-wincon v3.0.10
    Compiling anstyle-query v1.1.4
-   Compiling thiserror v1.0.69
    Compiling is_terminal_polyfill v1.70.1
-   Compiling strsim v0.11.1
    Compiling colorchoice v1.0.4
+   Compiling thiserror v1.0.69
    Compiling getrandom v0.3.3
+   Compiling strsim v0.11.1
    Compiling anstream v0.6.20
-   Compiling windows-interface v0.59.2
    Compiling windows-implement v0.59.0
+   Compiling windows-interface v0.59.2
    Compiling windows-core v0.60.1
+   Compiling windows-collections v0.1.1
    Compiling windows-numerics v0.1.1
    Compiling windows-future v0.1.1
-   Compiling windows-collections v0.1.1
    Compiling thiserror-impl v1.0.69
-   Compiling serde v1.0.228
-   Compiling heck v0.5.0
-   Compiling clap_lex v0.7.5
-   Compiling cfg-if v1.0.3
    Compiling windows-link v0.2.0
+   Compiling heck v0.5.0
    Compiling serde_json v1.0.145
-   Compiling windows-sys v0.61.1
+   Compiling cfg-if v1.0.3
+   Compiling serde v1.0.228
+   Compiling clap_lex v0.7.5
    Compiling clap_builder v4.5.48
    Compiling clap_derive v4.5.47
+   Compiling windows-sys v0.61.1
    Compiling windows v0.60.0
    Compiling serde_derive v1.0.228
-   Compiling memchr v2.7.6
-   Compiling once_cell v1.21.3
-   Compiling ryu v1.0.20
-   Compiling fastrand v2.3.0
-   Compiling itoa v1.0.15
-   Compiling tempfile v3.23.0
-   Compiling clap v4.5.48
-   Compiling rappct v0.9.0 (D:\a\rappct\rappct)
-error: extern blocks must be unsafe
-  --> tests\windows_acl.rs:29:1
-   |
-29 | / extern "system" {
-30 | |     fn LocalFree(h: isize) -> isize;
-31 | | }
-   | |_^
-
-error: extern blocks must be unsafe
-  --> tests\windows_launch.rs:14:1
-   |
-14 | / extern "system" {
-15 | |     fn OpenProcessToken(ProcessHandle: HANDLE, DesiredAccess: u32, TokenHandle: *mut HANDLE)
-16 | |         -> i32;
-17 | | }
-   | |_^
-
-error: extern blocks must be unsafe
-  --> tests\windows_launch.rs:21:1
-   |
-21 | / extern "system" {
-22 | |     fn LocalFree(h: isize) -> isize;
-23 | | }
-   | |_^
-
-error[E0599]: no method named `unwrap` found for struct `rappct::SecurityCapabilitiesBuilder` in the current scope
-   --> tests\windows_launch.rs:195:10
-    |
-193 |       let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
-    |  ________________-
-194 | |         .with_known(&[KnownCapability::InternetClient])
-195 | |         .unwrap()
-    | |         -^^^^^^ method not found in `rappct::SecurityCapabilitiesBuilder`
-    | |_________|
-    |
-
-error: could not compile `rappct` (test "windows_acl") due to 1 previous error
-warning: build failed, waiting for other jobs to finish...
-error[E0599]: no method named `unwrap` found for struct `rappct::SecurityCapabilitiesBuilder` in the current scope
-   --> tests\windows_launch.rs:435:10
-    |
-433 |       let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
-    |  ________________-
-434 | |         .with_known(&[KnownCapability::InternetClient])
-435 | |         .unwrap()
-    | |         -^^^^^^ method not found in `rappct::SecurityCapabilitiesBuilder`
-    | |_________|
-    |
-
-error[E0599]: no method named `unwrap` found for struct `rappct::SecurityCapabilitiesBuilder` in the current scope
-   --> tests\windows_launch.rs:470:10
-    |
-468 |       let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
-    |  ________________-
-469 | |         .with_known(&[KnownCapability::InternetClient])
-470 | |         .unwrap()
-    | |         -^^^^^^ method not found in `rappct::SecurityCapabilitiesBuilder`
-    | |_________|
-    |
-
-error[E0599]: no method named `unwrap` found for struct `rappct::SecurityCapabilitiesBuilder` in the current scope
-   --> tests\windows_launch.rs:503:10
-    |
-501 |       let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
-    |  ________________-
-502 | |         .with_known(&[KnownCapability::InternetClient])
-503 | |         .unwrap()
-    | |         -^^^^^^ method not found in `rappct::SecurityCapabilitiesBuilder`
-    | |_________|
-    |
-
-For more information about this error, try `rustc --explain E0599`.
-error: could not compile `rappct` (test "windows_launch") due to 6 previous errors
-Error: Process completed with exit code 101.
+Error: The operation was canceled.
 0s
 0s
-2s
+6s
 Post job cleanup.
 "C:\Program Files\Git\bin\git.exe" version
 git version 2.51.0.windows.1
-Temporarily overriding HOME='D:\a\_temp\7909dcc1-13a6-4ee5-9688-ef5a282a2016' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\fefee246-bfad-4c4f-8c18-1a7459f6e0d7' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 "C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
@@ -485,14 +427,13 @@ http.https://github.com/.extraheader
 "C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
 0s
 Cleaning up orphan processes
-Terminate orphan process: pid (4072) (vctip)
 
 
 
 test-windows (net)
-cancelled 1 minute ago in 1m 37s
+cancelled now in 1m 32s
 Search logs
-2s
+1s
 Current runner version: '2.328.0'
 Runner Image Provisioner
 Operating System
@@ -509,7 +450,7 @@ Complete job name: test-windows (net)
 Run actions/checkout@v4
 Syncing repository: cpjet64/rappct
 Getting Git version info
-Temporarily overriding HOME='D:\a\_temp\9da5c7ca-7ceb-4385-926d-bf58d29f9237' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\671e7c3e-8415-4197-8eee-c52846f5bcd6' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 Deleting the contents of 'D:\a\rappct\rappct'
@@ -522,79 +463,8 @@ Determining the checkout info
 "C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
 Checking out the ref
 "C:\Program Files\Git\bin\git.exe" log -1 --format=%H
-bca1c5e507fe6ec080e932cd8f2e3757572ac5fe
-1m 18s
-Run dtolnay/rust-toolchain@stable
-Run : parse toolchain version
-Run : construct rustup command line
-Run : set $CARGO_HOME
-Run : install rustup if needed on windows
-Run rustup toolchain install stable --profile minimal --no-self-update
-info: syncing channel updates for 'stable-x86_64-pc-windows-msvc'
-info: latest update on 2025-09-18, rust version 1.90.0 (1159e78c4 2025-09-14)
-info: downloading component 'cargo'
-info: retrying download for 'https://static.rust-lang.org/dist/2025-09-18/cargo-1.90.0-x86_64-pc-windows-msvc.tar.xz'
-info: downloading component 'rust-std'
-info: retrying download for 'https://static.rust-lang.org/dist/2025-09-18/rust-std-1.90.0-x86_64-pc-windows-msvc.tar.xz'
-info: downloading component 'rustc'
-Error: The operation was canceled.
-0s
-0s
-0s
-0s
-7s
-Post job cleanup.
-"C:\Program Files\Git\bin\git.exe" version
-git version 2.51.0.windows.1
-Temporarily overriding HOME='D:\a\_temp\8d01e334-534d-4983-b38f-f7fb331046e6' before making global git config changes
-Adding repository directory to the temporary git global config as a safe directory
-"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
-"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
-"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
-"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-http.https://github.com/.extraheader
-"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
-"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
-0s
-Cleaning up orphan processes
-
-
-
-test-windows (introspection,net)
-cancelled 1 minute ago in 1m 28s
-Search logs
-1s
-Current runner version: '2.328.0'
-Runner Image Provisioner
-Operating System
-Runner Image
-GITHUB_TOKEN Permissions
-Secret source: Actions
-Prepare workflow directory
-Prepare all required actions
-Getting action download info
-Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
-Download action repository 'dtolnay/rust-toolchain@stable' (SHA:5d458579430fc14a04a08a1e7d3694f545e91ce6)
-Complete job name: test-windows (introspection,net)
-11s
-Run actions/checkout@v4
-Syncing repository: cpjet64/rappct
-Getting Git version info
-Temporarily overriding HOME='D:\a\_temp\934497bd-9745-4756-b161-e60dffcd5c77' before making global git config changes
-Adding repository directory to the temporary git global config as a safe directory
-"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
-Deleting the contents of 'D:\a\rappct\rappct'
-Initializing the repository
-Disabling automatic garbage collection
-Setting up auth
-Fetching the repository
-Determining the checkout info
-"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
-"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
-Checking out the ref
-"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
-bca1c5e507fe6ec080e932cd8f2e3757572ac5fe
-16s
+198cf987a0d5e0d63c071cdabd41f84358d6fe56
+17s
 Run dtolnay/rust-toolchain@stable
 Run : parse toolchain version
 Run : construct rustup command line
@@ -631,7 +501,7 @@ commit-date: 2025-09-14
 host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
-11s
+15s
 Run rustc -Vv && cargo -V
 rustc 1.90.0 (1159e78c4 2025-09-14)
 binary: rustc
@@ -641,55 +511,213 @@ host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
 cargo 1.90.0 (840b83a10 2025-07-30)
-42s
-Run if [[ "introspection,net" == "" ]]; then
+44s
+Run if [[ "net" == "" ]]; then
     Updating crates.io index
  Downloading crates ...
-  Downloaded cfg-if v1.0.3
-  Downloaded windows-link v0.1.3
-  Downloaded windows-targets v0.53.4
-  Downloaded windows-interface v0.59.2
-  Downloaded windows-core v0.60.1
-  Downloaded unicode-ident v1.0.19
-  Downloaded clap v4.5.48
-  Downloaded serde_core v1.0.228
-  Downloaded clap_builder v4.5.48
-  Downloaded ryu v1.0.20
-  Downloaded tempfile v3.23.0
-  Downloaded syn v2.0.106
-  Downloaded serde_derive v1.0.228
-  Downloaded quote v1.0.41
-  Downloaded serde v1.0.228
-  Downloaded memchr v2.7.6
-  Downloaded serde_json v1.0.145
-  Downloaded proc-macro2 v1.0.101
-  Downloaded once_cell v1.21.3
-  Downloaded heck v0.5.0
   Downloaded getrandom v0.3.3
-  Downloaded windows-implement v0.59.0
+  Downloaded windows-targets v0.53.4
+  Downloaded windows-result v0.3.4
+  Downloaded windows-strings v0.3.1
+  Downloaded windows-core v0.60.1
+  Downloaded memchr v2.7.6
+  Downloaded serde v1.0.228
+  Downloaded thiserror-impl v1.0.69
+  Downloaded serde_derive v1.0.228
+  Downloaded serde_json v1.0.145
+  Downloaded clap_builder v4.5.48
+  Downloaded quote v1.0.41
+  Downloaded proc-macro2 v1.0.101
+  Downloaded fastrand v2.3.0
+  Downloaded windows-numerics v0.1.1
   Downloaded windows-future v0.1.1
-  Downloaded thiserror v1.0.69
-  Downloaded strsim v0.11.1
+  Downloaded windows-collections v0.1.1
+  Downloaded syn v2.0.106
+  Downloaded unicode-ident v1.0.19
+  Downloaded tempfile v3.23.0
+  Downloaded serde_core v1.0.228
+  Downloaded ryu v1.0.20
+  Downloaded once_cell v1.21.3
+  Downloaded clap v4.5.48
+  Downloaded windows-implement v0.59.0
   Downloaded once_cell_polyfill v1.70.1
-  Downloaded itoa v1.0.15
   Downloaded is_terminal_polyfill v1.70.1
+  Downloaded heck v0.5.0
   Downloaded colorchoice v1.0.4
   Downloaded clap_lex v0.7.5
   Downloaded clap_derive v4.5.47
+  Downloaded cfg-if v1.0.3
   Downloaded anstyle-wincon v3.0.10
   Downloaded anstyle-query v1.1.4
+  Downloaded anstyle v1.0.11
+  Downloaded anstream v0.6.20
+  Downloaded windows-link v0.2.0
+  Downloaded windows-link v0.1.3
+  Downloaded windows-interface v0.59.2
+  Downloaded windows_x86_64_msvc v0.53.0
+  Downloaded utf8parse v0.2.2
+  Downloaded thiserror v1.0.69
+  Downloaded strsim v0.11.1
+  Downloaded itoa v1.0.15
   Downloaded anstyle-parse v0.2.7
+  Downloaded windows-sys v0.61.1
+  Downloaded windows-sys v0.60.2
+  Downloaded windows v0.60.0
+   Compiling proc-macro2 v1.0.101
+   Compiling unicode-ident v1.0.19
+   Compiling quote v1.0.41
+   Compiling windows_x86_64_msvc v0.53.0
+Error: The operation was canceled.
+0s
+0s
+5s
+Post job cleanup.
+"C:\Program Files\Git\bin\git.exe" version
+git version 2.51.0.windows.1
+Temporarily overriding HOME='D:\a\_temp\a8d94816-9b71-404a-a34a-1a23eedbcd73' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
+"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+http.https://github.com/.extraheader
+"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+0s
+Cleaning up orphan processes
+
+
+
+test-windows (introspection,net)
+cancelled now in 1m 26s
+Search logs
+1s
+Current runner version: '2.328.0'
+Runner Image Provisioner
+Operating System
+Runner Image
+GITHUB_TOKEN Permissions
+Secret source: Actions
+Prepare workflow directory
+Prepare all required actions
+Getting action download info
+Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+Download action repository 'dtolnay/rust-toolchain@stable' (SHA:5d458579430fc14a04a08a1e7d3694f545e91ce6)
+Complete job name: test-windows (introspection,net)
+8s
+Run actions/checkout@v4
+Syncing repository: cpjet64/rappct
+Getting Git version info
+Temporarily overriding HOME='D:\a\_temp\21cefec8-6b92-4c0a-a82e-9c0af19accb5' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
+Deleting the contents of 'D:\a\rappct\rappct'
+Initializing the repository
+Disabling automatic garbage collection
+Setting up auth
+Fetching the repository
+Determining the checkout info
+"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+Checking out the ref
+"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+198cf987a0d5e0d63c071cdabd41f84358d6fe56
+18s
+Run dtolnay/rust-toolchain@stable
+Run : parse toolchain version
+Run : construct rustup command line
+Run : set $CARGO_HOME
+Run : install rustup if needed on windows
+Run rustup toolchain install stable --profile minimal --no-self-update
+info: syncing channel updates for 'stable-x86_64-pc-windows-msvc'
+info: latest update on 2025-09-18, rust version 1.90.0 (1159e78c4 2025-09-14)
+info: downloading component 'cargo'
+info: downloading component 'rust-std'
+info: downloading component 'rustc'
+info: installing component 'cargo'
+info: installing component 'rust-std'
+info: installing component 'rustc'
+
+  stable-x86_64-pc-windows-msvc installed - rustc 1.90.0 (1159e78c4 2025-09-14)
+
+Run rustup default stable
+info: using existing install for 'stable-x86_64-pc-windows-msvc'
+info: default toolchain set to 'stable-x86_64-pc-windows-msvc'
+
+  stable-x86_64-pc-windows-msvc unchanged - rustc 1.90.0 (1159e78c4 2025-09-14)
+
+Run : create cachekey
+Run : disable incremental compilation
+Run : enable colors in Cargo output
+Run : enable Cargo sparse registry
+Run : work around spurious network errors in curl 8.0
+Run rustc +stable --version --verbose
+rustc 1.90.0 (1159e78c4 2025-09-14)
+binary: rustc
+commit-hash: 1159e78c4747b02ef996e55082b704c09b970588
+commit-date: 2025-09-14
+host: x86_64-pc-windows-msvc
+release: 1.90.0
+LLVM version: 20.1.8
+18s
+Run rustc -Vv && cargo -V
+rustc 1.90.0 (1159e78c4 2025-09-14)
+binary: rustc
+commit-hash: 1159e78c4747b02ef996e55082b704c09b970588
+commit-date: 2025-09-14
+host: x86_64-pc-windows-msvc
+release: 1.90.0
+LLVM version: 20.1.8
+cargo 1.90.0 (840b83a10 2025-07-30)
+27s
+Run if [[ "introspection,net" == "" ]]; then
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded anstyle-wincon v3.0.10
+  Downloaded windows-targets v0.53.4
+  Downloaded windows-link v0.2.0
   Downloaded windows-strings v0.3.1
+  Downloaded unicode-ident v1.0.19
+  Downloaded serde_core v1.0.228
+  Downloaded serde v1.0.228
+  Downloaded proc-macro2 v1.0.101
+  Downloaded getrandom v0.3.3
+  Downloaded clap_builder v4.5.48
+  Downloaded tempfile v3.23.0
+  Downloaded ryu v1.0.20
+  Downloaded once_cell v1.21.3
+  Downloaded syn v2.0.106
   Downloaded windows-result v0.3.4
   Downloaded windows-numerics v0.1.1
-  Downloaded windows-link v0.2.0
+  Downloaded windows-core v0.60.1
   Downloaded utf8parse v0.2.2
-  Downloaded windows_x86_64_msvc v0.53.0
   Downloaded thiserror-impl v1.0.69
-  Downloaded anstream v0.6.20
-  Downloaded windows-collections v0.1.1
+  Downloaded memchr v2.7.6
+  Downloaded strsim v0.11.1
+  Downloaded once_cell_polyfill v1.70.1
+  Downloaded itoa v1.0.15
+  Downloaded serde_json v1.0.145
+  Downloaded heck v0.5.0
+  Downloaded colorchoice v1.0.4
+  Downloaded clap_lex v0.7.5
+  Downloaded clap_derive v4.5.47
+  Downloaded anstyle-parse v0.2.7
+  Downloaded windows-link v0.1.3
+  Downloaded windows-interface v0.59.2
+  Downloaded windows-implement v0.59.0
+  Downloaded windows-future v0.1.1
+  Downloaded thiserror v1.0.69
   Downloaded fastrand v2.3.0
+  Downloaded clap v4.5.48
+  Downloaded windows_x86_64_msvc v0.53.0
+  Downloaded anstyle-query v1.1.4
+  Downloaded windows-collections v0.1.1
+  Downloaded serde_derive v1.0.228
+  Downloaded quote v1.0.41
+  Downloaded is_terminal_polyfill v1.70.1
+  Downloaded cfg-if v1.0.3
   Downloaded anstyle v1.0.11
+  Downloaded anstream v0.6.20
   Downloaded windows-sys v0.60.2
   Downloaded windows-sys v0.61.1
   Downloaded windows v0.60.0
@@ -698,55 +726,28 @@ Run if [[ "introspection,net" == "" ]]; then
    Compiling unicode-ident v1.0.19
    Compiling windows_x86_64_msvc v0.53.0
    Compiling windows-link v0.1.3
+   Compiling syn v2.0.106
    Compiling windows-targets v0.53.4
    Compiling windows-result v0.3.4
    Compiling windows-strings v0.3.1
-   Compiling syn v2.0.106
    Compiling windows-sys v0.60.2
-   Compiling anstyle v1.0.11
-   Compiling serde_core v1.0.228
    Compiling utf8parse v0.2.2
+   Compiling serde_core v1.0.228
    Compiling once_cell_polyfill v1.70.1
+   Compiling anstyle v1.0.11
    Compiling anstyle-wincon v3.0.10
    Compiling anstyle-parse v0.2.7
    Compiling anstyle-query v1.1.4
-   Compiling thiserror v1.0.69
-   Compiling strsim v0.11.1
-   Compiling getrandom v0.3.3
    Compiling is_terminal_polyfill v1.70.1
-   Compiling colorchoice v1.0.4
-   Compiling anstream v0.6.20
-   Compiling windows-interface v0.59.2
-   Compiling windows-implement v0.59.0
-   Compiling windows-core v0.60.1
-   Compiling windows-collections v0.1.1
-   Compiling windows-numerics v0.1.1
-   Compiling windows-future v0.1.1
-   Compiling thiserror-impl v1.0.69
-   Compiling windows-link v0.2.0
-   Compiling cfg-if v1.0.3
-   Compiling serde_json v1.0.145
-   Compiling serde v1.0.228
-   Compiling clap_lex v0.7.5
-   Compiling heck v0.5.0
-   Compiling clap_derive v4.5.47
-   Compiling clap_builder v4.5.48
-   Compiling windows-sys v0.61.1
-   Compiling windows v0.60.0
-   Compiling serde_derive v1.0.228
-   Compiling itoa v1.0.15
-   Compiling ryu v1.0.20
-   Compiling once_cell v1.21.3
-   Compiling fastrand v2.3.0
-   Compiling memchr v2.7.6
+   Compiling strsim v0.11.1
 Error: The operation was canceled.
 0s
 0s
-5s
+12s
 Post job cleanup.
 "C:\Program Files\Git\bin\git.exe" version
 git version 2.51.0.windows.1
-Temporarily overriding HOME='D:\a\_temp\02323537-9630-424d-a994-efd505164e19' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\aea5e401-4759-48f4-9209-2be54e99d7f1' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 "C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand

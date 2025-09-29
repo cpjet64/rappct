@@ -28,6 +28,14 @@ jobs:
           else
             cargo test --all-targets --features "${{ matrix.features }}"
           fi
+      - name: Dependency Duplicates (cargo tree -d)
+        shell: bash
+        run: |
+          if [[ "${{ matrix.features }}" == "" ]]; then
+            cargo tree -d || true
+          else
+            cargo tree -d --features "${{ matrix.features }}" || true
+          fi
       - name: Install clippy
         run: rustup component add clippy
       - name: Clippy (${{ matrix.features }})

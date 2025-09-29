@@ -56,9 +56,15 @@ fn capability_typo_returns_suggestion() {
 #[cfg(windows)]
 #[test]
 fn supports_lpac_override_ok() {
-    std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "ok");
+    #[allow(unused_unsafe)]
+    unsafe {
+        std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "ok");
+    }
     let result = rappct::supports_lpac();
-    std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
+    #[allow(unused_unsafe)]
+    unsafe {
+        std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
+    }
     assert!(
         result.is_ok(),
         "supports_lpac should succeed when override requests ok"
@@ -68,8 +74,14 @@ fn supports_lpac_override_ok() {
 #[cfg(windows)]
 #[test]
 fn supports_lpac_override_unsupported() {
-    std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "unsupported");
+    #[allow(unused_unsafe)]
+    unsafe {
+        std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "unsupported");
+    }
     let result = rappct::supports_lpac();
-    std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
+    #[allow(unused_unsafe)]
+    unsafe {
+        std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
+    }
     assert!(matches!(result, Err(rappct::AcError::UnsupportedLpac)));
 }
