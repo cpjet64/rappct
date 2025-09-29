@@ -1,5 +1,7 @@
 # rappct
 
+[![CI](https://github.com/cpjet64/rappct/actions/workflows/ci.yml/badge.svg)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml)
+
 > Rust toolkit for working with Windows AppContainer (AC) and Low Privilege AppContainer (LPAC) security boundaries.
 
 rappct packages the underlying Windows APIs into a cohesive crate so that you can create, manage, and launch
