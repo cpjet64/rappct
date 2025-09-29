@@ -69,7 +69,7 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
         use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
         // Some toolchains don't surface DeriveCapabilitySidsFromName via windows-rs; bind manually.
         #[link(name = "Userenv")]
-        extern "system" {
+        unsafe extern "system" {
             fn DeriveCapabilitySidsFromName(
                 CapName: PCWSTR,
                 CapGroupSids: *mut *mut *mut core::ffi::c_void,

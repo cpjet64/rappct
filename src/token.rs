@@ -24,7 +24,7 @@ use windows::Win32::System::Threading::GetCurrentProcess;
 
 #[cfg(windows)]
 #[link(name = "Advapi32")]
-extern "system" {
+unsafe extern "system" {
     fn OpenProcessToken(
         ProcessHandle: windows::Win32::Foundation::HANDLE,
         DesiredAccess: u32,

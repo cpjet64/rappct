@@ -1,5 +1,5 @@
-test-windows
-failed 5 minutes ago in 1m 24s
+test-windows (introspection)
+failed now in 1m 21s
 Search logs
 1s
 Current runner version: '2.328.0'
@@ -13,12 +13,12 @@ Prepare all required actions
 Getting action download info
 Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
 Download action repository 'dtolnay/rust-toolchain@stable' (SHA:5d458579430fc14a04a08a1e7d3694f545e91ce6)
-Complete job name: test-windows
-7s
+Complete job name: test-windows (introspection)
+5s
 Run actions/checkout@v4
 Syncing repository: cpjet64/rappct
 Getting Git version info
-Temporarily overriding HOME='D:\a\_temp\d10e9349-0314-4af1-a610-25398fb0bf27' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\fc92be87-1c60-4847-a1b3-874d67bc04af' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 Deleting the contents of 'D:\a\rappct\rappct'
@@ -31,7 +31,7 @@ Determining the checkout info
 "C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
 Checking out the ref
 "C:\Program Files\Git\bin\git.exe" log -1 --format=%H
-25281aca87745c932bf9c8bc8d8231d1f464743b
+a80ab91436143d516a9983ae47b10cd7193365d1
 15s
 Run dtolnay/rust-toolchain@stable
 Run : parse toolchain version
@@ -69,7 +69,7 @@ commit-date: 2025-09-14
 host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
-11s
+10s
 Run rustc -Vv && cargo -V
 rustc 1.90.0 (1159e78c4 2025-09-14)
 binary: rustc
@@ -79,55 +79,55 @@ host: x86_64-pc-windows-msvc
 release: 1.90.0
 LLVM version: 20.1.8
 cargo 1.90.0 (840b83a10 2025-07-30)
-45s
-Run if [[ "" == "" ]]; then
+47s
+Run if [[ "introspection" == "" ]]; then
     Updating crates.io index
  Downloading crates ...
-  Downloaded anstyle-wincon v3.0.10
-  Downloaded windows-targets v0.53.4
-  Downloaded windows-strings v0.3.1
-  Downloaded windows-collections v0.1.1
-  Downloaded unicode-ident v1.0.19
-  Downloaded tempfile v3.23.0
-  Downloaded ryu v1.0.20
-  Downloaded quote v1.0.41
-  Downloaded syn v2.0.106
-  Downloaded serde_json v1.0.145
-  Downloaded serde v1.0.228
-  Downloaded proc-macro2 v1.0.101
-  Downloaded clap_builder v4.5.48
-  Downloaded memchr v2.7.6
-  Downloaded thiserror v1.0.69
-  Downloaded strsim v0.11.1
-  Downloaded serde_core v1.0.228
-  Downloaded once_cell_polyfill v1.70.1
-  Downloaded anstyle-query v1.1.4
-  Downloaded windows-numerics v0.1.1
-  Downloaded windows-interface v0.59.2
   Downloaded windows-implement v0.59.0
-  Downloaded utf8parse v0.2.2
-  Downloaded thiserror-impl v1.0.69
-  Downloaded serde_derive v1.0.228
-  Downloaded itoa v1.0.15
-  Downloaded heck v0.5.0
-  Downloaded colorchoice v1.0.4
-  Downloaded clap_derive v4.5.47
-  Downloaded clap v4.5.48
-  Downloaded cfg-if v1.0.3
-  Downloaded anstyle-parse v0.2.7
-  Downloaded anstream v0.6.20
-  Downloaded windows-result v0.3.4
   Downloaded windows-link v0.2.0
-  Downloaded windows-link v0.1.3
-  Downloaded windows_x86_64_msvc v0.53.0
-  Downloaded windows-future v0.1.1
+  Downloaded windows-numerics v0.1.1
+  Downloaded windows-targets v0.53.4
+  Downloaded utf8parse v0.2.2
+  Downloaded windows-result v0.3.4
+  Downloaded strsim v0.11.1
+  Downloaded windows-collections v0.1.1
+  Downloaded windows-interface v0.59.2
+  Downloaded serde_core v1.0.228
+  Downloaded thiserror-impl v1.0.69
+  Downloaded syn v2.0.106
+  Downloaded clap_builder v4.5.48
+  Downloaded windows-strings v0.3.1
   Downloaded windows-core v0.60.1
-  Downloaded once_cell v1.21.3
+  Downloaded unicode-ident v1.0.19
+  Downloaded once_cell_polyfill v1.70.1
+  Downloaded memchr v2.7.6
+  Downloaded itoa v1.0.15
+  Downloaded windows-future v0.1.1
   Downloaded is_terminal_polyfill v1.70.1
   Downloaded getrandom v0.3.3
+  Downloaded thiserror v1.0.69
+  Downloaded serde_derive v1.0.228
+  Downloaded ryu v1.0.20
+  Downloaded heck v0.5.0
   Downloaded fastrand v2.3.0
+  Downloaded colorchoice v1.0.4
   Downloaded clap_lex v0.7.5
+  Downloaded clap v4.5.48
+  Downloaded anstyle-wincon v3.0.10
+  Downloaded anstyle-query v1.1.4
+  Downloaded anstyle-parse v0.2.7
   Downloaded anstyle v1.0.11
+  Downloaded anstream v0.6.20
+  Downloaded windows-link v0.1.3
+  Downloaded serde_json v1.0.145
+  Downloaded serde v1.0.228
+  Downloaded quote v1.0.41
+  Downloaded clap_derive v4.5.47
+  Downloaded cfg-if v1.0.3
+  Downloaded tempfile v3.23.0
+  Downloaded proc-macro2 v1.0.101
+  Downloaded once_cell v1.21.3
+  Downloaded windows_x86_64_msvc v0.53.0
   Downloaded windows-sys v0.61.1
   Downloaded windows-sys v0.60.2
   Downloaded windows v0.60.0
@@ -138,137 +138,1063 @@ Run if [[ "" == "" ]]; then
    Compiling windows-link v0.1.3
    Compiling windows-targets v0.53.4
    Compiling windows-strings v0.3.1
-   Compiling syn v2.0.106
    Compiling windows-result v0.3.4
    Compiling windows-sys v0.60.2
-   Compiling utf8parse v0.2.2
+   Compiling syn v2.0.106
+   Compiling once_cell_polyfill v1.70.1
    Compiling serde_core v1.0.228
    Compiling anstyle v1.0.11
-   Compiling once_cell_polyfill v1.70.1
-   Compiling anstyle-wincon v3.0.10
+   Compiling utf8parse v0.2.2
    Compiling anstyle-parse v0.2.7
+   Compiling anstyle-wincon v3.0.10
    Compiling anstyle-query v1.1.4
-   Compiling getrandom v0.3.3
-   Compiling colorchoice v1.0.4
    Compiling thiserror v1.0.69
    Compiling is_terminal_polyfill v1.70.1
+   Compiling strsim v0.11.1
+   Compiling colorchoice v1.0.4
+   Compiling getrandom v0.3.3
    Compiling anstream v0.6.20
-   Compiling windows-implement v0.59.0
    Compiling windows-interface v0.59.2
+   Compiling windows-implement v0.59.0
    Compiling windows-core v0.60.1
-   Compiling thiserror-impl v1.0.69
-   Compiling windows-collections v0.1.1
    Compiling windows-numerics v0.1.1
+   Compiling windows-collections v0.1.1
    Compiling windows-future v0.1.1
+   Compiling thiserror-impl v1.0.69
+   Compiling windows-link v0.2.0
    Compiling clap_lex v0.7.5
    Compiling heck v0.5.0
-   Compiling strsim v0.11.1
-   Compiling cfg-if v1.0.3
    Compiling serde_json v1.0.145
-   Compiling windows-link v0.2.0
+   Compiling cfg-if v1.0.3
    Compiling serde v1.0.228
-   Compiling windows-sys v0.61.1
    Compiling clap_derive v4.5.47
    Compiling clap_builder v4.5.48
+   Compiling windows-sys v0.61.1
    Compiling windows v0.60.0
    Compiling serde_derive v1.0.228
-   Compiling memchr v2.7.6
-   Compiling fastrand v2.3.0
-   Compiling itoa v1.0.15
-   Compiling once_cell v1.21.3
    Compiling ryu v1.0.20
+   Compiling once_cell v1.21.3
+   Compiling memchr v2.7.6
+   Compiling itoa v1.0.15
+   Compiling fastrand v2.3.0
    Compiling tempfile v3.23.0
    Compiling clap v4.5.48
    Compiling rappct v0.9.0 (D:\a\rappct\rappct)
-error[E0432]: unresolved import `windows::Win32::System::Memory::LocalFree`
-  --> src\util.rs:10:9
+error: extern blocks must be unsafe
+  --> src\capability.rs:72:9
    |
-10 |     use windows::Win32::System::Memory::LocalFree;
-   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---------
-   |         |                               |
-   |         |                               help: a similar name exists in the module: `LocalSize`
-   |         no `LocalFree` in `Win32::System::Memory`
+72 | /         extern "system" {
+73 | |             fn DeriveCapabilitySidsFromName(
+74 | |                 CapName: PCWSTR,
+75 | |                 CapGroupSids: *mut *mut *mut core::ffi::c_void,
+...  |
+79 | |             ) -> i32;
+80 | |         }
+   | |_________^
 
-error: unused import: `std::os::windows::ffi::OsStrExt`
-  --> src\acl.rs:57:9
+error: extern blocks must be unsafe
+  --> src\profile.rs:25:13
    |
-57 |     use std::os::windows::ffi::OsStrExt;
-   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+25 | /             extern "system" {
+26 | |                 fn CreateAppContainerProfile(
+27 | |                     pszAppContainerName: PCWSTR,
+28 | |                     pszDisplayName: PCWSTR,
+...  |
+37 | |                 ) -> HRESULT;
+38 | |             }
+   | |_____________^
+
+error: extern blocks must be unsafe
+   --> src\profile.rs:112:13
+    |
+112 | /             extern "system" {
+113 | |                 fn DeleteAppContainerProfile(
+114 | |                     pszAppContainerName: windows::core::PCWSTR,
+115 | |                 ) -> windows::core::HRESULT;
+116 | |             }
+    | |_____________^
+
+error: extern blocks must be unsafe
+   --> src\profile.rs:139:13
+    |
+139 | /             extern "system" {
+140 | |                 fn GetAppContainerFolderPath(
+141 | |                     pszAppContainerSid: windows::Win32::Security::PSID,
+142 | |                     ppszPath: *mut windows::core::PWSTR,
+143 | |                 ) -> windows::core::HRESULT;
+144 | |             }
+    | |_____________^
+
+error: extern blocks must be unsafe
+   --> src\profile.rs:146:13
+    |
+146 | /             extern "system" {
+147 | |                 fn DeriveAppContainerSidFromAppContainerName(
+148 | |                     name: windows::core::PCWSTR,
+149 | |                     sid: *mut windows::Win32::Security::PSID,
+150 | |                 ) -> windows::core::HRESULT;
+151 | |             }
+    | |_____________^
+
+error: extern blocks must be unsafe
+   --> src\profile.rs:207:13
+    |
+207 | /             extern "system" {
+208 | |                 fn GetAppContainerNamedObjectPath(
+209 | |                     token: windows::Win32::Foundation::HANDLE,
+210 | |                     appcontainersid: *mut core::ffi::c_void,
+...   |
+214 | |                 ) -> i32;
+215 | |             }
+    | |_____________^
+
+error: extern blocks must be unsafe
+   --> src\profile.rs:270:9
+    |
+270 | /         extern "system" {
+271 | |             fn DeriveAppContainerSidFromAppContainerName(
+272 | |                 name: windows::core::PCWSTR,
+273 | |                 sid: *mut *mut core::ffi::c_void,
+274 | |             ) -> windows::core::HRESULT;
+275 | |         }
+    | |_________^
+
+error: extern blocks must be unsafe
+  --> src\token.rs:27:1
    |
-   = note: `-D unused-imports` implied by `-D warnings`
-   = help: to override `-D warnings` add `#[allow(unused_imports)]`
+27 | / extern "system" {
+28 | |     fn OpenProcessToken(
+29 | |         ProcessHandle: windows::Win32::Foundation::HANDLE,
+30 | |         DesiredAccess: u32,
+31 | |         TokenHandle: *mut windows::Win32::Foundation::HANDLE,
+32 | |     ) -> i32;
+33 | | }
+   | |_^
 
-error: unused import: `std::os::windows::ffi::OsStrExt`
- --> src\capability.rs:8:5
-  |
-8 | use std::os::windows::ffi::OsStrExt;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error: unused import: `std::os::windows::ffi::OsStrExt`
-  --> src\launch\mod.rs:15:5
+error: extern blocks must be unsafe
+  --> src\util.rs:12:5
    |
-15 | use std::os::windows::ffi::OsStrExt;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12 | /     extern "system" {
+13 | |         fn LocalFree(h: isize) -> isize;
+14 | |     }
+   | |_____^
 
-error: unused import: `std::os::windows::ffi::OsStrExt`
-  --> src\profile.rs:10:5
+error: extern blocks must be unsafe
+  --> src\lib.rs:80:9
    |
-10 | use std::os::windows::ffi::OsStrExt;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error: unused import: `windows::Win32::Security::FreeSid`
-  --> src\profile.rs:25:17
-   |
-25 |             use windows::Win32::Security::FreeSid;
-   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0308]: mismatched types
-    --> src\util.rs:89:46
-     |
-  89 |                     let _ = LocalFree(HLOCAL(self.ptr as isize));
-     |                                       ------ ^^^^^^^^^^^^^^^^^ expected `*mut c_void`, found `isize`
-     |                                       |
-     |                                       arguments to this struct are incorrect
-     |
-     = note: expected raw pointer `*mut c_void`
-                       found type `isize`
-note: tuple struct defined here
-    --> C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-0.60.0\src\Windows\Win32\Foundation\mod.rs:5513:12
-     |
-5513 | pub struct HLOCAL(pub *mut core::ffi::c_void);
-     |            ^^^^^^
+80 | /         extern "system" {
+81 | |             fn RtlGetVersion(info: *mut OSVERSIONINFOW) -> i32;
+82 | |         }
+   | |_________^
 
 error: unused variable: `sd_guard`
-   --> src\acl.rs:113:17
+   --> src\acl.rs:112:17
     |
-113 |             let sd_guard = LocalFreeGuard::new(p_sd.0);
+112 |             let sd_guard = LocalFreeGuard::new(p_sd.0);
     |                 ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sd_guard`
     |
     = note: `-D unused-variables` implied by `-D warnings`
     = help: to override `-D warnings` add `#[allow(unused_variables)]`
 
 error: unused variable: `sd_guard`
-   --> src\acl.rs:162:17
+   --> src\acl.rs:161:17
     |
-162 |             let sd_guard = LocalFreeGuard::new(p_sd.0);
+161 |             let sd_guard = LocalFreeGuard::new(p_sd.0);
     |                 ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sd_guard`
 
 error: unused variable: `sd_guard`
-   --> src\acl.rs:244:17
+   --> src\acl.rs:243:17
     |
-244 |             let sd_guard = LocalFreeGuard::new(p_sd.0);
+243 |             let sd_guard = LocalFreeGuard::new(p_sd.0);
     |                 ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sd_guard`
 
-Some errors have detailed explanations: E0308, E0432.
-For more information about an error, try `rustc --explain E0308`.
-error: could not compile `rappct` (lib) due to 10 previous errors
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::ConvertStringSidToSidW` is unsafe and requires unsafe block
+  --> src\acl.rs:73:8
+   |
+73 |     if ConvertStringSidToSidW(PCWSTR(wide.as_ptr()), &mut psid).is_err() {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> src\acl.rs:56:1
+   |
+56 | unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) -> Result<()> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: `-D unsafe-op-in-unsafe-fn` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(unsafe_op_in_unsafe_fn)]`
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+  --> src\acl.rs:76:22
+   |
+76 |     let psid_guard = LocalFreeGuard::new(psid.0);
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `std::mem::zeroed` is unsafe and requires unsafe block
+  --> src\acl.rs:80:34
+   |
+80 |     let mut trustee: TRUSTEE_W = std::mem::zeroed();
+   |                                  ^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `std::mem::zeroed` is unsafe and requires unsafe block
+  --> src\acl.rs:85:37
+   |
+85 |     let mut ea: EXPLICIT_ACCESS_W = std::mem::zeroed();
+   |                                     ^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::GetNamedSecurityInfoW` is unsafe and requires unsafe block
+   --> src\acl.rs:96:22
+    |
+ 96 |               let st = GetNamedSecurityInfoW(
+    |  ______________________^
+ 97 | |                 PCWSTR(path_w.as_ptr()),
+ 98 | |                 SE_FILE_OBJECT,
+ 99 | |                 DACL_SECURITY_INFORMATION,
+...   |
+104 | |                 &mut p_sd,
+105 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+   --> src\acl.rs:112:28
+    |
+112 |             let sd_guard = LocalFreeGuard::new(p_sd.0);
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::SetEntriesInAclW` is unsafe and requires unsafe block
+   --> src\acl.rs:115:23
+    |
+115 |             let st2 = SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl);
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+   --> src\acl.rs:122:34
+    |
+122 |             let new_dacl_guard = LocalFreeGuard::new(new_dacl);
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::SetNamedSecurityInfoW` is unsafe and requires unsafe block
+   --> src\acl.rs:123:23
+    |
+123 |               let st3 = SetNamedSecurityInfoW(
+    |  _______________________^
+124 | |                 PCWSTR(path_w.as_ptr()),
+125 | |                 SE_FILE_OBJECT,
+126 | |                 DACL_SECURITY_INFORMATION,
+...   |
+130 | |                 None,
+131 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::GetNamedSecurityInfoW` is unsafe and requires unsafe block
+   --> src\acl.rs:145:22
+    |
+145 |               let st = GetNamedSecurityInfoW(
+    |  ______________________^
+146 | |                 PCWSTR(path_w.as_ptr()),
+147 | |                 SE_FILE_OBJECT,
+148 | |                 DACL_SECURITY_INFORMATION,
+...   |
+153 | |                 &mut p_sd,
+154 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+   --> src\acl.rs:161:28
+    |
+161 |             let sd_guard = LocalFreeGuard::new(p_sd.0);
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::SetEntriesInAclW` is unsafe and requires unsafe block
+   --> src\acl.rs:164:23
+    |
+164 |             let st2 = SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl);
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+   --> src\acl.rs:171:34
+    |
+171 |             let new_dacl_guard = LocalFreeGuard::new(new_dacl);
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::SetNamedSecurityInfoW` is unsafe and requires unsafe block
+   --> src\acl.rs:172:23
+    |
+172 |               let st3 = SetNamedSecurityInfoW(
+    |  _______________________^
+173 | |                 PCWSTR(path_w.as_ptr()),
+174 | |                 SE_FILE_OBJECT,
+175 | |                 DACL_SECURITY_INFORMATION,
+...   |
+179 | |                 None,
+180 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Registry::RegOpenKeyExW` is unsafe and requires unsafe block
+   --> src\acl.rs:213:22
+    |
+213 |               let st = RegOpenKeyExW(
+    |  ______________________^
+214 | |                 root,
+215 | |                 PCWSTR(subkey_w.as_ptr()),
+216 | |                 Some(0),
+217 | |                 KEY_READ | KEY_WRITE,
+218 | |                 &mut hkey,
+219 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::GetSecurityInfo` is unsafe and requires unsafe block
+   --> src\acl.rs:226:23
+    |
+226 |               let st2 = GetSecurityInfo(
+    |  _______________________^
+227 | |                 HANDLE(hkey.0),
+228 | |                 SE_REGISTRY_KEY,
+229 | |                 DACL_SECURITY_INFORMATION,
+...   |
+234 | |                 Some(&mut p_sd),
+235 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Registry::RegCloseKey` is unsafe and requires unsafe block
+   --> src\acl.rs:237:25
+    |
+237 |                 let _ = RegCloseKey(hkey);
+    |                         ^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+   --> src\acl.rs:243:28
+    |
+243 |             let sd_guard = LocalFreeGuard::new(p_sd.0);
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::SetEntriesInAclW` is unsafe and requires unsafe block
+   --> src\acl.rs:246:23
+    |
+246 |             let st3 = SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl);
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Registry::RegCloseKey` is unsafe and requires unsafe block
+   --> src\acl.rs:248:25
+    |
+248 |                 let _ = RegCloseKey(hkey);
+    |                         ^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+   --> src\acl.rs:254:34
+    |
+254 |             let new_dacl_guard = LocalFreeGuard::new(new_dacl);
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::SetSecurityInfo` is unsafe and requires unsafe block
+   --> src\acl.rs:255:23
+    |
+255 |               let st4 = SetSecurityInfo(
+    |  _______________________^
+256 | |                 HANDLE(hkey.0),
+257 | |                 SE_REGISTRY_KEY,
+258 | |                 DACL_SECURITY_INFORMATION,
+...   |
+262 | |                 None,
+263 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Registry::RegCloseKey` is unsafe and requires unsafe block
+   --> src\acl.rs:264:21
+    |
+264 |             let _ = RegCloseKey(hkey);
+    |                     ^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::ConvertStringSidToSidW` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:184:12
+    |
+184 |         if ConvertStringSidToSidW(PCWSTR(pkg_w.as_ptr()), &mut pkg_psid_raw).is_err() {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\launch\mod.rs:165:5
+    |
+165 |     unsafe fn new(sec: &SecurityCapabilities, handle_list: Option<Vec<HANDLE>>) -> Result<Self> {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:191:33
+    |
+191 |         let package_sid_guard = LocalFreeGuard::<std::ffi::c_void>::new(pkg_psid_raw.0);
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::ConvertStringSidToSidW` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:200:16
+    |
+200 |             if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw).is_err() {
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:207:25
+    |
+207 |             let guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `std::mem::zeroed` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:245:41
+    |
+245 |         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
+    |                                         ^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Threading::UpdateProcThreadAttribute` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:249:19
+    |
+249 |           let res = UpdateProcThreadAttribute(
+    |  ___________________^
+250 | |             si_ex.lpAttributeList,
+251 | |             0,
+252 | |             PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES as usize,
+...   |
+256 | |             None,
+257 | |         );
+    | |_________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Threading::UpdateProcThreadAttribute` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:282:23
+    |
+282 |               let res = UpdateProcThreadAttribute(
+    |  _______________________^
+283 | |                 si_ex.lpAttributeList,
+284 | |                 0,
+285 | |                 PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY as usize,
+...   |
+291 | |                 None,
+292 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Threading::UpdateProcThreadAttribute` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:319:23
+    |
+319 |               let res = UpdateProcThreadAttribute(
+    |  _______________________^
+320 | |                 si_ex.lpAttributeList,
+321 | |                 0,
+322 | |                 PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
+...   |
+326 | |                 None,
+327 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `launch::make_cmd_args` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:398:22
+    |
+398 |     let mut args_w = make_cmd_args(&opts.cmdline);
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\launch\mod.rs:388:1
+    |
+388 | unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<LaunchedIo> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0133]: call to unsafe function `std::mem::zeroed` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:402:37
+    |
+402 |     let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
+    |                                     ^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `std::mem::zeroed` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:416:47
+    |
+416 |             let mut sa: SECURITY_ATTRIBUTES = std::mem::zeroed();
+    |                                               ^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Storage::FileSystem::CreateFileW` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:420:24
+    |
+420 |               let h_in = CreateFileW(
+    |  ________________________^
+421 | |                 PCWSTR(nul.as_ptr()),
+422 | |                 FILE_GENERIC_READ.0,
+423 | |                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+...   |
+427 | |                 None,
+428 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Storage::FileSystem::CreateFileW` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:434:25
+    |
+434 |               let h_out = CreateFileW(
+    |  _________________________^
+435 | |                 PCWSTR(nul.as_ptr()),
+436 | |                 FILE_GENERIC_WRITE.0,
+437 | |                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+...   |
+441 | |                 None,
+442 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Storage::FileSystem::CreateFileW` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:448:25
+    |
+448 |               let h_err = CreateFileW(
+    |  _________________________^
+449 | |                 PCWSTR(nul.as_ptr()),
+450 | |                 FILE_GENERIC_WRITE.0,
+451 | |                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+...   |
+455 | |                 None,
+456 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `std::mem::zeroed` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:469:47
+    |
+469 |             let mut sa: SECURITY_ATTRIBUTES = std::mem::zeroed();
+    |                                               ^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Pipes::CreatePipe` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:473:13
+    |
+473 |             CreatePipe(&mut r_in, &mut w_in, Some(&sa), 0).map_err(|_| AcError::LaunchFailed {
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Pipes::CreatePipe` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:479:13
+    |
+479 |             CreatePipe(&mut r_out, &mut w_out, Some(&sa), 0).map_err(|_| {
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Pipes::CreatePipe` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:487:13
+    |
+487 |             CreatePipe(&mut r_err, &mut w_err, Some(&sa), 0).map_err(|_| {
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::SetHandleInformation` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:495:21
+    |
+495 |               let _ = SetHandleInformation(
+    |  _____________________^
+496 | |                 w_in,
+497 | |                 HANDLE_FLAG_INHERIT.0,
+498 | |                 windows::Win32::Foundation::HANDLE_FLAGS(0),
+499 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::SetHandleInformation` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:500:21
+    |
+500 |               let _ = SetHandleInformation(
+    |  _____________________^
+501 | |                 r_out,
+502 | |                 HANDLE_FLAG_INHERIT.0,
+503 | |                 windows::Win32::Foundation::HANDLE_FLAGS(0),
+504 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::SetHandleInformation` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:505:21
+    |
+505 |               let _ = SetHandleInformation(
+    |  _____________________^
+506 | |                 r_err,
+507 | |                 HANDLE_FLAG_INHERIT.0,
+508 | |                 windows::Win32::Foundation::HANDLE_FLAGS(0),
+509 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `launch::AttributeContext::new` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:531:24
+    |
+531 |     let mut attr_ctx = AttributeContext::new(sec, handles_for_attr)?;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `std::mem::zeroed` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:535:39
+    |
+535 |     let mut pi: PROCESS_INFORMATION = std::mem::zeroed();
+    |                                       ^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::Threading::CreateProcessW` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:558:14
+    |
+558 |       let ok = CreateProcessW(
+    |  ______________^
+559 | |         PCWSTR(exe_w.as_ptr()),
+560 | |         args_w.as_mut().map(|v| PWSTR(v.as_mut_ptr())),
+561 | |         None,
+...   |
+573 | |         &mut pi,
+574 | |     )
+    | |_____^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::CloseHandle` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:587:25
+    |
+587 |                 let _ = CloseHandle(child_stdin);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::CloseHandle` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:590:25
+    |
+590 |                 let _ = CloseHandle(child_stdout);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::CloseHandle` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:593:25
+    |
+593 |                 let _ = CloseHandle(child_stderr);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::CloseHandle` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:608:21
+    |
+608 |             let _ = CloseHandle(child_stdin);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::CloseHandle` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:611:21
+    |
+611 |             let _ = CloseHandle(child_stdout);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::CloseHandle` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:614:21
+    |
+614 |             let _ = CloseHandle(child_stderr);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::JobObjects::CreateJobObjectW` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:621:20
+    |
+621 |         let hjob = CreateJobObjectW(None, PCWSTR::null())
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `std::mem::zeroed` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:624:66
+    |
+624 |             let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
+    |                                                                  ^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::JobObjects::SetInformationJobObject` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:632:13
+    |
+632 | /             SetInformationJobObject(
+633 | |                 hjob,
+634 | |                 JobObjectExtendedLimitInformation,
+635 | |                 &info as *const _ as *const _,
+636 | |                 std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+637 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `std::mem::zeroed` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:645:68
+    |
+645 |             let mut info: JOBOBJECT_CPU_RATE_CONTROL_INFORMATION = std::mem::zeroed();
+    |                                                                    ^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::JobObjects::SetInformationJobObject` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:649:13
+    |
+649 | /             SetInformationJobObject(
+650 | |                 hjob,
+651 | |                 JobObjectCpuRateControlInformation,
+652 | |                 &info as *const _ as *const _,
+653 | |                 std::mem::size_of::<JOBOBJECT_CPU_RATE_CONTROL_INFORMATION>() as u32,
+654 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::System::JobObjects::AssignProcessToJobObject` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:661:9
+    |
+661 |         AssignProcessToJobObject(hjob, pi.hProcess).map_err(|_| AcError::LaunchFailed {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::CloseHandle` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:669:21
+    |
+669 |             let _ = CloseHandle(hjob);
+    |                     ^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Foundation::CloseHandle` is unsafe and requires unsafe block
+   --> src\launch\mod.rs:673:13
+    |
+673 |     let _ = CloseHandle(pi.hThread);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
+  --> src\token.rs:84:11
+   |
+84 |       match GetTokenInformation(
+   |  ___________^
+85 | |         token,
+86 | |         class,
+87 | |         Some((&mut value) as *mut _ as *mut _),
+88 | |         std::mem::size_of::<u32>() as u32,
+89 | |         &mut retlen,
+90 | |     ) {
+   | |_____^ call to unsafe function
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> src\token.rs:81:1
+   |
+81 | unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bool> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
+   --> src\token.rs:108:23
+    |
+108 |     if let Err(err) = GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) {
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\token.rs:106:1
+    |
+106 | unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid>> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
+   --> src\token.rs:123:5
+    |
+123 | /     GetTokenInformation(
+124 | |         token,
+125 | |         TokenAppContainerSid,
+126 | |         Some(buffer.as_mut_ptr() as *mut _),
+127 | |         needed,
+128 | |         &mut needed,
+129 | |     )
+    | |_____^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
+   --> src\token.rs:138:15
+    |
+138 |     let sid = (*info_ptr).TokenAppContainer;
+    |               ^^^^^^^^^^^ dereference of raw pointer
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
+
+error[E0133]: call to unsafe function `token::sid_to_string` is unsafe and requires unsafe block
+   --> src\token.rs:142:22
+    |
+142 |     let sid_string = sid_to_string(sid)?;
+    |                      ^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
+   --> src\token.rs:149:23
+    |
+149 |     if let Err(err) = GetTokenInformation(token, TokenCapabilities, None, 0, &mut needed) {
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\token.rs:147:1
+    |
+147 | unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0133]: call to unsafe function `windows::Win32::Security::GetTokenInformation` is unsafe and requires unsafe block
+   --> src\token.rs:164:5
+    |
+164 | /     GetTokenInformation(
+165 | |         token,
+166 | |         TokenCapabilities,
+167 | |         Some(buffer.as_mut_ptr() as *mut _),
+168 | |         needed,
+169 | |         &mut needed,
+170 | |     )
+    | |_____^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
+   --> src\token.rs:179:17
+    |
+179 |     let count = (*groups).GroupCount as usize;
+    |                 ^^^^^^^^^ dereference of raw pointer
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
+
+error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
+   --> src\token.rs:184:17
+    |
+184 |     let slice = std::slice::from_raw_parts((*groups).Groups.as_ptr(), count);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
+   --> src\token.rs:184:44
+    |
+184 |     let slice = std::slice::from_raw_parts((*groups).Groups.as_ptr(), count);
+    |                                            ^^^^^^^^^ dereference of raw pointer
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
+
+error[E0133]: call to unsafe function `token::sid_to_string` is unsafe and requires unsafe block
+   --> src\token.rs:189:23
+    |
+189 |         let sid_str = sid_to_string(entry.Sid)?;
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `windows::Win32::Security::Authorization::ConvertSidToStringSidW` is unsafe and requires unsafe block
+   --> src\token.rs:203:5
+    |
+203 |     ConvertSidToStringSidW(psid, &mut out)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\token.rs:196:1
+    |
+196 | unsafe fn sid_to_string(psid: windows::Win32::Security::PSID) -> Result<String> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0133]: call to unsafe function `util::win::LocalFreeGuard::<T>::new` is unsafe and requires unsafe block
+   --> src\token.rs:205:17
+    |
+205 |     let guard = LocalFreeGuard::<u16>::new(out.0);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: dereference of raw pointer is unsafe and requires unsafe block
+   --> src\util.rs:105:19
+    |
+105 |             while *self.ptr.add(len) != 0 {
+    |                   ^^^^^^^^^^^^^^^^^^ dereference of raw pointer
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: raw pointers may be null, dangling or unaligned; they can violate aliasing rules and cause data races: all of these are undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\util.rs:100:9
+    |
+100 |         pub unsafe fn to_string_lossy(&self) -> String {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0133]: call to unsafe function `std::ptr::mut_ptr::<impl *mut T>::add` is unsafe and requires unsafe block
+   --> src\util.rs:105:20
+    |
+105 |             while *self.ptr.add(len) != 0 {
+    |                    ^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `std::slice::from_raw_parts` is unsafe and requires unsafe block
+   --> src\util.rs:108:25
+    |
+108 |             let slice = std::slice::from_raw_parts(self.ptr, len);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+For more information about this error, try `rustc --explain E0133`.
+error: could not compile `rappct` (lib) due to 90 previous errors
 warning: build failed, waiting for other jobs to finish...
+error: could not compile `rappct` (lib test) due to 90 previous errors
 Error: Process completed with exit code 101.
 2s
 Post job cleanup.
 "C:\Program Files\Git\bin\git.exe" version
 git version 2.51.0.windows.1
-Temporarily overriding HOME='D:\a\_temp\edd54b06-97bd-4fdc-9367-7b83704d4784' before making global git config changes
+Temporarily overriding HOME='D:\a\_temp\3f01f892-a105-4c44-91a4-0ddd588b565e' before making global git config changes
 Adding repository directory to the temporary git global config as a safe directory
 "C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\rappct\rappct
 "C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
@@ -279,4 +1205,4 @@ http.https://github.com/.extraheader
 "C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
 0s
 Cleaning up orphan processes
-Terminate orphan process: pid (8124) (vctip)
+Terminate orphan process: pid (1440) (vctip)

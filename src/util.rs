@@ -9,7 +9,7 @@ pub mod win {
     use windows::Win32::Security::{FreeSid, PSID};
 
     #[link(name = "Kernel32")]
-    extern "system" {
+    unsafe extern "system" {
         fn LocalFree(h: isize) -> isize;
     }
 
@@ -48,13 +48,12 @@ pub mod win {
         }
 
         pub fn into_file(self) -> std::fs::File {
-            use std::os::windows::io::{FromRawHandle, RawHandle};
+            use std::os::windows::io::FromRawHandle;
             let handle = self.0;
             // Prevent Drop from closing the handle twice
             std::mem::forget(self);
-            // SAFETY: We transfer ownership of the HANDLE to a File. RawHandle on Windows
-            // is a *mut c_void and can be constructed from the underlying HANDLE value.
-            unsafe { std::fs::File::from_raw_handle(handle.0 as isize as RawHandle) }
+            // SAFETY: transfer ownership of the HANDLE to a File
+            unsafe { std::fs::File::from_raw_handle(handle.0 as *mut _) }
         }
     }
 

@@ -12,8 +12,7 @@ use crate::launch::attr::AttrList;
 use crate::util::{LocalFreeGuard, OwnedHandle};
 
 
-#[cfg(feature = "tracing")]
-use tracing::{debug, error, trace};
+// Use fully-qualified macros (tracing::trace!, etc.) to avoid unused import warnings
 #[cfg(windows)]
 use windows::core::{PCWSTR, PWSTR};
 #[cfg(windows)]
@@ -164,7 +163,7 @@ struct AttributeContext {
 impl AttributeContext {
     unsafe fn new(sec: &SecurityCapabilities, handle_list: Option<Vec<HANDLE>>) -> Result<Self> {
         #[cfg(feature = "tracing")]
-        trace!(
+        tracing::trace!(
             "setup_attributes: lpac={}, caps_named_count={}, stdio_handles={}",
             sec.lpac,
             sec.caps.len(),
@@ -172,10 +171,10 @@ impl AttributeContext {
         );
         #[cfg(feature = "tracing")]
         if sec.caps.is_empty() {
-            trace!("setup_attributes: pure AppContainer (no capabilities)");
+            tracing::trace!("setup_attributes: pure AppContainer (no capabilities)");
         } else {
             for cap in &sec.caps {
-                trace!("setup_attributes: capability SDDL={}", cap.sid_sddl);
+                tracing::trace!("setup_attributes: capability SDDL={}", cap.sid_sddl);
             }
         }
 
@@ -239,7 +238,7 @@ impl AttributeContext {
             attr_count += 1;
         }
         #[cfg(feature = "tracing")]
-        debug!("AttrList: count={}", attr_count);
+        tracing::debug!("AttrList: count={}", attr_count);
         let mut attr_list = AttrList::new(attr_count)?;
 
         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
@@ -256,7 +255,7 @@ impl AttributeContext {
             None,
         );
         #[cfg(feature = "tracing")]
-        trace!(
+        tracing::trace!(
             "UpdateProcThreadAttribute(security): attr_list_ptr={:p}, value_ptr={:p}, value_size={}",
             si_ex.lpAttributeList.0,
             caps_struct.as_ref() as *const _,
@@ -267,7 +266,7 @@ impl AttributeContext {
             {
                 use windows::Win32::Foundation::GetLastError;
                 let gle = GetLastError().0;
-                error!("UpdateProcThreadAttribute(security) failed: GLE={}", gle);
+                tracing::error!("UpdateProcThreadAttribute(security) failed: GLE={}", gle);
             }
             return Err(AcError::LaunchFailed {
                 stage: "UpdateProcThreadAttribute(security)",
@@ -291,7 +290,7 @@ impl AttributeContext {
                 None,
             );
             #[cfg(feature = "tracing")]
-            trace!(
+            tracing::trace!(
                 "UpdateProcThreadAttribute(AAPolicy): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
                 si_ex.lpAttributeList.0,
                 lpac_policy
@@ -305,7 +304,7 @@ impl AttributeContext {
                 {
                     use windows::Win32::Foundation::GetLastError;
                     let gle = GetLastError().0;
-                    error!("UpdateProcThreadAttribute(AAPolicy) failed: GLE={}", gle);
+                    tracing::error!("UpdateProcThreadAttribute(AAPolicy) failed: GLE={}", gle);
                 }
                 return Err(AcError::LaunchFailed {
                     stage: "UpdateProcThreadAttribute(lpac)",
@@ -327,14 +326,14 @@ impl AttributeContext {
             );
             #[cfg(feature = "tracing")]
             {
-                trace!(
+                tracing::trace!(
                     "UpdateProcThreadAttribute(handles): attr_list_ptr={:p}, count={}, bytes={}",
                     si_ex.lpAttributeList.0,
                     handles.len(),
                     std::mem::size_of::<HANDLE>() * handles.len()
                 );
                 for (idx, handle) in handles.iter().enumerate() {
-                    trace!("inherit_handle[{}]=0x{:X}", idx, handle.0 as usize);
+                    tracing::trace!("inherit_handle[{}]=0x{:X}", idx, handle.0 as usize);
                 }
             }
             if res.is_err() {
@@ -342,7 +341,7 @@ impl AttributeContext {
                 {
                     use windows::Win32::Foundation::GetLastError;
                     let gle = GetLastError().0;
-                    error!("UpdateProcThreadAttribute(handles) failed: GLE={}", gle);
+                    tracing::error!("UpdateProcThreadAttribute(handles) failed: GLE={}", gle);
                 }
                 return Err(AcError::LaunchFailed {
                     stage: "UpdateProcThreadAttribute(handles)",
@@ -544,7 +543,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     {
         let inherit_handles_dbg = inherit_handles;
         let env_bytes = env_block.as_ref().map(|b| b.len()).unwrap_or(0);
-        trace!(
+        tracing::trace!(
             "CreateProcessW: exe={:?}, args_present={}, cwd_present={}, lpAttributeList={:p}, inherit_handles={}, flags=0x{:X}, env_bytes={}",
             opts.exe,
             args_w.as_ref().map(|v| v.len()).is_some(),
@@ -579,7 +578,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
         {
             use windows::Win32::Foundation::GetLastError;
             let gle = unsafe { GetLastError().0 };
-            error!("CreateProcessW failed: GLE={}", gle);
+            tracing::error!("CreateProcessW failed: GLE={}", gle);
         }
         // close child ends if any
         if inherit_handles {

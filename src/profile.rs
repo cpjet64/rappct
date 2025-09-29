@@ -22,7 +22,7 @@ impl AppContainerProfile {
             use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 
             #[link(name = "Userenv")]
-            extern "system" {
+            unsafe extern "system" {
                 fn CreateAppContainerProfile(
                     pszAppContainerName: PCWSTR,
                     pszDisplayName: PCWSTR,
@@ -109,7 +109,7 @@ impl AppContainerProfile {
         {
             use windows::core::PCWSTR;
             #[link(name = "Userenv")]
-            extern "system" {
+            unsafe extern "system" {
                 fn DeleteAppContainerProfile(
                     pszAppContainerName: windows::core::PCWSTR,
                 ) -> windows::core::HRESULT;
@@ -136,14 +136,14 @@ impl AppContainerProfile {
         {
             use std::path::PathBuf;
             #[link(name = "Userenv")]
-            extern "system" {
+            unsafe extern "system" {
                 fn GetAppContainerFolderPath(
                     pszAppContainerSid: windows::Win32::Security::PSID,
                     ppszPath: *mut windows::core::PWSTR,
                 ) -> windows::core::HRESULT;
             }
             #[link(name = "Userenv")]
-            extern "system" {
+            unsafe extern "system" {
                 fn DeriveAppContainerSidFromAppContainerName(
                     name: windows::core::PCWSTR,
                     sid: *mut windows::Win32::Security::PSID,
@@ -204,7 +204,7 @@ impl AppContainerProfile {
             use windows::Win32::Foundation::HANDLE;
             use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
             #[link(name = "Userenv")]
-            extern "system" {
+            unsafe extern "system" {
                 fn GetAppContainerNamedObjectPath(
                     token: windows::Win32::Foundation::HANDLE,
                     appcontainersid: *mut core::ffi::c_void,
@@ -267,7 +267,7 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
     #[cfg(windows)]
     {
         #[link(name = "Userenv")]
-        extern "system" {
+        unsafe extern "system" {
             fn DeriveAppContainerSidFromAppContainerName(
                 name: windows::core::PCWSTR,
                 sid: *mut *mut core::ffi::c_void,

@@ -77,7 +77,7 @@ pub fn supports_lpac() -> Result<()> {
             csd: [u16; 128],
         }
         #[link(name = "ntdll")]
-        extern "system" {
+        unsafe extern "system" {
             fn RtlGetVersion(info: *mut OSVERSIONINFOW) -> i32;
         }
         unsafe {
