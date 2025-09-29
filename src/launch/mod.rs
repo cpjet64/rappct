@@ -154,13 +154,14 @@ struct AttributeContext {
     _caps_struct: Box<SECURITY_CAPABILITIES>,
     _cap_attrs: Vec<SID_AND_ATTRIBUTES>,
     _cap_sid_guards: Vec<LocalFreeGuard<std::ffi::c_void>>,
-    package_sid_guard: LocalFreeGuard<std::ffi::c_void>,
+    _package_sid_guard: LocalFreeGuard<std::ffi::c_void>,
     _handle_list: Option<Vec<HANDLE>>,
     _lpac_policy: Option<Box<u32>>,
 }
 
 #[cfg(windows)]
 impl AttributeContext {
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn new(sec: &SecurityCapabilities, handle_list: Option<Vec<HANDLE>>) -> Result<Self> {
         #[cfg(feature = "tracing")]
         tracing::trace!(
@@ -223,7 +224,7 @@ impl AttributeContext {
             Reserved: 0,
         });
         #[cfg(feature = "tracing")]
-        trace!(
+        tracing::trace!(
             "SECURITY_CAPABILITIES: pkg_sid_ptr={:p}, caps_ptr={:p}, cap_count={}",
             caps_struct.AppContainerSid.0,
             caps_struct.Capabilities,
@@ -356,7 +357,7 @@ impl AttributeContext {
             _caps_struct: caps_struct,
             _cap_attrs: cap_attrs,
             _cap_sid_guards: cap_sid_guards,
-            package_sid_guard,
+            _package_sid_guard: package_sid_guard,
             _handle_list: handle_list,
             _lpac_policy: lpac_policy,
         })
@@ -375,6 +376,7 @@ impl Drop for AttributeContext {
 }
 
 #[cfg(windows)]
+#[allow(unsafe_op_in_unsafe_fn)]
 unsafe fn make_cmd_args(cmdline: &Option<String>) -> Option<Vec<u16>> {
     cmdline.as_ref().map(|cl| {
         let mut w: Vec<u16> = cl.encode_utf16().collect();
@@ -384,6 +386,7 @@ unsafe fn make_cmd_args(cmdline: &Option<String>) -> Option<Vec<u16>> {
 }
 
 #[cfg(windows)]
+#[allow(unsafe_op_in_unsafe_fn)]
 unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<LaunchedIo> {
     if sec.lpac {
         crate::supports_lpac()?;

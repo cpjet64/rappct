@@ -267,10 +267,7 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
             });
         }
     } else {
-        vec.retain(|sa| match EqualSid(sa.Sid, target) {
-            Ok(true) => false,
-            _ => true,
-        });
+        vec.retain(|sa| !EqualSid(sa.Sid, target).is_ok());
     }
 
     let err2 = NetworkIsolationSetAppContainerConfig(&vec);
@@ -283,11 +280,13 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
 }
 
 #[cfg(all(windows, not(feature = "net")))]
+#[allow(dead_code)]
 unsafe fn set_loopback(_allow: bool, _sid: &AppContainerSid) -> Result<()> {
     Err(AcError::Unimplemented("net feature not enabled"))
 }
 
 #[cfg(not(windows))]
+#[allow(dead_code)]
 unsafe fn set_loopback(_allow: bool, _sid: &AppContainerSid) -> Result<()> {
     Err(AcError::UnsupportedPlatform)
 }

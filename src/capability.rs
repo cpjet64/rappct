@@ -31,6 +31,7 @@ pub fn known_caps_to_named(caps: &[KnownCapability]) -> Vec<&'static str> {
 
 // Static list of known/supported capability names for suggestions.
 #[cfg(feature = "introspection")]
+#[allow(dead_code)]
 static KNOWN_CAP_NAMES: &[&str] = &[
     "internetClient",
     "internetClientServer",
@@ -41,6 +42,7 @@ static KNOWN_CAP_NAMES: &[&str] = &[
 ];
 
 #[cfg(feature = "introspection")]
+#[allow(dead_code)]
 fn suggest_capability_name(name: &str) -> Option<&'static str> {
     let mut best = 0.0f64;
     let mut suggestion = None;
