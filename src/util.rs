@@ -96,15 +96,16 @@ pub mod win {
 
     impl LocalFreeGuard<u16> {
         /// Converts the guarded wide string into UTF-8 (without trailing null).
+        #[allow(unsafe_op_in_unsafe_fn)]
         pub unsafe fn to_string_lossy(&self) -> String {
             if self.ptr.is_null() {
                 return String::new();
             }
             let mut len = 0usize;
-            while *self.ptr.add(len) != 0 {
+            while unsafe { *self.ptr.add(len) } != 0 {
                 len += 1;
             }
-            let slice = std::slice::from_raw_parts(self.ptr, len);
+            let slice = unsafe { std::slice::from_raw_parts(self.ptr, len) };
             String::from_utf16_lossy(slice)
         }
 
