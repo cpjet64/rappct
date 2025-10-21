@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.10.0](https://github.com/cpjet64/rappct/compare/rappct-v0.9.0...rappct-v0.10.0) (2025-10-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* v0.9.0 – API ergonomics, Windows CI, wide-string helpers, net softening, docs, release-please setup, ignore Cargo.lock
+
+### Bug Fixes
+
+* **ci:** 2024 edition updates – mark extern blocks unsafe, wrap unsafe ops, clean imports, correct OwnedHandle::into_file; update CI should pass ([c53b3d4](https://github.com/cpjet64/rappct/commit/c53b3d4a48a8b9018e9e06a6c24fadb161b503aa))
+* **ci:** 2024 unsafe rules – annotate unsafe fns, fix EqualSid result handling, silence dead_code in feature stubs, rename unused field; pass -D warnings ([eaa344f](https://github.com/cpjet64/rappct/commit/eaa344f13e0eaf91b48836ee6b103e767a749ce2))
+* **ci:** edition 2024, remove unused imports, avoid LocalFree import; make set_loopback warnings non-fatal ([a80ab91](https://github.com/cpjet64/rappct/commit/a80ab91436143d516a9983ae47b10cd7193365d1))
+* update to googleapis/release-please-action@v4 ([af8f17d](https://github.com/cpjet64/rappct/commit/af8f17d379ef7b9413256b46abfaf0f062e9b9e7))
+
+
+### Miscellaneous Chores
+
+* v0.9.0 – API ergonomics, Windows CI, wide-string helpers, net softening, docs, release-please setup, ignore Cargo.lock ([335f20f](https://github.com/cpjet64/rappct/commit/335f20fad7b8ce9558006f0b0154338c4416afd2))
+
 ## v0.9.1
 
 - Build: Update to Rust edition 2024
@@ -23,4 +42,3 @@ The format is based on Keep a Changelog and this file will be managed automatica
 - Examples/Tests updated for new builder ergonomics.
 - OwnedHandle: safer `into_file` conversion; use `from_raw` at call sites.
 - Repo: set `repository` URL and ignore `Cargo.lock` for a library crate.
-
