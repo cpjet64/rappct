@@ -6,7 +6,7 @@ This directory contains comprehensive examples demonstrating all features of the
 
 ### Prerequisites
 - **Windows 10 1703+** (required for LPAC features)
-- **Administrator privileges** (required for AppContainer operations)
+- **Administrator privileges** (recommended for firewall loopback and some ACL operations; basic profile and sandboxed launches do not require elevation)
 - **Internet connectivity** (for network capability demonstrations)
 
 ### Running Examples
@@ -18,8 +18,8 @@ cargo run --example rappct_demo
 # With automatic firewall configuration (recommended)
 cargo run --example rappct_demo --features net
 
-# Individual feature demonstrations (requires Administrator)
-cargo run --example capability_showcase --features net
+# CLI tool for profile and launch management
+cargo run --example acrun -- --help
 
 # Complete feature walkthrough (requires Administrator)
 cargo run --example comprehensive_demo --features net
@@ -43,33 +43,18 @@ cargo run --example advanced_features --features "net,introspection"
 
 **Best for**: First-time users, quick proof-of-concept
 
-### 2. `capability_showcase.rs` - Feature-by-Feature Demos
-**Purpose**: Individual demonstrations of each major capability
-**Privileges**: Requires Administrator for process launching
+### 2. `acrun.rs` - CLI Tool for Profiles and Launches
+**Purpose**: Command-line interface for profile management and process launching
+**Privileges**: Basic features work without Administrator
 **What you'll see**:
-- Profile management
-- Complete process isolation
-- Network capabilities (InternetClient, etc.)
-- File system ACL management
-- Resource limits via Job Objects
-- LPAC (Low Privilege AppContainer) mode
-- Comprehensive combined example
+- Profile creation/deletion via `ensure` and `delete` subcommands
+- Token introspection with `whoami` (supports `--json` output)
+- Process launching with `launch` subcommand (supports `--lpac` flag)
+- Practical CLI patterns for integration
 
-**Best for**: Understanding specific features, developer learning
+**Best for**: Quick testing, scripting, understanding CLI integration patterns
 
-### 3. `comprehensive_demo.rs` - Interactive Walkthrough
-**Purpose**: Complete feature demonstration with user interaction
-**Privileges**: Requires Administrator for full functionality
-**What you'll see**:
-- Step-by-step interactive demos
-- Real-world scenarios (secure web scraper)
-- Token introspection
-- Process I/O redirection
-- Detailed explanations of each feature
-
-**Best for**: Training sessions, comprehensive understanding
-
-### 4. `network_demo.rs` - Network Troubleshooting
+### 3. `network_demo.rs` - Network Troubleshooting
 **Purpose**: Focused network capability testing and troubleshooting
 **Privileges**: Requires Administrator
 **What you'll see**:
@@ -80,7 +65,7 @@ cargo run --example advanced_features --features "net,introspection"
 
 **Best for**: Debugging network issues, production deployment preparation
 
-### 5. `advanced_features.rs` - Advanced API Features
+### 4. `advanced_features.rs` - Advanced API Features
 **Purpose**: Comprehensive coverage of advanced and lesser-known features
 **Privileges**: Requires Administrator
 **What you'll see**:
@@ -95,6 +80,18 @@ cargo run --example advanced_features --features "net,introspection"
 - LPAC testing environment variables
 
 **Best for**: Advanced users, comprehensive API exploration, production features
+
+### 5. `comprehensive_demo.rs` - Interactive Walkthrough
+**Purpose**: Complete feature demonstration with user interaction
+**Privileges**: Requires Administrator for full functionality
+**What you'll see**:
+- Step-by-step interactive demos
+- Real-world scenarios (secure web scraper)
+- Token introspection
+- Process I/O redirection
+- Detailed explanations of each feature
+
+**Best for**: Training sessions, comprehensive understanding
 
 ## Common Issues and Solutions
 

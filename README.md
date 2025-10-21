@@ -58,8 +58,8 @@ use rappct::{AppContainerProfile, KnownCapability, LaunchOptions, SecurityCapabi
 fn main() -> rappct::Result<()> {
     let profile = AppContainerProfile::ensure("demo.rappct", "Demo", Some("rappct example"))?;
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
-        .with_known(&[KnownCapability::InternetClient])?
-        .with_lpac_defaults()? // opt in to LPAC defaults when required
+        .with_known(&[KnownCapability::InternetClient])
+        .with_lpac_defaults() // opt in to LPAC defaults when required
         .build()?;
 
     let opts = LaunchOptions { exe: "C:/Windows/System32/notepad.exe".into(), ..Default::default() };
@@ -76,6 +76,7 @@ fn main() -> rappct::Result<()> {
 | `net` | Enable AppContainer enumeration and firewall loopback exemption helpers.<br><br>⚠️ This feature changes global Windows Firewall state. Always call `LoopbackAdd::confirm_debug_only()` before `add_loopback_exemption`, and use `remove_loopback_exemption` to restore the original configuration when finished. |
 | `introspection` | Toggle diagnostics, configuration validation, and capability suggestions. |
 | `tracing` | Emit structured tracing spans/logs; integrate with `tracing-subscriber`. |
+| `serde` | Enable Serialize/Deserialize support for core types (SecurityCapabilities, AppContainerSid, SidAndAttributes). Useful for config files or JSON APIs. |
 
 Disable unused features for the leanest runtime surface; APIs gracefully return `AcError::Unimplemented` when a
 feature is not compiled in.

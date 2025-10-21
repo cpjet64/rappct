@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## v0.9.1
+
+- Build: Update to Rust edition 2024
+- Deps: Update thiserror to 2.0, windows to 0.62
+- Docs: Fix README builder pattern example (remove incorrect `?` operators)
+- Docs: Add `serde` feature to documentation
+- Docs: Update EXAMPLES.md to reference correct examples and clarify admin requirements
+- Docs: Align CLAUDE.md with current codebase state
+
 ## v0.9.0
 
 - API: `SecurityCapabilitiesBuilder::{with_known,with_named,with_lpac_defaults}` now return `Self` (breaking change).

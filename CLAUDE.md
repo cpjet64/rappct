@@ -108,6 +108,7 @@ The crate is organized into focused modules that compose together:
 - `net`: Enable loopback exemption helpers (requires `Win32_NetworkManagement_WindowsFirewall`)
 - `introspection`: Enable diagnostics and capability name suggestions (adds `strsim` dependency)
 - `tracing`: Emit structured logs via `tracing` crate
+- `serde`: Enable Serialize/Deserialize derives on SecurityCapabilities, AppContainerSid, and SidAndAttributes
 
 ## Testing Conventions
 
