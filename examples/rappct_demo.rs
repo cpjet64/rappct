@@ -32,7 +32,7 @@ impl Drop for FirewallGuard {
     fn drop(&mut self) {
         match remove_loopback_exemption(&self.sid) {
             Ok(_) => println!("{}", self.success),
-            Err(e) => println!("⚠ Firewall exemption cleanup failed: {}", e),
+            Err(e) => println!("? Firewall exemption cleanup failed: {}", e),
         }
     }
 }
@@ -60,8 +60,8 @@ fn main() -> rappct::Result<()> {
 
     let profile =
         AppContainerProfile::ensure("demo.app", "Demo Application", Some("rappct demonstration"))?;
-    println!("✓ Created profile: {}", profile.name);
-    println!("✓ Profile SID: {}", profile.sid.as_string());
+    println!("- Created profile: {}", profile.name);
+    println!("- Profile SID: {}", profile.sid.as_string());
     println!("  This SID uniquely identifies our sandbox and controls what it can access.\n");
 
     // 2. Launch isolated process (no capabilities)
@@ -74,18 +74,14 @@ fn main() -> rappct::Result<()> {
     let isolated_caps = SecurityCapabilitiesBuilder::new(&profile.sid).build()?;
     let isolated_child = launch_in_container(&isolated_caps, &LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        cmdline: Some("/C echo [ISOLATED] Running in AppContainer sandbox && echo [ISOLATED] No special permissions granted && timeout /T 2 /NOBREAK >nul".to_string()),
-        cwd: Some(PathBuf::from("C:\\Windows\\System32")), // Set valid working directory
+        cmdline: Some("/C echo [ISOLATED] Running in AppContainer sandbox && echo [ISOLATED] No special permissions granted".to_string()),
+        cwd: Some(PathBuf::from("C:\\Windows\\System32")),
         ..Default::default()
     })?;
-    println!(
-        "✓ Isolated process launched with PID: {}",
-        isolated_child.pid
-    );
+    println!("- Isolated process launched with PID: {}", isolated_child.pid);
     println!("  Watch the output above - the process is completely sandboxed.\n");
 
-    // Wait for first process
-    std::thread::sleep(std::time::Duration::from_secs(3));
+    std::thread::sleep(std::time::Duration::from_secs(1));
 
     // 3. First show normal network access for comparison
     println!("STEP 3A: Normal Network Access (For Comparison)");
@@ -93,22 +89,23 @@ fn main() -> rappct::Result<()> {
     println!("First, let's see network access from a normal (non-sandboxed) process:");
     println!("Expected: HTTP should succeed in a normal process (no sandbox).\n");
 
-    // Quick test of normal network access
+    // Quick test of normal network access using curl
     use std::process::Command;
-    match Command::new("powershell")
-        .arg("-Command")
-        .arg("try { (Invoke-WebRequest -Uri 'http://httpbin.org/ip' -UseBasicParsing -TimeoutSec 3).StatusCode } catch { 'Failed' }")
-        .output() {
+    match Command::new("cmd")
+        .arg("/C")
+        .arg(r#"C:\Windows\System32\curl.exe -s -o NUL http://httpbin.org/ip && echo OK || echo FAILED"#)
+        .output()
+    {
         Ok(output) => {
             let result = String::from_utf8_lossy(&output.stdout);
             let result = result.trim();
-            if result.contains("200") {
-                println!("✓ Normal process: HTTP request succeeded ({})", result);
+            if result.contains("OK") {
+                println!("- Normal process: HTTP request succeeded");
             } else {
-                println!("⚠ Normal process: HTTP request failed ({})", result);
+                println!("? Normal process: HTTP request failed ({})", result);
             }
         }
-        Err(e) => println!("⚠ Normal process network test error: {}", e),
+        Err(e) => println!("? Normal process network test error: {}", e),
     }
 
     println!("\nSTEP 3B: AppContainer with Network Access");
@@ -126,12 +123,12 @@ fn main() -> rappct::Result<()> {
         if let Err(e) =
             add_loopback_exemption(LoopbackAdd(profile.sid.clone()).confirm_debug_only())
         {
-            println!("⚠ Firewall exemption failed: {} (continuing anyway)", e);
+            println!("? Firewall exemption failed: {} (continuing anyway)", e);
         } else {
-            println!("✓ Firewall loopback exemption configured");
+            println!("- Firewall loopback exemption configured");
             firewall_guard = Some(FirewallGuard::new(
                 profile.sid.clone(),
-                "✓ Firewall loopback exemption removed",
+                "- Firewall loopback exemption removed",
             ));
         }
     }
@@ -148,18 +145,14 @@ fn main() -> rappct::Result<()> {
         .build()?;
     let network_child = launch_in_container(&network_caps, &LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        cmdline: Some(r#"/C echo [NETWORK] Process with internet access && powershell -Command "$urls=@('http://httpbin.org/ip','http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){ try { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }" && echo [NETWORK] Test completed"#.to_string()),
-        cwd: Some(PathBuf::from("C:\\Windows\\System32")), // Set valid working directory
+        cmdline: Some(r#"/C echo [NETWORK] Process with internet access && C:\Windows\System32\curl.exe -s -o NUL http://httpbin.org/ip && echo HTTP OK || echo HTTP failed && echo [NETWORK] Test completed"#.to_string()),
+        cwd: Some(PathBuf::from("C:\\Windows\\System32")),
         ..Default::default()
     })?;
-    println!(
-        "✓ Network-enabled process launched with PID: {}",
-        network_child.pid
-    );
+    println!("- Network-enabled process launched with PID: {}", network_child.pid);
     println!("  Watch above - HTTP request should work with proper network capability\n");
 
-    // Wait for processes to complete
-    std::thread::sleep(std::time::Duration::from_secs(6));
+    std::thread::sleep(std::time::Duration::from_secs(3));
 
     // Cleanup
     println!("STEP 4: Cleanup");
@@ -168,24 +161,21 @@ fn main() -> rappct::Result<()> {
 
     #[cfg(feature = "net")]
     {
-        // FirewallGuard will auto-cleanup on drop
-        let _firewall_guard = firewall_guard; // keep scope explicit
+        let _firewall_guard = firewall_guard; // auto-clean on drop
     }
 
     let profile_name = profile.name.clone();
     profile.delete()?;
-    println!("✓ Profile '{}' deleted successfully", profile_name);
+    println!("- Profile '{}' deleted successfully", profile_name);
 
-    println!("\n🎉 Demo Complete!");
+    println!("\nDemo Complete!");
     println!("=================");
     println!("You've seen how rappct can:");
-    println!("• Create secure AppContainer profiles");
-    println!("• Launch completely isolated processes");
-    println!("• Grant specific capabilities (like network access)");
-    println!("• Clean up resources when done");
-    println!("\nThe key insight: Windows AppContainer provides strong isolation");
-    println!("while allowing you to grant exactly the permissions needed.");
-    println!("\n💡 Pro tip: Use '--features net' for automatic firewall configuration:");
+    println!("- Create secure AppContainer profiles");
+    println!("- Launch completely isolated processes");
+    println!("- Grant specific capabilities (like network access)");
+    println!("- Clean up resources when done");
+    println!("\nPro tip: Use '--features net' for automatic firewall configuration:");
     println!("   cargo run --example rappct_demo --features net");
 
     Ok(())
