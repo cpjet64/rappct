@@ -71,9 +71,10 @@ impl Drop for ProfileCleanupGuard {
 #[cfg(windows)]
 fn set_env_override(key: &str, value: &str) {
     // Mutates process environment; run single-threaded or before starting worker threads.
-    // Note: Mutates process environment; run single-threaded or before
-    // starting worker threads. std::env::set_var is safe.
-    std::env::set_var(key, value);
+    // Note: Environment mutation is unsafe on recent Rust; keep calls scoped.
+    unsafe {
+        std::env::set_var(key, value);
+    }
 }
 
 #[cfg(not(windows))]
@@ -85,9 +86,9 @@ fn set_env_override(key: &str, value: &str) {
 #[cfg(windows)]
 fn clear_env_override(key: &str) {
     // See note in set_env_override.
-    // Note: Mutates process environment; run single-threaded or before
-    // starting worker threads. std::env::remove_var is safe.
-    std::env::remove_var(key);
+    unsafe {
+        std::env::remove_var(key);
+    }
 }
 
 #[cfg(not(windows))]
