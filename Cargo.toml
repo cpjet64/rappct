@@ -11,6 +11,12 @@ keywords = ["windows", "appcontainer", "lpac", "sandbox", "security"]
 categories = ["os::windows-apis", "security", "api-bindings"]
 readme = "README.md"
 
+# docs.rs configuration for Windows-only crate
+[package.metadata.docs.rs]
+default-target = "x86_64-pc-windows-msvc"
+targets = ["x86_64-pc-windows-msvc"]
+all-features = true
+
 [features]
 default = []
 net = ["windows/Win32_NetworkManagement_WindowsFirewall"]
