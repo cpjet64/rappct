@@ -53,8 +53,13 @@ cargo build
 cargo run --example acrun -- --help
 ```
 
-The crate is structured as a binary-agnostic library. Bring it into your own project with either a Git dependency or a
-crates.io release:
+The crate is structured as a binary-agnostic library. Add it to your project from crates.io:
+
+```bash
+cargo add rappct
+```
+
+Or use the latest development version from git:
 
 ```bash
 cargo add rappct --git https://github.com/cpjet64/rappct.git
