@@ -66,7 +66,7 @@ fn main() -> rappct::Result<()> {
         println!("Run with: cargo run --example network_demo --features net");
         println!("\nThe 'net' feature provides automatic firewall loopback exemption");
         println!("which is essential for AppContainer network functionality.");
-        return Ok(());
+        Ok(())
     }
 
     #[cfg(feature = "net")]
@@ -125,7 +125,7 @@ fn main() -> rappct::Result<()> {
         println!("• Use LoopbackAdd::confirm_debug_only() for development/testing");
         println!("• Always clean up firewall exemptions when done");
         println!("• Network capabilities work much better with proper firewall config");
-        return Ok(());
+        Ok(())
     }
 }
 

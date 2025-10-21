@@ -297,7 +297,7 @@ fn demo_diagnostics() -> rappct::Result<()> {
         println!("⚠ Diagnostics require the 'introspection' feature");
         println!("  Run with: --features introspection");
         println!();
-        return Ok(());
+        Ok(())
     }
 
     #[cfg(feature = "introspection")]
@@ -351,7 +351,7 @@ fn demo_diagnostics() -> rappct::Result<()> {
         }
 
         drop(profile_guard);
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -501,7 +501,7 @@ fn demo_network_enumeration() -> rappct::Result<()> {
         println!("⚠ Network enumeration requires the 'net' feature");
         println!("  Run with: --features net");
         println!();
-        return Ok(());
+        Ok(())
     }
 
     #[cfg(feature = "net")]
@@ -530,7 +530,7 @@ fn demo_network_enumeration() -> rappct::Result<()> {
             }
         }
         println!();
-        return Ok(());
+        Ok(())
     }
 }
 
