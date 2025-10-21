@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.11.1](https://github.com/cpjet64/rappct/compare/rappct-v0.11.0...rappct-v0.11.1) (2025-10-21)
+
+
+### Bug Fixes
+
+* make release-please wait for CI to pass ([a05dadc](https://github.com/cpjet64/rappct/commit/a05dadc1aecdd7774f3053f0b1f1dc706d72da1c))
+
 ## [0.11.0](https://github.com/cpjet64/rappct/compare/rappct-v0.10.0...rappct-v0.11.0) (2025-10-21)
 
 
