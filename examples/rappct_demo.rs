@@ -175,8 +175,12 @@ fn main() -> rappct::Result<()> {
     println!("- Launch completely isolated processes");
     println!("- Grant specific capabilities (like network access)");
     println!("- Clean up resources when done");
-    println!("\nPro tip: Use '--features net' for automatic firewall configuration:");
-    println!("   cargo run --example rappct_demo --features net");
+    println!("\\nPro tip: Use '--features net' when you need localhost (loopback):");
+    println!("  - Adds helpers to grant/remove AppContainer loopback exemptions
+  - Usually requires Administrator rights
+  - Not required for outbound internet (InternetClient is enough)\n
+  Example: cargo run --example rappct_demo --features net");
 
     Ok(())
 }
+
