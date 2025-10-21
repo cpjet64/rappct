@@ -9,19 +9,18 @@
 //! - Direct SID derivation
 
 use rappct::{
-    AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
-    acl::{AccessMask, ResourcePath, grant_to_capability},
+    acl::{grant_to_capability, AccessMask, ResourcePath},
     launch::{JobLimits, LaunchOptions},
     launch_in_container,
     profile::derive_sid_from_name,
-    supports_lpac,
+    supports_lpac, AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
 };
 
 #[cfg(windows)]
-use rappct::launch::{StdioConfig, launch_in_container_with_io};
+use rappct::launch::{launch_in_container_with_io, StdioConfig};
 
 #[cfg(feature = "introspection")]
-use rappct::diag::{ConfigWarning, validate_configuration};
+use rappct::diag::{validate_configuration, ConfigWarning};
 
 #[cfg(feature = "net")]
 use rappct::net::list_appcontainers;

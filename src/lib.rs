@@ -49,10 +49,11 @@ pub mod util;
 
 // Re-exports
 pub use capability::{KnownCapability, SecurityCapabilities, SecurityCapabilitiesBuilder};
-pub use launch::{JobLimits, LaunchOptions, Launched, StdioConfig, launch_in_container};
+pub use launch::{launch_in_container, JobLimits, LaunchOptions, Launched, StdioConfig};
 #[cfg(windows)]
-pub use launch::{LaunchedIo, launch_in_container_with_io};
-pub use profile::{AppContainerProfile, derive_sid_from_name};
+pub use launch::{launch_in_container_with_io, LaunchedIo};
+pub use profile::{derive_sid_from_name, AppContainerProfile};
+pub use sid::AppContainerSid;
 
 /// Returns Ok(()) if LPAC is supported on this OS (Windows 10 1703+).
 pub fn supports_lpac() -> Result<()> {
@@ -68,7 +69,7 @@ pub fn supports_lpac() -> Result<()> {
         }
         // Use ntdll!RtlGetVersion to query build number reliably
         #[repr(C)]
-        struct OSVERSIONINFOW {
+        struct OsVersionInfoW {
             size: u32,
             major: u32,
             minor: u32,
@@ -78,11 +79,11 @@ pub fn supports_lpac() -> Result<()> {
         }
         #[link(name = "ntdll")]
         unsafe extern "system" {
-            fn RtlGetVersion(info: *mut OSVERSIONINFOW) -> i32;
+            fn RtlGetVersion(info: *mut OsVersionInfoW) -> i32;
         }
         unsafe {
-            let mut v = OSVERSIONINFOW {
-                size: std::mem::size_of::<OSVERSIONINFOW>() as u32,
+            let mut v = OsVersionInfoW {
+                size: std::mem::size_of::<OsVersionInfoW>() as u32,
                 major: 0,
                 minor: 0,
                 build: 0,

@@ -1,6 +1,7 @@
 //! STARTUPINFOEX attribute list RAII for Windows.
 
 #[cfg(windows)]
+#[derive(Debug)]
 pub struct AttrList {
     _buf: Vec<u8>,
     ptr: windows::Win32::System::Threading::LPPROC_THREAD_ATTRIBUTE_LIST,
@@ -72,6 +73,7 @@ impl Drop for AttrList {
 }
 
 #[cfg(not(windows))]
+#[derive(Debug)]
 pub struct AttrList {
     _private: (),
 }

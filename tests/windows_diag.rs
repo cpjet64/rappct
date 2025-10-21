@@ -1,9 +1,9 @@
 #[cfg(all(windows, feature = "introspection"))]
-use rappct::AppContainerProfile;
-#[cfg(all(windows, feature = "introspection"))]
 use rappct::capability::{KnownCapability, SecurityCapabilitiesBuilder};
 #[cfg(all(windows, feature = "introspection"))]
-use rappct::diag::{ConfigWarning, validate_configuration};
+use rappct::diag::{validate_configuration, ConfigWarning};
+#[cfg(all(windows, feature = "introspection"))]
+use rappct::AppContainerProfile;
 
 #[cfg(all(windows, feature = "introspection"))]
 #[test]

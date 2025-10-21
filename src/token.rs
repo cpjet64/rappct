@@ -6,6 +6,8 @@ use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
 
 #[cfg(windows)]
+use windows::core::HRESULT;
+#[cfg(windows)]
 use windows::Win32::Foundation::{
     CloseHandle, ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, HANDLE,
 };
@@ -13,14 +15,12 @@ use windows::Win32::Foundation::{
 use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 #[cfg(windows)]
 use windows::Win32::Security::{
-    GetTokenInformation, TOKEN_APPCONTAINER_INFORMATION, TOKEN_GROUPS, TOKEN_INFORMATION_CLASS,
-    TOKEN_QUERY, TokenAppContainerSid, TokenCapabilities, TokenIsAppContainer,
-    TokenIsLessPrivilegedAppContainer,
+    GetTokenInformation, TokenAppContainerSid, TokenCapabilities, TokenIsAppContainer,
+    TokenIsLessPrivilegedAppContainer, TOKEN_APPCONTAINER_INFORMATION, TOKEN_GROUPS,
+    TOKEN_INFORMATION_CLASS, TOKEN_QUERY,
 };
 #[cfg(windows)]
 use windows::Win32::System::Threading::GetCurrentProcess;
-#[cfg(windows)]
-use windows::core::HRESULT;
 
 #[cfg(windows)]
 #[link(name = "Advapi32")]
@@ -63,11 +63,12 @@ pub fn query_current_process_token() -> Result<TokenInfo> {
             let guard = HandleGuard(raw);
             let token = guard.0;
 
-            let mut info = TokenInfo::default();
-            info.is_appcontainer = query_bool(token, TokenIsAppContainer)?;
-            info.is_lpac = query_bool(token, TokenIsLessPrivilegedAppContainer)?;
-            info.package_sid = query_appcontainer_sid(token)?;
-            info.capability_sids = query_capabilities(token)?;
+            let info = TokenInfo {
+                is_appcontainer: query_bool(token, TokenIsAppContainer)?,
+                is_lpac: query_bool(token, TokenIsLessPrivilegedAppContainer)?,
+                package_sid: query_appcontainer_sid(token)?,
+                capability_sids: query_capabilities(token)?,
+            };
             Ok(info)
         }
     }

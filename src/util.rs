@@ -4,9 +4,9 @@
 pub mod win {
     use std::os::windows::ffi::OsStrExt;
 
+    use windows::core::PWSTR;
     use windows::Win32::Foundation::{CloseHandle, HANDLE};
     use windows::Win32::Security::{FreeSid, PSID};
-    use windows::core::PWSTR;
 
     #[link(name = "Kernel32")]
     unsafe extern "system" {
@@ -43,6 +43,12 @@ pub mod win {
             self.0
         }
 
+        /// Constructs an `OwnedHandle` from a raw Win32 `HANDLE`.
+        ///
+        /// # Safety
+        /// Caller must ensure `handle` is a valid, live HANDLE that is uniquely
+        /// owned and must be closed exactly once. After calling this, the guard
+        /// will close it on drop. Do not use the handle elsewhere after passing it here.
         pub unsafe fn from_raw(handle: HANDLE) -> Self {
             Self(handle)
         }
@@ -65,6 +71,11 @@ pub mod win {
 
     impl<T> LocalFreeGuard<T> {
         /// Creates a new guard from a raw pointer returned by Win32.
+        ///
+        /// # Safety
+        /// The pointer must have been allocated by a Win32 API that requires
+        /// `LocalFree` for release and must be valid for the lifetime of the guard.
+        /// Do not pass stack or heap pointers that are not `LocalAlloc`-managed.
         pub unsafe fn new(ptr: *mut T) -> Self {
             Self { ptr }
         }
@@ -98,6 +109,10 @@ pub mod win {
 
     impl LocalFreeGuard<u16> {
         /// Converts the guarded wide string into UTF-8 (without trailing null).
+        ///
+        /// # Safety
+        /// The guarded pointer must reference a valid, NUL-terminated UTF-16
+        /// buffer allocated by a Win32 API compatible with `LocalFree`.
         #[allow(unsafe_op_in_unsafe_fn)]
         pub unsafe fn to_string_lossy(&self) -> String {
             if self.ptr.is_null() {
@@ -123,6 +138,11 @@ pub mod win {
     }
 
     impl FreeSidGuard {
+        /// Creates a guard that will call `FreeSid` on drop.
+        ///
+        /// # Safety
+        /// `psid` must be a valid, heap-allocated SID returned by APIs that
+        /// require `FreeSid` for release. Do not pass borrowed or invalid pointers.
         pub unsafe fn new(psid: PSID) -> Self {
             Self { psid }
         }
@@ -166,4 +186,4 @@ pub use win::to_utf16;
 #[cfg(not(windows))]
 pub use win::to_utf16_os;
 #[cfg(windows)]
-pub use win::{FreeSidGuard, LocalFreeGuard, OwnedHandle, to_utf16, to_utf16_os};
+pub use win::{to_utf16, to_utf16_os, FreeSidGuard, LocalFreeGuard, OwnedHandle};

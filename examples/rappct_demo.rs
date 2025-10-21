@@ -7,12 +7,12 @@
 //! - Automatic network configuration (with 'net' feature)
 
 use rappct::{
-    AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder, launch::LaunchOptions,
-    launch_in_container,
+    launch::LaunchOptions, launch_in_container, AppContainerProfile, KnownCapability,
+    SecurityCapabilitiesBuilder,
 };
 
 #[cfg(feature = "net")]
-use rappct::net::{LoopbackAdd, add_loopback_exemption, remove_loopback_exemption};
+use rappct::net::{add_loopback_exemption, remove_loopback_exemption, LoopbackAdd};
 
 #[cfg(feature = "net")]
 struct FirewallGuard {

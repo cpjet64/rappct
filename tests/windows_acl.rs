@@ -1,11 +1,13 @@
 #[cfg(windows)]
-use rappct::AppContainerProfile;
-#[cfg(windows)]
 use rappct::acl::{self, AccessMask, ResourcePath};
+#[cfg(windows)]
+use rappct::AppContainerProfile;
 
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
 
+#[cfg(windows)]
+use windows::core::PCWSTR;
 #[cfg(windows)]
 use windows::Win32::Foundation::HANDLE;
 #[cfg(windows)]
@@ -17,12 +19,10 @@ use windows::Win32::Security::Authorization::{
 use windows::Win32::Security::{ACL, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR};
 #[cfg(windows)]
 use windows::Win32::System::Registry::{
-    HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_ALL_ACCESS, KEY_READ, KEY_WRITE,
-    REG_CREATE_KEY_DISPOSITION, REG_CREATED_NEW_KEY, REG_OPTION_NON_VOLATILE, RegCloseKey,
-    RegCreateKeyExW, RegDeleteTreeW, RegOpenKeyExW,
+    RegCloseKey, RegCreateKeyExW, RegDeleteTreeW, RegOpenKeyExW, HKEY, HKEY_CURRENT_USER,
+    HKEY_LOCAL_MACHINE, KEY_ALL_ACCESS, KEY_READ, KEY_WRITE, REG_CREATED_NEW_KEY,
+    REG_CREATE_KEY_DISPOSITION, REG_OPTION_NON_VOLATILE,
 };
-#[cfg(windows)]
-use windows::core::PCWSTR;
 
 #[cfg(windows)]
 #[link(name = "Kernel32")]
@@ -88,13 +88,13 @@ fn security_sddl_for_path(path: &std::path::Path) -> String {
 #[cfg(windows)]
 fn parse_registry_spec(spec: &str) -> Option<(HKEY, Vec<u16>)> {
     let up = spec.to_ascii_uppercase();
-    let (root, rest) = if let Some(_) = up.strip_prefix("HKCU\\") {
+    let (root, rest) = if up.strip_prefix("HKCU\\").is_some() {
         (HKEY_CURRENT_USER, &spec[5..])
-    } else if let Some(_) = up.strip_prefix("HKEY_CURRENT_USER\\") {
+    } else if up.strip_prefix("HKEY_CURRENT_USER\\").is_some() {
         (HKEY_CURRENT_USER, &spec[18..])
-    } else if let Some(_) = up.strip_prefix("HKLM\\") {
+    } else if up.strip_prefix("HKLM\\").is_some() {
         (HKEY_LOCAL_MACHINE, &spec[5..])
-    } else if let Some(_) = up.strip_prefix("HKEY_LOCAL_MACHINE\\") {
+    } else if up.strip_prefix("HKEY_LOCAL_MACHINE\\").is_some() {
         (HKEY_LOCAL_MACHINE, &spec[19..])
     } else {
         return None;

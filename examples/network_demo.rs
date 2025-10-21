@@ -3,16 +3,16 @@
 //! This example demonstrates rappct's built-in firewall loopback exemption
 //! functionality for proper AppContainer network access.
 
-use rappct::{AppContainerProfile, KnownCapability, supports_lpac};
+use rappct::{supports_lpac, AppContainerProfile, KnownCapability};
 
 #[cfg(windows)]
 use rappct::SecurityCapabilitiesBuilder;
 
 #[cfg(windows)]
-use rappct::launch::{LaunchOptions, StdioConfig, launch_in_container_with_io};
+use rappct::launch::{launch_in_container_with_io, LaunchOptions, StdioConfig};
 
 #[cfg(feature = "net")]
-use rappct::net::{LoopbackAdd, add_loopback_exemption, remove_loopback_exemption};
+use rappct::net::{add_loopback_exemption, remove_loopback_exemption, LoopbackAdd};
 
 #[cfg(feature = "net")]
 struct FirewallGuard {
@@ -306,10 +306,8 @@ impl NetworkTest {
         // Read output in real-time
         if let Some(stdout) = child.stdout.take() {
             let reader = BufReader::new(stdout);
-            for line in reader.lines() {
-                if let Ok(line) = line {
-                    println!("  {}", line);
-                }
+            for line in reader.lines().map_while(Result::ok) {
+                println!("  {}", line);
             }
         }
 

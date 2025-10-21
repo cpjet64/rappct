@@ -2,6 +2,12 @@
 use rappct::*;
 
 #[cfg(windows)]
+use std::sync::{Mutex, OnceLock};
+
+#[cfg(windows)]
+static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+#[cfg(windows)]
 #[test]
 fn derive_sid_from_name_works() {
     let sid = derive_sid_from_name("rappct.test.unit").expect("derive sid");
@@ -48,14 +54,15 @@ fn capability_derivation_repeated_calls_are_successful() {
 #[cfg(all(windows, feature = "introspection"))]
 #[test]
 fn capability_typo_returns_suggestion() {
-    // Windows treats arbitrary capability names as valid SIDs, so we rely on library-level
-    // tests in capability.rs to exercise the suggestion path.
-    assert!(true);
+    // Ensure diagnostics entry point is available under the feature flag.
+    let _f: fn(&rappct::SecurityCapabilities, &rappct::launch::LaunchOptions)
+        -> Vec<rappct::diag::ConfigWarning> = rappct::diag::validate_configuration;
 }
 
 #[cfg(windows)]
 #[test]
 fn supports_lpac_override_ok() {
+    let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
     #[allow(unused_unsafe)]
     unsafe {
         std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "ok");
@@ -74,6 +81,7 @@ fn supports_lpac_override_ok() {
 #[cfg(windows)]
 #[test]
 fn supports_lpac_override_unsupported() {
+    let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
     #[allow(unused_unsafe)]
     unsafe {
         std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "unsupported");

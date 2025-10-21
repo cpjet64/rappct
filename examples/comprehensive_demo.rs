@@ -5,11 +5,11 @@
 //! Designed for easy developer adoption and understanding.
 
 use rappct::{
-    AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
-    acl::{AccessMask, ResourcePath, grant_to_package},
+    acl::{grant_to_package, AccessMask, ResourcePath},
     launch::{JobLimits, LaunchOptions, StdioConfig},
     launch_in_container, supports_lpac,
     token::query_current_process_token,
+    AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
 };
 use std::{
     env, fs,
@@ -482,7 +482,7 @@ fn demo_io_redirection() -> rappct::Result<()> {
     if let Some(stdout) = child_io.stdout.take() {
         let reader = BufReader::new(stdout);
         println!("  STDOUT:");
-        for line in reader.lines().flatten() {
+        for line in reader.lines().map_while(Result::ok) {
             println!("    > {}", line);
         }
     }
@@ -490,7 +490,7 @@ fn demo_io_redirection() -> rappct::Result<()> {
     if let Some(stderr) = child_io.stderr.take() {
         let reader = BufReader::new(stderr);
         println!("  STDERR:");
-        for line in reader.lines().flatten() {
+        for line in reader.lines().map_while(Result::ok) {
             println!("    > {}", line);
         }
     }

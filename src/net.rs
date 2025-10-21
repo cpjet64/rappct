@@ -44,9 +44,9 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
     #[cfg(all(windows, feature = "net"))]
     unsafe {
         use windows::Win32::NetworkManagement::WindowsFirewall::{
-            INET_FIREWALL_APP_CONTAINER, NETISO_FLAG_FORCE_COMPUTE_BINARIES,
             NetworkIsolationEnumAppContainers, NetworkIsolationFreeAppContainers,
-            NetworkIsolationGetAppContainerConfig,
+            NetworkIsolationGetAppContainerConfig, INET_FIREWALL_APP_CONTAINER,
+            NETISO_FLAG_FORCE_COMPUTE_BINARIES,
         };
         use windows::Win32::Security::SID_AND_ATTRIBUTES;
 
@@ -121,6 +121,7 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
 
 /// Safety latch: force explicit acknowledgement before applying loopback exemptions.
 /// Marker type used to acknowledge loopback firewall exemptions in development builds.
+#[derive(Debug, Clone)]
 pub struct LoopbackAdd(pub AppContainerSid);
 
 /// Applies a loopback firewall exemption for the given AppContainer SID.
@@ -219,12 +220,12 @@ impl LoopbackAdd {
 
 #[cfg(all(windows, feature = "net"))]
 unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
+    use windows::core::PCWSTR;
     use windows::Win32::NetworkManagement::WindowsFirewall::{
         NetworkIsolationGetAppContainerConfig, NetworkIsolationSetAppContainerConfig,
     };
     use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
     use windows::Win32::Security::{EqualSid, SID_AND_ATTRIBUTES};
-    use windows::core::PCWSTR;
 
     let mut cur_count: u32 = 0;
     let mut cur_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
@@ -272,7 +273,7 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
                 });
             }
         } else {
-            vec.retain(|sa| !EqualSid(sa.Sid, target).is_ok());
+            vec.retain(|sa| EqualSid(sa.Sid, target).is_err());
         }
 
         let err2 = NetworkIsolationSetAppContainerConfig(&vec);

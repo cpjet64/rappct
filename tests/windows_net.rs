@@ -4,27 +4,15 @@ use rappct::*;
 #[cfg(all(windows, feature = "net"))]
 use rappct::util::LocalFreeGuard;
 #[cfg(all(windows, feature = "net"))]
+use windows::core::PWSTR;
+#[cfg(all(windows, feature = "net"))]
 use windows::Win32::NetworkManagement::WindowsFirewall::NetworkIsolationGetAppContainerConfig;
 #[cfg(all(windows, feature = "net"))]
 use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 #[cfg(all(windows, feature = "net"))]
 use windows::Win32::Security::SID_AND_ATTRIBUTES;
-#[cfg(all(windows, feature = "net"))]
-use windows::core::PWSTR;
 
-#[cfg(all(windows, feature = "net"))]
-fn pwstr_to_string(ptr: PWSTR) -> String {
-    if ptr.is_null() {
-        return String::new();
-    }
-    let mut len = 0usize;
-    unsafe {
-        while *ptr.0.add(len) != 0 {
-            len += 1;
-        }
-        String::from_utf16_lossy(std::slice::from_raw_parts(ptr.0, len))
-    }
-}
+// removed unused helper pwstr_to_string
 
 #[cfg(all(windows, feature = "net"))]
 fn loopback_config_sids() -> Result<Vec<String>> {
@@ -48,7 +36,7 @@ fn loopback_config_sids() -> Result<Vec<String>> {
             ConvertSidToStringSidW(sa.Sid, &mut raw)
                 .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
             let guard = LocalFreeGuard::<u16>::new(raw.0);
-            out.push(unsafe { guard.to_string_lossy() });
+            out.push(guard.to_string_lossy());
         }
         if !arr.is_null() {
             let _ = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(arr);

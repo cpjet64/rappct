@@ -1,10 +1,12 @@
 [package]
 name = "rappct"
-version = "0.9.0"
-edition = "2024"
+version = "0.9.1"
+edition = "2021"
 license = "MIT"
 description = "Rust AppContainer / LPAC toolkit for Windows (profiles, capabilities, process launch, diagnostics)."
 repository = "https://github.com/cpjet64/rappct"
+homepage = "https://github.com/cpjet64/rappct"
+documentation = "https://docs.rs/rappct"
 keywords = ["windows", "appcontainer", "lpac", "sandbox", "security"]
 categories = ["os::windows-apis", "security", "api-bindings"]
 readme = "README.md"
@@ -14,6 +16,7 @@ default = []
 net = ["windows/Win32_NetworkManagement_WindowsFirewall"]
 introspection = ["dep:strsim"]
 tracing = ["dep:tracing"]
+serde = ["dep:serde"]
 
 [dependencies]
 thiserror = "1.0"
@@ -35,10 +38,10 @@ windows = { version = "0.60", features = [
 # Suggestion helper for capability names (optional; not used yet in skeleton)
 strsim = { version = "0.11", optional = true }
 tracing = { version = "0.1", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
 
 [dev-dependencies]
 clap = { version = "4.5", features = ["derive"] }
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tempfile = "3"
 

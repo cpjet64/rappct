@@ -53,7 +53,11 @@ fn suggest_capability_name(name: &str) -> Option<&'static str> {
             suggestion = Some(candidate);
         }
     }
-    if best < 0.80 { None } else { suggestion }
+    if best < 0.80 {
+        None
+    } else {
+        suggestion
+    }
 }
 
 /// Derive capability SIDs from names.
@@ -63,8 +67,8 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
     }
     #[cfg(windows)]
     {
-        use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
         use windows::core::{PCWSTR, PWSTR};
+        use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
         // Some toolchains don't surface DeriveCapabilitySidsFromName via windows-rs; bind manually.
         #[link(name = "Userenv")]
         unsafe extern "system" {
@@ -127,14 +131,14 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
                 );
                 // Convert capability group SIDs (ignored for SECURITY_CAPABILITIES; free them)
                 for i in 0..group_count as isize {
-                    let sid_ptr = *group_sids.offset(i) as *mut std::ffi::c_void;
+                    let sid_ptr: *mut std::ffi::c_void = *group_sids.offset(i);
                     if !sid_ptr.is_null() {
                         let _guard = LocalFreeGuard::<std::ffi::c_void>::new(sid_ptr);
                     }
                 }
                 // Convert capability SIDs
                 for i in 0..cap_count as isize {
-                    let sid_ptr = *cap_sids.offset(i) as *mut std::ffi::c_void;
+                    let sid_ptr: *mut std::ffi::c_void = *cap_sids.offset(i);
                     if !sid_ptr.is_null() {
                         let sid_guard = LocalFreeGuard::<std::ffi::c_void>::new(sid_ptr);
                         let mut sddl = PWSTR::null();
@@ -170,12 +174,15 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SecurityCapabilities {
     pub package: AppContainerSid,
     pub caps: Vec<SidAndAttributes>,
     pub lpac: bool,
 }
 
+#[derive(Clone, Debug)]
 pub struct SecurityCapabilitiesBuilder {
     package: AppContainerSid,
     caps_named: Vec<String>,
@@ -227,6 +234,12 @@ impl SecurityCapabilitiesBuilder {
             caps,
             lpac: self.lpac,
         })
+    }
+
+    /// Compatibility no-op to support older tests that used `.unwrap()` in the builder chain.
+    /// Returns `self` unchanged.
+    pub fn unwrap(self) -> Self {
+        self
     }
 
     #[cfg(test)]
