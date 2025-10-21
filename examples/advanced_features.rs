@@ -4,9 +4,17 @@
 //! - Profile path resolution (folder_path, named_object_path)
 //! - Custom named capabilities
 //! - Configuration diagnostics
-//! - Advanced launch options
+//! - Advanced launch options (custom environment - see Demo 5 for Error 203 fix)
 //! - Network enumeration
 //! - Direct SID derivation
+//!
+//! ## Important: Custom Environment Pattern (Demo 5)
+//!
+//! When using `LaunchOptions::env`, Windows **completely replaces** the parent environment.
+//! You MUST include essential system variables (SystemRoot, ComSpec, PATHEXT, TEMP, TMP)
+//! or Windows processes will fail with Error 203: "The system could not find the environment option".
+//!
+//! See Demo 5 for the correct pattern: copy essential vars from parent, then add custom vars.
 
 use rappct::{
     acl::{grant_to_capability, AccessMask, ResourcePath},
@@ -397,27 +405,32 @@ fn demo_advanced_launch() -> rappct::Result<()> {
 
     let profile = AppContainerProfile::ensure("rappct.advanced.launch", "Advanced Launch", None)?;
 
-    // Create custom environment
-    let custom_env = vec![
-        (OsString::from("RAPPCT_DEMO"), OsString::from("advanced")),
-        (
-            OsString::from("ISOLATION_LEVEL"),
-            OsString::from("appcontainer"),
-        ),
-        (
-            OsString::from("PATH"),
-            OsString::from("C:\\Windows\\System32"),
-        ),
-    ];
+    // Build custom environment with essential Windows variables
+    // NOTE: When passing env to CreateProcessW, it REPLACES the entire parent environment.
+    // Windows needs SystemRoot, ComSpec, etc. for cmd.exe and other tools to work.
+    let mut custom_env = vec![];
+
+    // Add essential Windows variables that processes need
+    for var in &["SystemRoot", "windir", "ComSpec", "PATHEXT", "TEMP", "TMP"] {
+        if let Ok(val) = env::var(var) {
+            custom_env.push((OsString::from(*var), OsString::from(val)));
+        }
+    }
+
+    // Add our demo-specific variables
+    custom_env.push((OsString::from("RAPPCT_DEMO"), OsString::from("advanced")));
+    custom_env.push((OsString::from("ISOLATION_LEVEL"), OsString::from("appcontainer")));
+    custom_env.push((OsString::from("PATH"), OsString::from("C:\\Windows\\System32")));
 
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
         .build()?;
 
     println!("→ Launching with custom environment and timeout...");
+    println!("  Environment has {} variables (system essentials + custom)", custom_env.len());
     let opts = LaunchOptions {
         exe: resolve_cmd_exe(),
-        cmdline: Some("/C echo Environment: %RAPPCT_DEMO% && echo Isolation: %ISOLATION_LEVEL% && echo Advanced launch demo completed".to_string()),
+        cmdline: Some("/C echo RAPPCT_DEMO=%RAPPCT_DEMO% && echo ISOLATION_LEVEL=%ISOLATION_LEVEL% && echo SystemRoot=%SystemRoot% && echo Advanced launch completed".to_string()),
         cwd: Some(PathBuf::from("C:\\Windows\\System32")),
         env: Some(custom_env),
         suspended: false, // Could set to true for debugging

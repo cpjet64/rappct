@@ -3,6 +3,16 @@
 //! This example provides clear, isolated demonstrations of each rappct capability
 //! followed by a combined example showing how to use multiple features together.
 //! Designed for easy developer adoption and understanding.
+//!
+//! ## Important: PowerShell in AppContainers (Demo 4)
+//!
+//! Demo 4 (Network Capabilities) redirects PowerShell output to temporary files
+//! to avoid Error 0x5 "Access is denied" when accessing the console output buffer.
+//! AppContainers restrict console buffer access for security. The pattern used:
+//! 1. Grant ACL access to temp directory for the AppContainer profile
+//! 2. Redirect PowerShell output: `Out-File -FilePath '{temp_file}' -Encoding ASCII`
+//! 3. Read back with cmd: `type "{temp_file}"`
+//! 4. Auto-cleanup: `del "{temp_file}" 2>nul`
 
 use rappct::{
     acl::{grant_to_package, AccessMask, ResourcePath},
@@ -162,6 +172,14 @@ fn demo_network_capabilities() -> rappct::Result<()> {
         Some("Network capability demonstration"),
     )?;
 
+    // Grant ACL access to temp directory for PowerShell output files
+    let temp_dir = env::temp_dir();
+    grant_to_package(
+        ResourcePath::Directory(temp_dir.clone()),
+        &profile.sid,
+        AccessMask(0x001F01FF), // GENERIC_ALL - full access to write temp files
+    )?;
+
     // Example 1: Internet Client only
     println!("\n→ Example 1: Internet Client capability");
     println!("  Allows: Outbound internet connections");
@@ -171,10 +189,13 @@ fn demo_network_capabilities() -> rappct::Result<()> {
         .with_known(&[KnownCapability::InternetClient])
         .build()?;
 
+    // Create temp file for PowerShell output (avoids console buffer errors in AppContainer)
+    let http_out1 = temp_dir.join(format!("rappct_http_client_{}.txt", std::process::id()));
+
     let client_opts = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        // Try multiple endpoints to reduce false negatives
-        cmdline: Some("/C echo [NET-CLIENT] Testing Internet Client && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){ try { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }\" && ping -n 2 8.8.8.8 && timeout /T 2 /NOBREAK >nul".to_string()),
+        // PowerShell output redirected to file to avoid console buffer access errors
+        cmdline: Some(format!("/C echo [NET-CLIENT] Testing Internet Client && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){{ try {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && ping -n 2 8.8.8.8 && timeout /T 2 /NOBREAK >nul", http_out1.display(), http_out1.display(), http_out1.display(), http_out1.display())),
         ..Default::default()
     };
 
@@ -190,10 +211,13 @@ fn demo_network_capabilities() -> rappct::Result<()> {
         .with_known(&[KnownCapability::InternetClientServer])
         .build()?;
 
+    // Create temp file for PowerShell output (avoids console buffer errors in AppContainer)
+    let http_out2 = temp_dir.join(format!("rappct_http_server_{}.txt", std::process::id()));
+
     let server_opts = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        // Multi-endpoint HTTP with optional proxy support from env (HTTPS_PROXY/HTTP_PROXY)
-        cmdline: Some("/C echo [NET-SERVER] Can act as both client and server && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; $proxy=$env:HTTPS_PROXY; if(-not $proxy){ $proxy=$env:HTTP_PROXY }; foreach($u in $urls){ try { if($proxy){ $r=Invoke-WebRequest -Uri $u -Proxy $proxy -UseBasicParsing -TimeoutSec 5 } else { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5 }; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }\" && netstat -an | findstr LISTENING && timeout /T 2 /NOBREAK >nul".to_string()),
+        // PowerShell output redirected to file to avoid console buffer access errors
+        cmdline: Some(format!("/C echo [NET-SERVER] Can act as both client and server && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; $proxy=$env:HTTPS_PROXY; if(-not $proxy){{ $proxy=$env:HTTP_PROXY }}; foreach($u in $urls){{ try {{ if($proxy){{ $r=Invoke-WebRequest -Uri $u -Proxy $proxy -UseBasicParsing -TimeoutSec 5 }} else {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5 }}; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && netstat -an | findstr LISTENING && timeout /T 2 /NOBREAK >nul", http_out2.display(), http_out2.display(), http_out2.display(), http_out2.display())),
         ..Default::default()
     };
 
@@ -209,10 +233,13 @@ fn demo_network_capabilities() -> rappct::Result<()> {
         .with_known(&[KnownCapability::PrivateNetworkClientServer])
         .build()?;
 
+    // Create temp file for PowerShell output (avoids console buffer errors in AppContainer)
+    let http_out3 = temp_dir.join(format!("rappct_http_private_{}.txt", std::process::id()));
+
     let private_opts = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        // Use multi-endpoint HTTP to demonstrate network access reliably
-        cmdline: Some("/C echo [NET-PRIVATE] Access to private networks && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){ try { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }\" && timeout /T 2 /NOBREAK >nul".to_string()),
+        // PowerShell output redirected to file to avoid console buffer access errors
+        cmdline: Some(format!("/C echo [NET-PRIVATE] Access to private networks && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){{ try {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && timeout /T 2 /NOBREAK >nul", http_out3.display(), http_out3.display(), http_out3.display(), http_out3.display())),
         ..Default::default()
     };
 

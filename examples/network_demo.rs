@@ -2,6 +2,13 @@
 //!
 //! This example demonstrates rappct's built-in firewall loopback exemption
 //! functionality for proper AppContainer network access.
+//!
+//! ## Important: PowerShell in AppContainers
+//!
+//! PowerShell output is redirected to temporary files to avoid Error 0x5
+//! "Access is denied" when reading the console output buffer, which AppContainers
+//! restrict for security. See the test_script formatting in NetworkTest for the pattern:
+//! `Out-File -FilePath '{temp_file}'` -> `type "{temp_file}"` -> `del "{temp_file}"`
 
 #[cfg(feature = "net")]
 use rappct::{supports_lpac, AppContainerProfile, KnownCapability};
@@ -273,10 +280,18 @@ impl NetworkTest {
 
         let caps = caps_builder.build()?;
 
-        // Create a comprehensive network test script with better HTTP testing
+        // Create temp files for PowerShell output (avoids console buffer access errors in AppContainer)
+        let temp_dir = std::env::temp_dir();
+        let http_out = temp_dir.join(format!("rappct_http_{}.txt", std::process::id()));
+        let localhost_out = temp_dir.join(format!("rappct_localhost_{}.txt", std::process::id()));
+
+        // Create a comprehensive network test script
+        // NOTE: PowerShell output is redirected to files to avoid console buffer access errors
         let mut test_script = format!(
-            r#"/C echo [{prefix}] Starting network tests... && echo [{prefix}] Test 1: DNS resolution && nslookup google.com 1>nul 2>nul && echo [{prefix}] DNS: SUCCESS || echo [{prefix}] DNS: FAILED && echo [{prefix}] Test 2: HTTP connectivity && powershell -Command "try {{ $response = Invoke-WebRequest -Uri 'http://example.com' -UseBasicParsing -TimeoutSec 5; 'HTTP: SUCCESS (Status: ' + $response.StatusCode + ')' }} catch {{ 'HTTP: FAILED - ' + $_.Exception.Message }}" && echo [{prefix}] Test 3: Localhost test && powershell -Command "try {{ $response = Invoke-WebRequest -Uri 'http://127.0.0.1:1' -UseBasicParsing -TimeoutSec 2 }} catch {{ if ($_.Exception.Message -like '*ConnectFailure*') {{ 'LOCALHOST: ACCESSIBLE (connection refused = good)' }} else {{ 'LOCALHOST: BLOCKED - ' + $_.Exception.Message }} }}" && echo [{prefix}] Network tests completed"#,
-            prefix = self.prefix
+            r#"/C echo [{prefix}] Starting network tests... && echo [{prefix}] Test 1: DNS resolution && nslookup google.com 1>nul 2>nul && echo [{prefix}] DNS: SUCCESS || echo [{prefix}] DNS: FAILED && echo [{prefix}] Test 2: HTTP connectivity && powershell -Command "try {{ $response = Invoke-WebRequest -Uri 'http://example.com' -UseBasicParsing -TimeoutSec 5; 'HTTP: SUCCESS (Status: ' + $response.StatusCode + ')' | Out-File -FilePath '{http_out}' -Encoding ASCII }} catch {{ 'HTTP: FAILED - ' + $_.Exception.Message | Out-File -FilePath '{http_out}' -Encoding ASCII }}" && type "{http_out}" 2>nul || echo HTTP: FAILED && echo [{prefix}] Test 3: Localhost test && powershell -Command "try {{ $response = Invoke-WebRequest -Uri 'http://127.0.0.1:1' -UseBasicParsing -TimeoutSec 2 }} catch {{ if ($_.Exception.Message -like '*ConnectFailure*') {{ 'LOCALHOST: ACCESSIBLE (connection refused = good)' | Out-File -FilePath '{localhost_out}' -Encoding ASCII }} else {{ 'LOCALHOST: BLOCKED - ' + $_.Exception.Message | Out-File -FilePath '{localhost_out}' -Encoding ASCII }} }}" && type "{localhost_out}" 2>nul || echo LOCALHOST: BLOCKED && del "{http_out}" 2>nul && del "{localhost_out}" 2>nul && echo [{prefix}] Network tests completed"#,
+            prefix = self.prefix,
+            http_out = http_out.display(),
+            localhost_out = localhost_out.display()
         );
 
         // In LPAC, PowerShell may fail due to ETW/COM init restrictions; use curl for HTTP

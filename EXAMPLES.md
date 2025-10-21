@@ -98,6 +98,52 @@ cargo run --example advanced_features --features "net,introspection"
 
 ## Common Issues and Solutions
 
+### ❌ "The system could not find the environment option that was entered" (Error 203)
+**Cause**: When passing custom environment via `LaunchOptions::env`, it **completely replaces** the parent environment. Windows processes require essential system variables (SystemRoot, ComSpec, PATHEXT, TEMP, TMP) to function.
+**Solution**: When using custom environments, always include essential Windows variables:
+```rust
+let mut custom_env = vec![];
+
+// Copy essential Windows variables from parent
+for var in &["SystemRoot", "windir", "ComSpec", "PATHEXT", "TEMP", "TMP"] {
+    if let Ok(val) = env::var(var) {
+        custom_env.push((OsString::from(*var), OsString::from(val)));
+    }
+}
+
+// Then add your custom variables
+custom_env.push((OsString::from("MY_VAR"), OsString::from("value")));
+
+let opts = LaunchOptions {
+    env: Some(custom_env),
+    ..Default::default()
+};
+```
+**See**: `advanced_features.rs` Demo 5 for a complete example
+
+### ❌ "Access is denied" reading console output buffer (Error 0x5)
+**Cause**: PowerShell tries to access the console output buffer for formatting, which AppContainers restrict for security.
+**Solution**: Redirect PowerShell output to temporary files instead of console:
+```rust
+// Create temp file path
+let temp_dir = env::temp_dir();
+let output_file = temp_dir.join(format!("output_{}.txt", std::process::id()));
+
+// Grant ACL access to temp directory for the AppContainer
+grant_to_package(
+    ResourcePath::Directory(temp_dir.clone()),
+    &profile.sid,
+    AccessMask(0x001F01FF), // GENERIC_ALL
+)?;
+
+// Redirect PowerShell output to file, read back with cmd, and auto-cleanup
+let cmdline = format!(
+    r#"/C powershell -Command "... | Out-File -FilePath '{}' -Encoding ASCII" && type "{}" && del "{}" 2>nul"#,
+    output_file.display(), output_file.display(), output_file.display()
+);
+```
+**See**: `network_demo.rs` and `comprehensive_demo.rs` Demo 4 for complete examples
+
 ### ❌ "Process launch failed at CreateProcessW" or "The system cannot find the file specified"
 **Cause**: Not running as Administrator OR AppContainer restrictions blocking access
 **Solutions**:
