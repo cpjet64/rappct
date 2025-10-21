@@ -125,9 +125,8 @@ fn main() -> rappct::Result<()> {
         println!("• Use LoopbackAdd::confirm_debug_only() for development/testing");
         println!("• Always clean up firewall exemptions when done");
         println!("• Network capabilities work much better with proper firewall config");
+        return Ok(());
     }
-
-    Ok(())
 }
 
 #[cfg(feature = "net")]

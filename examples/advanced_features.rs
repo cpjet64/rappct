@@ -351,9 +351,8 @@ fn demo_diagnostics() -> rappct::Result<()> {
         }
 
         drop(profile_guard);
+        return Ok(());
     }
-
-    Ok(())
 }
 
 /// Demo 5: Advanced Launch Options
@@ -531,9 +530,8 @@ fn demo_network_enumeration() -> rappct::Result<()> {
             }
         }
         println!();
+        return Ok(());
     }
-
-    Ok(())
 }
 
 /// Demo 8: Capability-based ACLs
