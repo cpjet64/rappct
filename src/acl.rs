@@ -55,18 +55,18 @@ pub fn grant_to_capability(
 #[cfg(windows)]
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) -> Result<()> {
-    use windows::core::{PCWSTR, PWSTR};
     use windows::Win32::Foundation::HANDLE;
     use windows::Win32::Security::Authorization::{
-        ConvertStringSidToSidW, GetNamedSecurityInfoW, GetSecurityInfo, SetEntriesInAclW,
-        SetNamedSecurityInfoW, SetSecurityInfo, EXPLICIT_ACCESS_W, SE_FILE_OBJECT, SE_REGISTRY_KEY,
+        ConvertStringSidToSidW, EXPLICIT_ACCESS_W, GetNamedSecurityInfoW, GetSecurityInfo,
+        SE_FILE_OBJECT, SE_REGISTRY_KEY, SetEntriesInAclW, SetNamedSecurityInfoW, SetSecurityInfo,
         TRUSTEE_FORM, TRUSTEE_IS_SID, TRUSTEE_IS_WELL_KNOWN_GROUP, TRUSTEE_TYPE, TRUSTEE_W,
     };
     use windows::Win32::Security::{ACE_FLAGS, ACL, DACL_SECURITY_INFORMATION};
     use windows::Win32::System::Registry::{
-        RegCloseKey, RegOpenKeyExW, HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ,
-        KEY_WRITE,
+        HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WRITE, RegCloseKey,
+        RegOpenKeyExW,
     };
+    use windows::core::{PCWSTR, PWSTR};
 
     // Convert SDDL to PSID
     let wide: Vec<u16> = crate::util::to_utf16(sid_sddl);
@@ -94,16 +94,18 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
-            let st = unsafe { GetNamedSecurityInfoW(
-                PCWSTR(path_w.as_ptr()),
-                SE_FILE_OBJECT,
-                DACL_SECURITY_INFORMATION,
-                None,
-                None,
-                Some(&mut p_dacl),
-                None,
-                &mut p_sd,
-            ) };
+            let st = unsafe {
+                GetNamedSecurityInfoW(
+                    PCWSTR(path_w.as_ptr()),
+                    SE_FILE_OBJECT,
+                    DACL_SECURITY_INFORMATION,
+                    None,
+                    None,
+                    Some(&mut p_dacl),
+                    None,
+                    &mut p_sd,
+                )
+            };
             if st.0 != 0 {
                 return Err(AcError::Win32(format!(
                     "GetNamedSecurityInfoW failed: {:?}",
@@ -113,7 +115,9 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             let _sd_guard = unsafe { LocalFreeGuard::new(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
-            let st2 = unsafe { SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl) };
+            let st2 = unsafe {
+                SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
+            };
             if st2.0 != 0 {
                 return Err(AcError::Win32(format!(
                     "SetEntriesInAclW failed: {:?}",
@@ -121,15 +125,17 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 )));
             }
             let new_dacl_guard = unsafe { LocalFreeGuard::new(new_dacl) };
-            let st3 = unsafe { SetNamedSecurityInfoW(
-                PCWSTR(path_w.as_ptr()),
-                SE_FILE_OBJECT,
-                DACL_SECURITY_INFORMATION,
-                None,
-                None,
-                Some(new_dacl_guard.as_ptr() as *const ACL),
-                None,
-            ) };
+            let st3 = unsafe {
+                SetNamedSecurityInfoW(
+                    PCWSTR(path_w.as_ptr()),
+                    SE_FILE_OBJECT,
+                    DACL_SECURITY_INFORMATION,
+                    None,
+                    None,
+                    Some(new_dacl_guard.as_ptr() as *const ACL),
+                    None,
+                )
+            };
             if st3.0 != 0 {
                 return Err(AcError::Win32(format!(
                     "SetNamedSecurityInfoW failed: {:?}",
@@ -143,16 +149,18 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
-            let st = unsafe { GetNamedSecurityInfoW(
-                PCWSTR(path_w.as_ptr()),
-                SE_FILE_OBJECT,
-                DACL_SECURITY_INFORMATION,
-                None,
-                None,
-                Some(&mut p_dacl),
-                None,
-                &mut p_sd,
-            ) };
+            let st = unsafe {
+                GetNamedSecurityInfoW(
+                    PCWSTR(path_w.as_ptr()),
+                    SE_FILE_OBJECT,
+                    DACL_SECURITY_INFORMATION,
+                    None,
+                    None,
+                    Some(&mut p_dacl),
+                    None,
+                    &mut p_sd,
+                )
+            };
             if st.0 != 0 {
                 return Err(AcError::Win32(format!(
                     "GetNamedSecurityInfoW failed: {:?}",
@@ -162,7 +170,9 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             let _sd_guard = unsafe { LocalFreeGuard::new(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
-            let st2 = unsafe { SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl) };
+            let st2 = unsafe {
+                SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
+            };
             if st2.0 != 0 {
                 return Err(AcError::Win32(format!(
                     "SetEntriesInAclW failed: {:?}",
@@ -170,15 +180,17 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 )));
             }
             let new_dacl_guard = unsafe { LocalFreeGuard::new(new_dacl) };
-            let st3 = unsafe { SetNamedSecurityInfoW(
-                PCWSTR(path_w.as_ptr()),
-                SE_FILE_OBJECT,
-                DACL_SECURITY_INFORMATION,
-                None,
-                None,
-                Some(new_dacl_guard.as_ptr() as *const ACL),
-                None,
-            ) };
+            let st3 = unsafe {
+                SetNamedSecurityInfoW(
+                    PCWSTR(path_w.as_ptr()),
+                    SE_FILE_OBJECT,
+                    DACL_SECURITY_INFORMATION,
+                    None,
+                    None,
+                    Some(new_dacl_guard.as_ptr() as *const ACL),
+                    None,
+                )
+            };
             if st3.0 != 0 {
                 return Err(AcError::Win32(format!(
                     "SetNamedSecurityInfoW failed: {:?}",
@@ -191,13 +203,13 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             // Parse root and subkey
             fn parse_root(spec: &str) -> Option<(HKEY, Vec<u16>)> {
                 let up = spec.to_ascii_uppercase();
-                let (root, rest) = if let Some(_) = up.strip_prefix("HKCU\\") {
+                let (root, rest) = if up.strip_prefix("HKCU\\").is_some() {
                     (HKEY_CURRENT_USER, &spec[5..])
-                } else if let Some(_) = up.strip_prefix("HKEY_CURRENT_USER\\") {
+                } else if up.strip_prefix("HKEY_CURRENT_USER\\").is_some() {
                     (HKEY_CURRENT_USER, &spec[18..])
-                } else if let Some(_) = up.strip_prefix("HKLM\\") {
+                } else if up.strip_prefix("HKLM\\").is_some() {
                     (HKEY_LOCAL_MACHINE, &spec[5..])
-                } else if let Some(_) = up.strip_prefix("HKEY_LOCAL_MACHINE\\") {
+                } else if up.strip_prefix("HKEY_LOCAL_MACHINE\\").is_some() {
                     (HKEY_LOCAL_MACHINE, &spec[19..])
                 } else {
                     return None;
@@ -211,29 +223,33 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 ));
             };
             let mut hkey = HKEY(std::ptr::null_mut());
-            let st = unsafe { RegOpenKeyExW(
-                root,
-                PCWSTR(subkey_w.as_ptr()),
-                Some(0),
-                KEY_READ | KEY_WRITE,
-                &mut hkey,
-            ) };
+            let st = unsafe {
+                RegOpenKeyExW(
+                    root,
+                    PCWSTR(subkey_w.as_ptr()),
+                    Some(0),
+                    KEY_READ | KEY_WRITE,
+                    &mut hkey,
+                )
+            };
             if st.0 != 0 {
                 return Err(AcError::Win32(format!("RegOpenKeyExW failed: {:?}", st)));
             }
 
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
-            let st2 = unsafe { GetSecurityInfo(
-                HANDLE(hkey.0),
-                SE_REGISTRY_KEY,
-                DACL_SECURITY_INFORMATION,
-                None,
-                None,
-                Some(&mut p_dacl),
-                None,
-                Some(&mut p_sd),
-            ) };
+            let st2 = unsafe {
+                GetSecurityInfo(
+                    HANDLE(hkey.0),
+                    SE_REGISTRY_KEY,
+                    DACL_SECURITY_INFORMATION,
+                    None,
+                    None,
+                    Some(&mut p_dacl),
+                    None,
+                    Some(&mut p_sd),
+                )
+            };
             if st2.0 != 0 {
                 let _ = RegCloseKey(hkey);
                 return Err(AcError::Win32(format!(
@@ -244,7 +260,9 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             let _sd_guard = unsafe { LocalFreeGuard::new(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
-            let st3 = unsafe { SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl) };
+            let st3 = unsafe {
+                SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
+            };
             if st3.0 != 0 {
                 let _ = RegCloseKey(hkey);
                 return Err(AcError::Win32(format!(
@@ -253,15 +271,17 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 )));
             }
             let new_dacl_guard = unsafe { LocalFreeGuard::new(new_dacl) };
-            let st4 = unsafe { SetSecurityInfo(
-                HANDLE(hkey.0),
-                SE_REGISTRY_KEY,
-                DACL_SECURITY_INFORMATION,
-                None,
-                None,
-                Some(new_dacl_guard.as_ptr() as *const ACL),
-                None,
-            ) };
+            let st4 = unsafe {
+                SetSecurityInfo(
+                    HANDLE(hkey.0),
+                    SE_REGISTRY_KEY,
+                    DACL_SECURITY_INFORMATION,
+                    None,
+                    None,
+                    Some(new_dacl_guard.as_ptr() as *const ACL),
+                    None,
+                )
+            };
             let _ = unsafe { RegCloseKey(hkey) };
             if st4.0 != 0 {
                 return Err(AcError::Win32(format!(

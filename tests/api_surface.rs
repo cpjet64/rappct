@@ -4,9 +4,9 @@ use std::mem::size_of;
 
 use rappct::sid::AppContainerSid;
 use rappct::{
-    launch_in_container, launch_in_container_with_io, AppContainerProfile, JobLimits,
-    KnownCapability, LaunchOptions, Launched, LaunchedIo, Result, SecurityCapabilities,
-    SecurityCapabilitiesBuilder, StdioConfig,
+    AppContainerProfile, JobLimits, KnownCapability, LaunchOptions, Launched, LaunchedIo, Result,
+    SecurityCapabilities, SecurityCapabilitiesBuilder, StdioConfig, launch_in_container,
+    launch_in_container_with_io,
 };
 
 #[test]
@@ -36,14 +36,14 @@ fn api_reexports_are_accessible() {
 
     #[cfg(feature = "introspection")]
     {
-        use rappct::diag::{validate_configuration, ConfigWarning};
+        use rappct::diag::{ConfigWarning, validate_configuration};
         let _ = validate_configuration
             as fn(&SecurityCapabilities, &LaunchOptions) -> Vec<ConfigWarning>;
     }
 
     #[cfg(feature = "net")]
     {
-        use rappct::net::{add_loopback_exemption, list_appcontainers, LoopbackAdd};
+        use rappct::net::{LoopbackAdd, add_loopback_exemption, list_appcontainers};
         let sid = AppContainerSid::from_sddl("S-1-15-2-1");
         let _ = list_appcontainers as fn() -> Result<Vec<(AppContainerSid, String)>>;
         let _ = add_loopback_exemption as fn(LoopbackAdd) -> Result<()>;

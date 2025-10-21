@@ -20,29 +20,33 @@ unsafe fn pwstr_to_string(ptr: PWSTR) -> String {
         return String::new();
     }
     let mut len = 0usize;
-    while *ptr.0.add(len) != 0 {
-        len += 1;
+    unsafe {
+        while *ptr.0.add(len) != 0 {
+            len += 1;
+        }
+        String::from_utf16_lossy(std::slice::from_raw_parts(ptr.0, len))
     }
-    String::from_utf16_lossy(std::slice::from_raw_parts(ptr.0, len))
 }
 
 #[cfg(all(windows, feature = "net"))]
 unsafe fn psid_to_string(psid: PSID) -> Result<String> {
     use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
     let mut raw = PWSTR::null();
-    ConvertSidToStringSidW(psid, &mut raw)
-        .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
-    let guard = LocalFreeGuard::<u16>::new(raw.0);
-    Ok(unsafe { guard.to_string_lossy() })
+    unsafe {
+        ConvertSidToStringSidW(psid, &mut raw)
+            .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
+        let guard = LocalFreeGuard::<u16>::new(raw.0);
+        Ok(guard.to_string_lossy())
+    }
 }
 
 pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
     #[cfg(all(windows, feature = "net"))]
     unsafe {
         use windows::Win32::NetworkManagement::WindowsFirewall::{
+            INET_FIREWALL_APP_CONTAINER, NETISO_FLAG_FORCE_COMPUTE_BINARIES,
             NetworkIsolationEnumAppContainers, NetworkIsolationFreeAppContainers,
-            NetworkIsolationGetAppContainerConfig, INET_FIREWALL_APP_CONTAINER,
-            NETISO_FLAG_FORCE_COMPUTE_BINARIES,
+            NetworkIsolationGetAppContainerConfig,
         };
         use windows::Win32::Security::SID_AND_ATTRIBUTES;
 
@@ -76,32 +80,32 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
             NetworkIsolationFreeAppContainers(arr);
         }
 
-    let mut cfg_count: u32 = 0;
-    let mut cfg_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
-    let cfg_err = NetworkIsolationGetAppContainerConfig(&mut cfg_count, &mut cfg_arr);
-    if cfg_err != 0 {
-        return Err(AcError::Win32(format!(
-            "NetworkIsolationGetAppContainerConfig failed: {cfg_err}"
-        )));
-    }
-    if !cfg_arr.is_null() {
-        let cfg_guard = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cfg_arr);
-        let cfg_slice = std::slice::from_raw_parts(
-            cfg_guard.as_ptr() as *const SID_AND_ATTRIBUTES,
-            cfg_count as usize,
-        );
-        for sa in cfg_slice {
-            let sid_str = psid_to_string(sa.Sid)?;
-            if !sid_set.contains(&sid_str) {
-                #[cfg(feature = "tracing")]
-                tracing::warn!(
-                    "Firewall config SID missing from enumeration; continuing: {}",
-                    sid_str
-                );
-                // Continue without failing; enumeration and config may be out of sync on some systems.
+        let mut cfg_count: u32 = 0;
+        let mut cfg_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
+        let cfg_err = NetworkIsolationGetAppContainerConfig(&mut cfg_count, &mut cfg_arr);
+        if cfg_err != 0 {
+            return Err(AcError::Win32(format!(
+                "NetworkIsolationGetAppContainerConfig failed: {cfg_err}"
+            )));
+        }
+        if !cfg_arr.is_null() {
+            let cfg_guard = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cfg_arr);
+            let cfg_slice = std::slice::from_raw_parts(
+                cfg_guard.as_ptr() as *const SID_AND_ATTRIBUTES,
+                cfg_count as usize,
+            );
+            for sa in cfg_slice {
+                let sid_str = psid_to_string(sa.Sid)?;
+                if !sid_set.contains(&sid_str) {
+                    #[cfg(feature = "tracing")]
+                    tracing::warn!(
+                        "Firewall config SID missing from enumeration; continuing: {}",
+                        sid_str
+                    );
+                    // Continue without failing; enumeration and config may be out of sync on some systems.
+                }
             }
         }
-    }
 
         Ok(out)
     }
@@ -215,68 +219,70 @@ impl LoopbackAdd {
 
 #[cfg(all(windows, feature = "net"))]
 unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
-    use windows::core::PCWSTR;
     use windows::Win32::NetworkManagement::WindowsFirewall::{
         NetworkIsolationGetAppContainerConfig, NetworkIsolationSetAppContainerConfig,
     };
     use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
     use windows::Win32::Security::{EqualSid, SID_AND_ATTRIBUTES};
+    use windows::core::PCWSTR;
 
     let mut cur_count: u32 = 0;
     let mut cur_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
-    let err = NetworkIsolationGetAppContainerConfig(&mut cur_count, &mut cur_arr);
-    if err != 0 {
-        return Err(AcError::Win32(format!(
-            "NetworkIsolationGetAppContainerConfig failed: {err}"
-        )));
-    }
-    let current_guard = if !cur_arr.is_null() {
-        Some(LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cur_arr))
-    } else {
-        None
-    };
-    let mut vec: Vec<SID_AND_ATTRIBUTES> = if let Some(ref guard) = current_guard {
-        std::slice::from_raw_parts(
-            guard.as_ptr() as *const SID_AND_ATTRIBUTES,
-            cur_count as usize,
-        )
-        .to_vec()
-    } else {
-        Vec::new()
-    };
+    unsafe {
+        let err = NetworkIsolationGetAppContainerConfig(&mut cur_count, &mut cur_arr);
+        if err != 0 {
+            return Err(AcError::Win32(format!(
+                "NetworkIsolationGetAppContainerConfig failed: {err}"
+            )));
+        }
+        let current_guard = if !cur_arr.is_null() {
+            Some(LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cur_arr))
+        } else {
+            None
+        };
+        let mut vec: Vec<SID_AND_ATTRIBUTES> = if let Some(ref guard) = current_guard {
+            std::slice::from_raw_parts(
+                guard.as_ptr() as *const SID_AND_ATTRIBUTES,
+                cur_count as usize,
+            )
+            .to_vec()
+        } else {
+            Vec::new()
+        };
 
-    let sddl_w: Vec<u16> = crate::util::to_utf16(sid.as_string());
-    let mut psid_raw = PSID::default();
-    ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
-        .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e}")))?;
-    let psid_guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
-    let target = PSID(psid_guard.as_ptr());
+        let sddl_w: Vec<u16> = crate::util::to_utf16(sid.as_string());
+        let mut psid_raw = PSID::default();
+        ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
+            .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e}")))?;
+        let psid_guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
+        let target = PSID(psid_guard.as_ptr());
 
-    if allow {
-        let mut exists = false;
-        for sa in &vec {
-            if EqualSid(sa.Sid, target).is_ok() {
-                exists = true;
-                break;
+        if allow {
+            let mut exists = false;
+            for sa in &vec {
+                if EqualSid(sa.Sid, target).is_ok() {
+                    exists = true;
+                    break;
+                }
             }
+            if !exists {
+                vec.push(SID_AND_ATTRIBUTES {
+                    Sid: target,
+                    Attributes: 0,
+                });
+            }
+        } else {
+            vec.retain(|sa| !EqualSid(sa.Sid, target).is_ok());
         }
-        if !exists {
-            vec.push(SID_AND_ATTRIBUTES {
-                Sid: target,
-                Attributes: 0,
-            });
-        }
-    } else {
-        vec.retain(|sa| !EqualSid(sa.Sid, target).is_ok());
-    }
 
-    let err2 = NetworkIsolationSetAppContainerConfig(&vec);
-    if err2 != 0 {
-        return Err(AcError::Win32(format!(
-            "NetworkIsolationSetAppContainerConfig failed: {err2}"
-        )));
+        let err2 = NetworkIsolationSetAppContainerConfig(&vec);
+        if err2 != 0 {
+            return Err(AcError::Win32(format!(
+                "NetworkIsolationSetAppContainerConfig failed: {err2}"
+            )));
+        }
+        Ok(())
     }
-    Ok(())
 }
 
 #[cfg(all(windows, not(feature = "net")))]

@@ -11,14 +11,11 @@ use crate::launch::attr::AttrList;
 #[cfg(windows)]
 use crate::util::{LocalFreeGuard, OwnedHandle};
 
-
 // Use fully-qualified macros (tracing::trace!, etc.) to avoid unused import warnings
-#[cfg(windows)]
-use windows::core::{PCWSTR, PWSTR};
 #[cfg(windows)]
 use windows::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE, TRUE};
 #[cfg(windows)]
-use windows::Win32::Foundation::{SetHandleInformation, HANDLE_FLAG_INHERIT};
+use windows::Win32::Foundation::{HANDLE_FLAG_INHERIT, SetHandleInformation};
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
 #[cfg(windows)]
@@ -32,23 +29,25 @@ use windows::Win32::Storage::FileSystem::{
 };
 #[cfg(windows)]
 use windows::Win32::System::JobObjects::{
-    AssignProcessToJobObject, CreateJobObjectW, JobObjectCpuRateControlInformation,
+    AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_CPU_RATE_CONTROL_ENABLE,
+    JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+    JOB_OBJECT_LIMIT_PROCESS_MEMORY, JOBOBJECT_CPU_RATE_CONTROL_INFORMATION,
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectCpuRateControlInformation,
     JobObjectExtendedLimitInformation, SetInformationJobObject,
-    JOBOBJECT_CPU_RATE_CONTROL_INFORMATION, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
-    JOB_OBJECT_CPU_RATE_CONTROL_ENABLE, JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP,
-    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY,
 };
 #[cfg(windows)]
 use windows::Win32::System::Pipes::CreatePipe;
 #[cfg(windows)]
 use windows::Win32::System::Threading::{
-    CreateProcessW, UpdateProcThreadAttribute, CREATE_SUSPENDED, CREATE_UNICODE_ENVIRONMENT,
-    EXTENDED_STARTUPINFO_PRESENT, PROCESS_INFORMATION,
+    CREATE_SUSPENDED, CREATE_UNICODE_ENVIRONMENT, CreateProcessW, EXTENDED_STARTUPINFO_PRESENT,
     PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-    PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES, STARTUPINFOEXW, STARTUPINFOW,
+    PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES, PROCESS_INFORMATION, STARTUPINFOEXW, STARTUPINFOW,
+    UpdateProcThreadAttribute,
 };
 #[cfg(windows)]
 use windows::Win32::System::WindowsProgramming::PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT;
+#[cfg(windows)]
+use windows::core::{PCWSTR, PWSTR};
 
 #[derive(Clone, Copy, Debug)]
 pub enum StdioConfig {
@@ -78,10 +77,14 @@ pub struct LaunchOptions {
 
 impl Default for LaunchOptions {
     fn default() -> Self {
+        #[cfg(target_os = "windows")]
+        let cwd = Some(std::path::PathBuf::from("C:\\Windows\\System32"));
+        #[cfg(not(target_os = "windows"))]
+        let cwd = None;
         Self {
             exe: std::path::PathBuf::from("C:\\Windows\\System32\\notepad.exe"),
             cmdline: None,
-            cwd: None,
+            cwd,
             env: None,
             stdio: StdioConfig::Inherit,
             suspended: false,
@@ -398,7 +401,10 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     // Command
     let exe_w: Vec<u16> = crate::util::to_utf16_os(opts.exe.as_os_str());
     let mut args_w = make_cmd_args(&opts.cmdline);
-    let cwd_w = opts.cwd.as_ref().map(|p| crate::util::to_utf16_os(p.as_os_str()));
+    let cwd_w = opts
+        .cwd
+        .as_ref()
+        .map(|p| crate::util::to_utf16_os(p.as_os_str()));
 
     // stdio: Inherit/Null or Pipes
     let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
@@ -583,6 +589,20 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             let gle = unsafe { GetLastError().0 };
             tracing::error!("CreateProcessW failed: GLE={}", gle);
         }
+        // Optional debug log without requiring a tracing subscriber
+        if std::env::var_os("RAPPCT_DEBUG_LAUNCH").is_some() {
+            use windows::Win32::Foundation::GetLastError;
+            let gle = unsafe { GetLastError().0 };
+            eprintln!(
+                "[rappct] CreateProcessW failed: GLE={} exe={:?} args_present={} cwd_present={} inherit_handles={} flags=0x{:X}",
+                gle,
+                opts.exe,
+                args_w.as_ref().map(|v| v.len()).is_some(),
+                cwd_w.as_ref().is_some(),
+                inherit_handles,
+                flags.0,
+            );
+        }
         // close child ends if any
         if inherit_handles {
             if child_stdin != INVALID_HANDLE_VALUE {
@@ -626,7 +646,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
             if let Some(bytes) = limits.memory_bytes {
                 info.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_PROCESS_MEMORY;
-                info.ProcessMemoryLimit = bytes as usize;
+                info.ProcessMemoryLimit = bytes;
             }
             if limits.kill_on_job_close {
                 info.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
@@ -647,7 +667,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             let mut info: JOBOBJECT_CPU_RATE_CONTROL_INFORMATION = std::mem::zeroed();
             info.ControlFlags =
                 JOB_OBJECT_CPU_RATE_CONTROL_ENABLE | JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP;
-            info.Anonymous.CpuRate = (percent.clamp(1, 100) * 100) as u32;
+            info.Anonymous.CpuRate = percent.clamp(1, 100) * 100;
             SetInformationJobObject(
                 hjob,
                 JobObjectCpuRateControlInformation,
@@ -697,7 +717,7 @@ impl LaunchedIo {
     pub fn wait(self, timeout: Option<std::time::Duration>) -> Result<u32> {
         use windows::Win32::Foundation::{STILL_ACTIVE, WAIT_FAILED, WAIT_TIMEOUT};
         use windows::Win32::System::Threading::{
-            GetExitCodeProcess, WaitForSingleObject, INFINITE,
+            GetExitCodeProcess, INFINITE, WaitForSingleObject,
         };
         unsafe {
             let ms = timeout

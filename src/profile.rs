@@ -17,9 +17,9 @@ impl AppContainerProfile {
     pub fn ensure(_name: &str, _display: &str, _description: Option<&str>) -> Result<Self> {
         #[cfg(windows)]
         {
-            use windows::core::{HRESULT, PCWSTR, PWSTR};
             use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, ERROR_INVALID_PARAMETER};
             use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
+            use windows::core::{HRESULT, PCWSTR, PWSTR};
 
             #[link(name = "Userenv")]
             unsafe extern "system" {
@@ -41,7 +41,7 @@ impl AppContainerProfile {
                 // Prepare wide strings; keep them alive across FFI calls by binding
                 let name_w: Vec<u16> = crate::util::to_utf16(_name);
                 let display_w: Vec<u16> = crate::util::to_utf16(_display);
-                let desc_storage: Option<Vec<u16>> = _description.map(|d| crate::util::to_utf16(d));
+                let desc_storage: Option<Vec<u16>> = _description.map(crate::util::to_utf16);
                 let desc_ptr = desc_storage
                     .as_ref()
                     .map(|buf| PCWSTR(buf.as_ptr()))
@@ -58,8 +58,8 @@ impl AppContainerProfile {
                     &mut sid_ptr,
                 );
 
-                let already_exists = HRESULT::from_win32(ERROR_ALREADY_EXISTS.0 as u32);
-                let invalid_parameter = HRESULT::from_win32(ERROR_INVALID_PARAMETER.0 as u32);
+                let already_exists = HRESULT::from_win32(ERROR_ALREADY_EXISTS.0);
+                let invalid_parameter = HRESULT::from_win32(ERROR_INVALID_PARAMETER.0);
                 let sid_guard = if hr.is_ok() {
                     FreeSidGuard::new(windows::Win32::Security::PSID(sid_ptr))
                 } else if hr == already_exists || hr == invalid_parameter {
@@ -86,17 +86,14 @@ impl AppContainerProfile {
                 // Convert to SDDL
                 let mut sddl_ptr = PWSTR::null();
                 ConvertSidToStringSidW(sid_guard.as_psid(), &mut sddl_ptr)
-                    .map_err(|e| AcError::Win32(format!(
-                        "ConvertSidToStringSidW failed: {}",
-                        e
-                    )))?;
+                    .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {}", e)))?;
                 let sddl_guard = LocalFreeGuard::<u16>::new(sddl_ptr.0);
                 let sddl = sddl_guard.to_string_lossy();
 
-                return Ok(Self {
+                Ok(Self {
                     name: _name.to_string(),
                     sid: AppContainerSid::from_sddl(sddl),
-                });
+                })
             }
         }
         #[cfg(not(windows))]
@@ -149,8 +146,8 @@ impl AppContainerProfile {
                     sid: *mut windows::Win32::Security::PSID,
                 ) -> windows::core::HRESULT;
             }
-            use windows::core::{PCWSTR, PWSTR};
             use windows::Win32::System::Com::CoTaskMemFree;
+            use windows::core::{PCWSTR, PWSTR};
             unsafe {
                 // Derive package PSID from name for folder query
                 let name_w: Vec<u16> = crate::util::to_utf16(&self.name);
@@ -200,9 +197,9 @@ impl AppContainerProfile {
     pub fn named_object_path(&self) -> Result<String> {
         #[cfg(windows)]
         {
-            use windows::core::{PCWSTR, PWSTR};
             use windows::Win32::Foundation::HANDLE;
             use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
+            use windows::core::{PCWSTR, PWSTR};
             #[link(name = "Userenv")]
             unsafe extern "system" {
                 fn GetAppContainerNamedObjectPath(
@@ -273,8 +270,8 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
                 sid: *mut *mut core::ffi::c_void,
             ) -> windows::core::HRESULT;
         }
-        use windows::core::{PCWSTR, PWSTR};
         use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
+        use windows::core::{PCWSTR, PWSTR};
         unsafe {
             let name_w: Vec<u16> = crate::util::to_utf16(name);
             let mut sid_ptr = std::ptr::null_mut();

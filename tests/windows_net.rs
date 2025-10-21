@@ -4,13 +4,13 @@ use rappct::*;
 #[cfg(all(windows, feature = "net"))]
 use rappct::util::LocalFreeGuard;
 #[cfg(all(windows, feature = "net"))]
-use windows::core::PWSTR;
-#[cfg(all(windows, feature = "net"))]
 use windows::Win32::NetworkManagement::WindowsFirewall::NetworkIsolationGetAppContainerConfig;
 #[cfg(all(windows, feature = "net"))]
 use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 #[cfg(all(windows, feature = "net"))]
 use windows::Win32::Security::SID_AND_ATTRIBUTES;
+#[cfg(all(windows, feature = "net"))]
+use windows::core::PWSTR;
 
 #[cfg(all(windows, feature = "net"))]
 fn pwstr_to_string(ptr: PWSTR) -> String {

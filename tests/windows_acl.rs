@@ -1,13 +1,11 @@
 #[cfg(windows)]
-use rappct::acl::{self, AccessMask, ResourcePath};
-#[cfg(windows)]
 use rappct::AppContainerProfile;
+#[cfg(windows)]
+use rappct::acl::{self, AccessMask, ResourcePath};
 
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
 
-#[cfg(windows)]
-use windows::core::PCWSTR;
 #[cfg(windows)]
 use windows::Win32::Foundation::HANDLE;
 #[cfg(windows)]
@@ -19,10 +17,12 @@ use windows::Win32::Security::Authorization::{
 use windows::Win32::Security::{ACL, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR};
 #[cfg(windows)]
 use windows::Win32::System::Registry::{
-    RegCloseKey, RegCreateKeyExW, RegDeleteTreeW, RegOpenKeyExW, HKEY, HKEY_CURRENT_USER,
-    HKEY_LOCAL_MACHINE, KEY_ALL_ACCESS, KEY_READ, KEY_WRITE, REG_CREATED_NEW_KEY,
-    REG_CREATE_KEY_DISPOSITION, REG_OPTION_NON_VOLATILE,
+    HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_ALL_ACCESS, KEY_READ, KEY_WRITE,
+    REG_CREATE_KEY_DISPOSITION, REG_CREATED_NEW_KEY, REG_OPTION_NON_VOLATILE, RegCloseKey,
+    RegCreateKeyExW, RegDeleteTreeW, RegOpenKeyExW,
 };
+#[cfg(windows)]
+use windows::core::PCWSTR;
 
 #[cfg(windows)]
 #[link(name = "Kernel32")]

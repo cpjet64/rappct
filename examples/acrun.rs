@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use rappct::derive_sid_from_name;
 use rappct::*;
 use std::path::PathBuf;
 
@@ -44,9 +45,10 @@ fn main() -> rappct::Result<()> {
             );
         }
         Cmd::Delete { name } => {
+            let derived_sid = derive_sid_from_name(&name)?;
             let p = AppContainerProfile {
                 name: name.clone(),
-                sid: sid::AppContainerSid::from_sddl("S-1-0-0"),
+                sid: derived_sid,
             };
             p.delete()?;
             println!("Deleted profile: {}", name);
@@ -55,16 +57,16 @@ fn main() -> rappct::Result<()> {
             Ok(info) => {
                 if json {
                     let package_sid = info.package_sid.as_ref().map(|s| s.as_string());
-                    println!(
-                        "{}",
-                        serde_json::to_string_pretty(&serde_json::json!({
-                            "is_appcontainer": info.is_appcontainer,
-                            "is_lpac": info.is_lpac,
-                            "package_sid": package_sid,
-                            "capabilities": info.capability_sids,
-                        }))
-                        .unwrap()
-                    );
+                    let serialized = serde_json::to_string_pretty(&serde_json::json!({
+                        "is_appcontainer": info.is_appcontainer,
+                        "is_lpac": info.is_lpac,
+                        "package_sid": package_sid,
+                        "capabilities": info.capability_sids,
+                    }))
+                    .map_err(|e| {
+                        AcError::Win32(format!("Failed to serialize token info: {}", e))
+                    })?;
+                    println!("{}", serialized);
                 } else {
                     println!("is_appcontainer={}", info.is_appcontainer);
                     println!("is_lpac={}", info.is_lpac);
@@ -89,10 +91,13 @@ fn main() -> rappct::Result<()> {
         },
         Cmd::Launch { name, exe, lpac } => {
             let p = AppContainerProfile::ensure(&name, &name, None)?;
-            let caps = SecurityCapabilitiesBuilder::new(&p.sid)
-                .with_known(&[KnownCapability::InternetClient])
-                .lpac(lpac)
-                .build()?;
+            let mut builder = SecurityCapabilitiesBuilder::new(&p.sid)
+                .with_known(&[KnownCapability::InternetClient]);
+            if lpac {
+                supports_lpac()?;
+                builder = builder.with_lpac_defaults();
+            }
+            let caps = builder.build()?;
             let child = launch_in_container(
                 &caps,
                 &LaunchOptions {

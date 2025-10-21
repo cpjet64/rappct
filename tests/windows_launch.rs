@@ -2,7 +2,7 @@
 use rappct::*;
 
 #[cfg(all(windows, feature = "introspection"))]
-use rappct::diag::{validate_configuration, ConfigWarning};
+use rappct::diag::{ConfigWarning, validate_configuration};
 
 #[cfg(windows)]
 use windows::Win32::Foundation::HANDLE;
@@ -13,7 +13,7 @@ use windows::Win32::Security::PSID;
 #[link(name = "Advapi32")]
 unsafe extern "system" {
     fn OpenProcessToken(ProcessHandle: HANDLE, DesiredAccess: u32, TokenHandle: *mut HANDLE)
-        -> i32;
+    -> i32;
 }
 
 #[cfg(windows)]
@@ -81,13 +81,13 @@ fn launch_lpac_cmd_exits_if_supported() {
 fn launch_appcontainer_token_matches_profile() {
     use std::ffi::c_void;
     use std::time::Duration;
-    use windows::core::PWSTR;
     use windows::Win32::Foundation::{CloseHandle, HANDLE};
     use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
     use windows::Win32::Security::{
-        GetTokenInformation, TokenAppContainerSid, TokenIsAppContainer, TOKEN_QUERY,
+        GetTokenInformation, TOKEN_QUERY, TokenAppContainerSid, TokenIsAppContainer,
     };
     use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
+    use windows::core::PWSTR;
 
     let name = format!("rappct.test.launch.token.{}", std::process::id());
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
@@ -179,14 +179,14 @@ fn launch_lpac_token_sets_flag_and_caps() {
     }
     use std::ffi::c_void;
     use std::time::Duration;
-    use windows::core::PWSTR;
     use windows::Win32::Foundation::CloseHandle;
     use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
     use windows::Win32::Security::{
-        GetTokenInformation, TokenAppContainerSid, TokenIsAppContainer,
-        TokenIsLessPrivilegedAppContainer, TOKEN_QUERY,
+        GetTokenInformation, TOKEN_QUERY, TokenAppContainerSid, TokenIsAppContainer,
+        TokenIsLessPrivilegedAppContainer,
     };
     use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
+    use windows::core::PWSTR;
 
     let name = format!("rappct.test.launch.lpac.token.{}", std::process::id());
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
@@ -328,11 +328,11 @@ fn launch_job_limits_reported_by_query() {
     use std::time::Duration;
     use windows::Win32::Foundation::STILL_ACTIVE;
     use windows::Win32::System::JobObjects::{
+        JOB_OBJECT_CPU_RATE_CONTROL_ENABLE, JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP,
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY,
+        JOBOBJECT_CPU_RATE_CONTROL_INFORMATION, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
         JobObjectCpuRateControlInformation, JobObjectExtendedLimitInformation,
-        QueryInformationJobObject, JOBOBJECT_CPU_RATE_CONTROL_INFORMATION,
-        JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_CPU_RATE_CONTROL_ENABLE,
-        JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
-        JOB_OBJECT_LIMIT_PROCESS_MEMORY,
+        QueryInformationJobObject,
     };
 
     let name = format!("rappct.test.launch.jobinfo.{}", std::process::id());
@@ -546,9 +546,9 @@ fn diagnostics_reports_missing_caps() {
 #[cfg(windows)]
 fn token_capability_sids(token: HANDLE) -> Vec<String> {
     use std::ffi::c_void;
-    use windows::core::PWSTR;
     use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
-    use windows::Win32::Security::{GetTokenInformation, TokenCapabilities, TOKEN_GROUPS};
+    use windows::Win32::Security::{GetTokenInformation, TOKEN_GROUPS, TokenCapabilities};
+    use windows::core::PWSTR;
 
     unsafe {
         let mut needed: u32 = 0;

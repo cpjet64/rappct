@@ -66,7 +66,7 @@ impl Drop for AttrList {
     fn drop(&mut self) {
         use windows::Win32::System::Threading::DeleteProcThreadAttributeList;
         unsafe {
-            let _ = DeleteProcThreadAttributeList(self.ptr);
+            DeleteProcThreadAttributeList(self.ptr);
         }
     }
 }

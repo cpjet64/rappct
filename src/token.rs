@@ -6,8 +6,6 @@ use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
 
 #[cfg(windows)]
-use windows::core::HRESULT;
-#[cfg(windows)]
 use windows::Win32::Foundation::{
     CloseHandle, ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, HANDLE,
 };
@@ -15,12 +13,14 @@ use windows::Win32::Foundation::{
 use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 #[cfg(windows)]
 use windows::Win32::Security::{
-    GetTokenInformation, TokenAppContainerSid, TokenCapabilities, TokenIsAppContainer,
-    TokenIsLessPrivilegedAppContainer, TOKEN_APPCONTAINER_INFORMATION, TOKEN_GROUPS,
-    TOKEN_INFORMATION_CLASS, TOKEN_QUERY,
+    GetTokenInformation, TOKEN_APPCONTAINER_INFORMATION, TOKEN_GROUPS, TOKEN_INFORMATION_CLASS,
+    TOKEN_QUERY, TokenAppContainerSid, TokenCapabilities, TokenIsAppContainer,
+    TokenIsLessPrivilegedAppContainer,
 };
 #[cfg(windows)]
 use windows::Win32::System::Threading::GetCurrentProcess;
+#[cfg(windows)]
+use windows::core::HRESULT;
 
 #[cfg(windows)]
 #[link(name = "Advapi32")]
@@ -82,13 +82,15 @@ pub fn query_current_process_token() -> Result<TokenInfo> {
 unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bool> {
     let mut value: u32 = 0;
     let mut retlen: u32 = 0;
-    match unsafe { GetTokenInformation(
-        token,
-        class,
-        Some((&mut value) as *mut _ as *mut _),
-        std::mem::size_of::<u32>() as u32,
-        &mut retlen,
-    ) } {
+    match unsafe {
+        GetTokenInformation(
+            token,
+            class,
+            Some((&mut value) as *mut _ as *mut _),
+            std::mem::size_of::<u32>() as u32,
+            &mut retlen,
+        )
+    } {
         Ok(_) => Ok(value != 0),
         Err(err) => {
             if is_win32_error(&err, ERROR_INVALID_PARAMETER.0) {
@@ -107,7 +109,9 @@ unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bo
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid>> {
     let mut needed: u32 = 0;
-    if let Err(err) = unsafe { GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) } {
+    if let Err(err) =
+        unsafe { GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) }
+    {
         if is_win32_error(&err, ERROR_INVALID_PARAMETER.0) {
             return Ok(None);
         }
@@ -122,13 +126,15 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
         return Ok(None);
     }
     let mut buffer = vec![0u8; needed as usize];
-    unsafe { GetTokenInformation(
-        token,
-        TokenAppContainerSid,
-        Some(buffer.as_mut_ptr() as *mut _),
-        needed,
-        &mut needed,
-    ) }
+    unsafe {
+        GetTokenInformation(
+            token,
+            TokenAppContainerSid,
+            Some(buffer.as_mut_ptr() as *mut _),
+            needed,
+            &mut needed,
+        )
+    }
     .map_err(|e| {
         AcError::Win32(format!(
             "GetTokenInformation(TokenAppContainerSid) failed: {}",
@@ -149,7 +155,8 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
     let mut needed: u32 = 0;
-    if let Err(err) = unsafe { GetTokenInformation(token, TokenCapabilities, None, 0, &mut needed) } {
+    if let Err(err) = unsafe { GetTokenInformation(token, TokenCapabilities, None, 0, &mut needed) }
+    {
         if is_win32_error(&err, ERROR_INVALID_PARAMETER.0) {
             return Ok(Vec::new());
         }
@@ -164,13 +171,15 @@ unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
         return Ok(Vec::new());
     }
     let mut buffer = vec![0u8; needed as usize];
-    unsafe { GetTokenInformation(
-        token,
-        TokenCapabilities,
-        Some(buffer.as_mut_ptr() as *mut _),
-        needed,
-        &mut needed,
-    ) }
+    unsafe {
+        GetTokenInformation(
+            token,
+            TokenCapabilities,
+            Some(buffer.as_mut_ptr() as *mut _),
+            needed,
+            &mut needed,
+        )
+    }
     .map_err(|e| {
         AcError::Win32(format!(
             "GetTokenInformation(TokenCapabilities) failed: {}",
