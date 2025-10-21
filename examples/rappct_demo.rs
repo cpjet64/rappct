@@ -38,6 +38,8 @@ impl Drop for FirewallGuard {
 }
 
 use std::path::PathBuf;
+use std::net::TcpListener;
+use std::io::Write;
 
 fn main() -> rappct::Result<()> {
     println!("rappct - Windows AppContainer Demo");
@@ -108,37 +110,86 @@ fn main() -> rappct::Result<()> {
         Err(e) => println!("? Normal process network test error: {}", e),
     }
 
-    println!("\nSTEP 3B: AppContainer with Network Access");
-    println!("------------------------------------------");
-    println!("Now granting 'InternetClient' capability to allow outbound network connections.");
-    println!("Compare this result with the normal process above:");
-    println!("Expected: With InternetClient, HTTP should work inside the AppContainer.\n");
+    println!("\nSTEP 3B: Localhost (loopback) access");
+    println!("------------------------------------");
+    println!("Stand up a tiny localhost HTTP server, then try from AppContainer:");
+    println!("  - Expect failure without loopback exemption");
+    println!("  - Expect success after enabling loopback (with --features net)\n");
+
+    // Start a minimal localhost HTTP server on an ephemeral port.
+    let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind localhost");
+    let port = listener.local_addr().unwrap().port();
+    std::thread::spawn(move || {
+        for _ in 0..4 {
+            if let Ok((mut stream, _)) = listener.accept() {
+                let _ = stream.write_all(
+                    b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK",
+                );
+            } else {
+                break;
+            }
+        }
+    });
+
+    // Build capabilities with InternetClient; loopback is controlled by firewall exemption.
+    let network_caps = SecurityCapabilitiesBuilder::new(&profile.sid)
+        .with_known(&[KnownCapability::InternetClient])
+        .build()?;
+
+    // Attempt localhost without loopback exemption – expect failure.
+    let curl_no_loopback = LaunchOptions {
+        exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
+        cmdline: Some(format!(" -s -I -m 3 http://127.0.0.1:{}", port)),
+        cwd: Some(PathBuf::from("C:\\Windows\\System32")),
+        ..Default::default()
+    };
+    println!("- Trying http://127.0.0.1:{} without loopback exemption...", port);
+    let _ = launch_in_container(&network_caps, &curl_no_loopback)?;
+    std::thread::sleep(std::time::Duration::from_secs(2));
 
     #[cfg(feature = "net")]
     let mut firewall_guard: Option<FirewallGuard> = None;
 
     #[cfg(feature = "net")]
     {
-        println!("Setting up automatic firewall loopback exemption for better network access...");
-        if let Err(e) =
-            add_loopback_exemption(LoopbackAdd(profile.sid.clone()).confirm_debug_only())
+        println!("- Enabling loopback exemption for this AppContainer SID...");
+        if let Err(e) = add_loopback_exemption(LoopbackAdd(profile.sid.clone()).confirm_debug_only())
         {
-            println!("? Firewall exemption failed: {} (continuing anyway)", e);
+            println!("? Loopback exemption failed: {} (continuing anyway)", e);
         } else {
-            println!("- Firewall loopback exemption configured");
             firewall_guard = Some(FirewallGuard::new(
                 profile.sid.clone(),
                 "- Firewall loopback exemption removed",
             ));
+            // Try localhost again – expect success (HTTP headers).
+            let curl_with_loopback = LaunchOptions {
+                exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
+                cmdline: Some(format!(" -s -I -m 5 http://127.0.0.1:{}", port)),
+                cwd: Some(PathBuf::from("C:\\Windows\\System32")),
+                ..Default::default()
+            };
+            println!("- Trying http://127.0.0.1:{} with loopback exemption...", port);
+            let _ = launch_in_container(&network_caps, &curl_with_loopback)?;
+            std::thread::sleep(std::time::Duration::from_secs(2));
         }
     }
 
     #[cfg(not(feature = "net"))]
     {
-        println!("Note: Run with '--features net' for automatic firewall configuration");
+        println!("(Enable --features net to allow localhost by adding a loopback exemption)");
     }
 
-    println!("Note: ICMP ping may still fail on some systems even when HTTP works.\n");
+    println!("\nSTEP 3C: Outbound Internet from AppContainer");
+    println!("-------------------------------------------");
+    println!("Now demonstrate an outbound HTTP request (does not require loopback)");
+    let internet_curl = LaunchOptions {
+        exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
+        cmdline: Some(" -s -I -m 5 http://httpbin.org/ip".to_string()),
+        cwd: Some(PathBuf::from("C:\\Windows\\System32")),
+        ..Default::default()
+    };
+    let _ = launch_in_container(&network_caps, &internet_curl)?;
+    std::thread::sleep(std::time::Duration::from_secs(2));
 
     let network_caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
@@ -175,7 +226,7 @@ fn main() -> rappct::Result<()> {
     println!("- Launch completely isolated processes");
     println!("- Grant specific capabilities (like network access)");
     println!("- Clean up resources when done");
-    println!("\\nPro tip: Use '--features net' when you need localhost (loopback):");
+    println!("Pro tip: Use '--features net' when you need localhost (loopback):");
     println!("  - Adds helpers to grant/remove AppContainer loopback exemptions
   - Usually requires Administrator rights
   - Not required for outbound internet (InternetClient is enough)\n
@@ -183,4 +234,3 @@ fn main() -> rappct::Result<()> {
 
     Ok(())
 }
-
