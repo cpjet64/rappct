@@ -1,6 +1,16 @@
 # rappct
 
-[![CI](https://github.com/cpjet64/rappct/actions/workflows/ci.yml/badge.svg)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml)
+**Stable (main branch)**
+
+[![CI](https://github.com/cpjet64/rappct/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
+[![Release](https://img.shields.io/github/v/release/cpjet64/rappct)](https://github.com/cpjet64/rappct/releases)
+[![Crates.io](https://img.shields.io/crates/v/rappct)](https://crates.io/crates/rappct)
+[![Downloads](https://img.shields.io/crates/d/rappct)](https://crates.io/crates/rappct)
+
+**Development (dev branch)**
+
+[![CI](https://github.com/cpjet64/rappct/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Adev)
+[![Dev Release](https://img.shields.io/github/v/release/cpjet64/rappct?include_prereleases&filter=*-dev.*&label=dev%20release)](https://github.com/cpjet64/rappct/releases?q=prerelease%3Atrue)
 
 > Rust toolkit for working with Windows AppContainer (AC) and Low Privilege AppContainer (LPAC) security boundaries.
 
