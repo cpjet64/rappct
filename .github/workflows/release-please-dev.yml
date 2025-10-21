@@ -28,6 +28,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config-dev.json
           manifest-file: .release-please-manifest-dev.json
+          target-branch: dev
 
   publish-crate-dev:
     name: Publish dev pre-release to crates.io
