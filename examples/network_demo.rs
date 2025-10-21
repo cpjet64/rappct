@@ -3,12 +3,13 @@
 //! This example demonstrates rappct's built-in firewall loopback exemption
 //! functionality for proper AppContainer network access.
 
+#[cfg(feature = "net")]
 use rappct::{supports_lpac, AppContainerProfile, KnownCapability};
 
-#[cfg(windows)]
+#[cfg(all(windows, feature = "net"))]
 use rappct::SecurityCapabilitiesBuilder;
 
-#[cfg(windows)]
+#[cfg(all(windows, feature = "net"))]
 use rappct::launch::{launch_in_container_with_io, LaunchOptions, StdioConfig};
 
 #[cfg(feature = "net")]
@@ -49,7 +50,7 @@ impl Drop for FirewallGuard {
     }
 }
 
-#[cfg(windows)]
+#[cfg(all(windows, feature = "net"))]
 use std::{
     io::{BufRead, BufReader},
     path::PathBuf,
