@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.11.0](https://github.com/cpjet64/rappct/compare/rappct-v0.10.0...rappct-v0.11.0) (2025-10-21)
+
+
+### Features
+
+* add automatic crates.io publishing ([827becf](https://github.com/cpjet64/rappct/commit/827becf4b7aba7dacd300e6c3a7b10175509b21b))
+
 ## [0.10.0](https://github.com/cpjet64/rappct/compare/rappct-v0.9.0...rappct-v0.10.0) (2025-10-21)
 
 
