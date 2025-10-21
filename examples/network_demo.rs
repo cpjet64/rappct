@@ -156,7 +156,7 @@ fn run_network_tests(profile: &AppContainerProfile) -> rappct::Result<()> {
     println!("\n→ Testing HTTP connectivity (normal process):");
     match Command::new("powershell")
         .arg("-Command")
-        .arg("try { (Invoke-WebRequest -Uri 'http://httpbin.org/ip' -UseBasicParsing -TimeoutSec 3).StatusCode } catch { 'Failed' }")
+        .arg("try { (Invoke-WebRequest -Uri 'http://example.com' -UseBasicParsing -TimeoutSec 3).StatusCode } catch { 'Failed' }")
         .output() {
         Ok(output) => {
             let result = String::from_utf8_lossy(&output.stdout);
@@ -275,7 +275,7 @@ impl NetworkTest {
 
         // Create a comprehensive network test script with better HTTP testing
         let mut test_script = format!(
-            r#"/C echo [{prefix}] Starting network tests... && echo [{prefix}] Test 1: DNS resolution && nslookup google.com 1>nul 2>nul && echo [{prefix}] DNS: SUCCESS || echo [{prefix}] DNS: FAILED && echo [{prefix}] Test 2: HTTP connectivity && powershell -Command "try {{ $response = Invoke-WebRequest -Uri 'http://httpbin.org/ip' -UseBasicParsing -TimeoutSec 5; 'HTTP: SUCCESS (Status: ' + $response.StatusCode + ')' }} catch {{ 'HTTP: FAILED - ' + $_.Exception.Message }}" && echo [{prefix}] Test 3: Localhost test && powershell -Command "try {{ $response = Invoke-WebRequest -Uri 'http://127.0.0.1:1' -UseBasicParsing -TimeoutSec 2 }} catch {{ if ($_.Exception.Message -like '*ConnectFailure*') {{ 'LOCALHOST: ACCESSIBLE (connection refused = good)' }} else {{ 'LOCALHOST: BLOCKED - ' + $_.Exception.Message }} }}" && echo [{prefix}] Network tests completed"#,
+            r#"/C echo [{prefix}] Starting network tests... && echo [{prefix}] Test 1: DNS resolution && nslookup google.com 1>nul 2>nul && echo [{prefix}] DNS: SUCCESS || echo [{prefix}] DNS: FAILED && echo [{prefix}] Test 2: HTTP connectivity && powershell -Command "try {{ $response = Invoke-WebRequest -Uri 'http://example.com' -UseBasicParsing -TimeoutSec 5; 'HTTP: SUCCESS (Status: ' + $response.StatusCode + ')' }} catch {{ 'HTTP: FAILED - ' + $_.Exception.Message }}" && echo [{prefix}] Test 3: Localhost test && powershell -Command "try {{ $response = Invoke-WebRequest -Uri 'http://127.0.0.1:1' -UseBasicParsing -TimeoutSec 2 }} catch {{ if ($_.Exception.Message -like '*ConnectFailure*') {{ 'LOCALHOST: ACCESSIBLE (connection refused = good)' }} else {{ 'LOCALHOST: BLOCKED - ' + $_.Exception.Message }} }}" && echo [{prefix}] Network tests completed"#,
             prefix = self.prefix
         );
 

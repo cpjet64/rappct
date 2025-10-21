@@ -7,3 +7,5 @@
 .vs/
 ci-run.txt
 rust-analyzer.txt
+claude-updatedocs.md
+codex-updatedocs.md

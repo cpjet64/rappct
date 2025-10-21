@@ -55,8 +55,10 @@ fn capability_derivation_repeated_calls_are_successful() {
 #[test]
 fn capability_typo_returns_suggestion() {
     // Ensure diagnostics entry point is available under the feature flag.
-    let _f: fn(&rappct::SecurityCapabilities, &rappct::launch::LaunchOptions)
-        -> Vec<rappct::diag::ConfigWarning> = rappct::diag::validate_configuration;
+    let _f: fn(
+        &rappct::SecurityCapabilities,
+        &rappct::launch::LaunchOptions,
+    ) -> Vec<rappct::diag::ConfigWarning> = rappct::diag::validate_configuration;
 }
 
 #[cfg(windows)]

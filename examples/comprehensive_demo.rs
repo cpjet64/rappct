@@ -174,7 +174,7 @@ fn demo_network_capabilities() -> rappct::Result<()> {
     let client_opts = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
         // Try multiple endpoints to reduce false negatives
-        cmdline: Some("/C echo [NET-CLIENT] Testing Internet Client && powershell -Command \"$urls=@('http://httpbin.org/ip','http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){ try { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }\" && ping -n 2 8.8.8.8 && timeout /T 2 /NOBREAK >nul".to_string()),
+        cmdline: Some("/C echo [NET-CLIENT] Testing Internet Client && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){ try { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }\" && ping -n 2 8.8.8.8 && timeout /T 2 /NOBREAK >nul".to_string()),
         ..Default::default()
     };
 
@@ -193,7 +193,7 @@ fn demo_network_capabilities() -> rappct::Result<()> {
     let server_opts = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
         // Multi-endpoint HTTP with optional proxy support from env (HTTPS_PROXY/HTTP_PROXY)
-        cmdline: Some("/C echo [NET-SERVER] Can act as both client and server && powershell -Command \"$urls=@('http://httpbin.org/ip','http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; $proxy=$env:HTTPS_PROXY; if(-not $proxy){ $proxy=$env:HTTP_PROXY }; foreach($u in $urls){ try { if($proxy){ $r=Invoke-WebRequest -Uri $u -Proxy $proxy -UseBasicParsing -TimeoutSec 5 } else { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5 }; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }\" && netstat -an | findstr LISTENING && timeout /T 2 /NOBREAK >nul".to_string()),
+        cmdline: Some("/C echo [NET-SERVER] Can act as both client and server && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; $proxy=$env:HTTPS_PROXY; if(-not $proxy){ $proxy=$env:HTTP_PROXY }; foreach($u in $urls){ try { if($proxy){ $r=Invoke-WebRequest -Uri $u -Proxy $proxy -UseBasicParsing -TimeoutSec 5 } else { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5 }; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }\" && netstat -an | findstr LISTENING && timeout /T 2 /NOBREAK >nul".to_string()),
         ..Default::default()
     };
 
@@ -212,7 +212,7 @@ fn demo_network_capabilities() -> rappct::Result<()> {
     let private_opts = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
         // Use multi-endpoint HTTP to demonstrate network access reliably
-        cmdline: Some("/C echo [NET-PRIVATE] Access to private networks && powershell -Command \"$urls=@('http://httpbin.org/ip','http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){ try { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }\" && timeout /T 2 /NOBREAK >nul".to_string()),
+        cmdline: Some("/C echo [NET-PRIVATE] Access to private networks && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){ try { $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){ $code=$r.StatusCode; break } } catch {} }; if($code){ $code } else { 'HTTP failed' }\" && timeout /T 2 /NOBREAK >nul".to_string()),
         ..Default::default()
     };
 

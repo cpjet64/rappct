@@ -241,8 +241,7 @@ fn launch_lpac_token_sets_flag_and_caps() {
         match lpac_result {
             Ok(()) => assert!(is_lpac.as_bool(), "child token not marked LPAC"),
             Err(err)
-                if err.code()
-                    == windows::core::HRESULT::from_win32(ERROR_INVALID_PARAMETER.0) =>
+                if err.code() == windows::core::HRESULT::from_win32(ERROR_INVALID_PARAMETER.0) =>
             {
                 // Windows builds before TokenIsLessPrivilegedAppContainer support return E_INVALIDARG.
             }

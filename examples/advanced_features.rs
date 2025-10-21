@@ -524,7 +524,7 @@ fn demo_network_enumeration() -> rappct::Result<()> {
 
 #[cfg(feature = "net")]
 fn demo_network_enumeration_impl() -> rappct::Result<()> {
-// (moved into demo_network_enumeration_impl wrapper)
+    // (moved into demo_network_enumeration_impl wrapper)
     println!("=== DEMO 7: Network Container Enumeration ===");
 
     #[cfg(not(feature = "net"))]

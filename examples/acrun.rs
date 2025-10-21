@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "acrun", version)]
-/// Developer CLI for rappct (skeleton). Commands will fail until Windows impls are added.
+/// Developer CLI for rappct - manage AppContainer profiles and launch sandboxed processes
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
@@ -13,22 +13,33 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
+    /// Create or open an AppContainer profile
     Ensure {
+        /// Profile name (e.g., "demo.app")
         name: String,
         #[arg(long, default_value = "rappct")]
+        /// Display name for the profile
         display: String,
     },
+    /// Delete an AppContainer profile
     Delete {
+        /// Profile name to delete
         name: String,
     },
+    /// Show current process token information (AppContainer status, SID, capabilities)
     Whoami {
         #[arg(long)]
+        /// Output in JSON format
         json: bool,
     },
+    /// Launch a process in an AppContainer sandbox
     Launch {
+        /// Profile name to use
         name: String,
+        /// Path to executable to launch
         exe: PathBuf,
         #[arg(long)]
+        /// Enable LPAC (Low Privilege AppContainer) mode
         lpac: bool,
     },
 }
