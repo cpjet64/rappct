@@ -56,10 +56,14 @@ cargo run --example acrun -- --help
 The crate is structured as a binary-agnostic library. Add it to your project from crates.io:
 
 ```bash
+# Stable release (main branch)
 cargo add rappct
+
+# Pre-release/development version (dev branch)
+cargo add rappct@0.11.2-dev.1
 ```
 
-Or use the latest development version from git:
+If crates.io is unavailable, you can use git as an alternative:
 
 ```bash
 cargo add rappct --git https://github.com/cpjet64/rappct.git
