@@ -289,7 +289,22 @@ fn demo_custom_capabilities() -> rappct::Result<()> {
 }
 
 /// Demo 4: Configuration Diagnostics
+#[cfg(not(feature = "introspection"))]
 fn demo_diagnostics() -> rappct::Result<()> {
+    println!("=== DEMO 4: Configuration Diagnostics ===");
+    println!("? Diagnostics require the 'introspection' feature");
+    println!("  Run with: --features introspection");
+    println!();
+    Ok(())
+}
+
+#[cfg(feature = "introspection")]
+fn demo_diagnostics() -> rappct::Result<()> {
+    demo_diagnostics_old()
+}
+
+#[cfg(feature = "introspection")]
+fn demo_diagnostics_old() -> rappct::Result<()> {
     println!("=== DEMO 4: Configuration Diagnostics ===");
 
     #[cfg(not(feature = "introspection"))]
@@ -492,8 +507,24 @@ fn demo_enhanced_io() -> rappct::Result<()> {
     Err(rappct::AcError::UnsupportedPlatform)
 }
 
-/// Demo 7: Network Container Enumeration
+/// Demo 7: Network Container Enumeration (feature-gated wrappers)
+#[cfg(not(feature = "net"))]
 fn demo_network_enumeration() -> rappct::Result<()> {
+    println!("=== DEMO 7: Network Container Enumeration ===");
+    println!("? Network enumeration requires the 'net' feature");
+    println!("  Run with: --features net");
+    println!();
+    Ok(())
+}
+
+#[cfg(feature = "net")]
+fn demo_network_enumeration() -> rappct::Result<()> {
+    demo_network_enumeration_impl()
+}
+
+#[cfg(feature = "net")]
+fn demo_network_enumeration_impl() -> rappct::Result<()> {
+// (moved into demo_network_enumeration_impl wrapper)
     println!("=== DEMO 7: Network Container Enumeration ===");
 
     #[cfg(not(feature = "net"))]
