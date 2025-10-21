@@ -93,7 +93,7 @@ fn main() -> rappct::Result<()> {
     use std::process::Command;
     match Command::new("cmd")
         .arg("/C")
-        .arg(r#"C:\Windows\System32\curl.exe -s -o NUL http://httpbin.org/ip && echo OK || echo FAILED"#)
+        .arg(r#"C:\Windows\System32\curl.exe -s -I -m 5 http://httpbin.org/ip && echo OK || echo FAILED"#)
         .output()
     {
         Ok(output) => {
@@ -144,13 +144,13 @@ fn main() -> rappct::Result<()> {
         .with_known(&[KnownCapability::InternetClient])
         .build()?;
     let network_child = launch_in_container(&network_caps, &LaunchOptions {
-        exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        cmdline: Some(r#"/C echo [NETWORK] Process with internet access && C:\Windows\System32\curl.exe -s -o NUL http://httpbin.org/ip && echo HTTP OK || echo HTTP failed && echo [NETWORK] Test completed"#.to_string()),
+        exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
+        cmdline: Some(" -s -I -m 5 http://httpbin.org/ip".to_string()),
         cwd: Some(PathBuf::from("C:\\Windows\\System32")),
         ..Default::default()
     })?;
     println!("- Network-enabled process launched with PID: {}", network_child.pid);
-    println!("  Watch above - HTTP request should work with proper network capability\n");
+    println!("  curl will print HTTP headers if successful\n");
 
     std::thread::sleep(std::time::Duration::from_secs(3));
 
