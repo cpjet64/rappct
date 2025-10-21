@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.12.2](https://github.com/cpjet64/rappct/compare/rappct-v0.12.1...rappct-v0.12.2) (2025-10-21)
+
+
+### Bug Fixes
+
+* checkout correct tag when publishing to crates.io ([deea246](https://github.com/cpjet64/rappct/commit/deea24647491b2443c82e731d1cdc8eeb46fcd18))
+
 ## [0.12.1](https://github.com/cpjet64/rappct/compare/rappct-v0.12.0...rappct-v0.12.1) (2025-10-21)
 
 
