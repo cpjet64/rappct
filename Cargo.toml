@@ -21,7 +21,7 @@ serde = ["dep:serde"]
 [dependencies]
 thiserror = "2.0"
 # Keep windows crate features tight; expand as implementation grows
-windows = { version = "0.62", features = [
+windows = { version = "0.60", features = [
     "Win32_Foundation",
     "Win32_Security",
     "Win32_Security_Authorization",
