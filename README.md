@@ -9,7 +9,7 @@ AppContainer-aware workloads from Rust with minimal boilerplate. It is designed 
 that needs to compose profiles, capabilities, process launches, ACL helpers, and diagnostics in one place.
 
 - **Status**: Actively developed. Windows paths are implemented first; non-Windows hosts return `UnsupportedPlatform`.
-- **MSRV**: Rust 1.78 (stable).
+- **MSRV**: Rust 1.90 (stable).
 
 ## Highlights
 
