@@ -211,6 +211,9 @@ Stable releases are published to crates.io:
 ```bash
 # Latest stable release (recommended)
 cargo add rappct
+
+# Specific stable version
+cargo add rappct@0.12.2
 ```
 
 Or in `Cargo.toml`:

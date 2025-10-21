@@ -59,6 +59,9 @@ The crate is structured as a binary-agnostic library. Add it to your project:
 # Stable release from crates.io (recommended)
 cargo add rappct
 
+# Specific stable version from crates.io
+cargo add rappct@0.12.2
+
 # Development version from git (dev branch)
 cargo add rappct --git https://github.com/cpjet64/rappct.git --branch dev
 
