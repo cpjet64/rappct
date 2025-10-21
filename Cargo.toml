@@ -1,6 +1,6 @@
 [package]
 name = "rappct"
-version = "0.11.1"
+version = "0.12.0"
 edition = "2024"
 license = "MIT"
 description = "Rust AppContainer / LPAC toolkit for Windows (profiles, capabilities, process launch, diagnostics)."
