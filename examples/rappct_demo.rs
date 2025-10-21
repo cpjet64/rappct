@@ -10,6 +10,8 @@ use rappct::{
     launch::LaunchOptions, launch_in_container, AppContainerProfile, KnownCapability,
     SecurityCapabilitiesBuilder,
 };
+#[cfg(windows)]
+use rappct::launch::launch_in_container_with_io;
 
 #[cfg(feature = "net")]
 use rappct::net::{add_loopback_exemption, remove_loopback_exemption, LoopbackAdd};
@@ -40,6 +42,7 @@ impl Drop for FirewallGuard {
 use std::path::PathBuf;
 use std::net::TcpListener;
 use std::io::Write;
+use std::io::Read;
 
 fn main() -> rappct::Result<()> {
     println!("rappct - Windows AppContainer Demo");
@@ -88,8 +91,8 @@ fn main() -> rappct::Result<()> {
     // 3. First show normal network access for comparison
     println!("STEP 3A: Normal Network Access (For Comparison)");
     println!("------------------------------------------------");
-    println!("First, let's see network access from a normal (non-sandboxed) process:");
-    println!("Expected: HTTP should succeed in a normal process (no sandbox).\n");
+    println!("First, test from the host (no sandbox) to establish a baseline.");
+    println!("Expected: HTTP should succeed in a normal process.\n");
 
     // Quick test of normal network access using curl
     use std::process::Command;
@@ -102,9 +105,9 @@ fn main() -> rappct::Result<()> {
             let result = String::from_utf8_lossy(&output.stdout);
             let result = result.trim();
             if result.contains("OK") {
-                println!("- Normal process: HTTP request succeeded");
+                println!("- Normal process: HTTP request succeeded (curl exit {})", output.status);
             } else {
-                println!("? Normal process: HTTP request failed ({})", result);
+                println!("? Normal process: HTTP request failed (curl exit {}): {}", output.status, result);
             }
         }
         Err(e) => println!("? Normal process network test error: {}", e),
@@ -112,9 +115,9 @@ fn main() -> rappct::Result<()> {
 
     println!("\nSTEP 3B: Localhost (loopback) access");
     println!("------------------------------------");
-    println!("Stand up a tiny localhost HTTP server, then try from AppContainer:");
-    println!("  - Expect failure without loopback exemption");
-    println!("  - Expect success after enabling loopback (with --features net)\n");
+    println!("We will start a tiny localhost HTTP server, then call it from the AppContainer.");
+    println!("  - Without loopback exemption: connection should fail or be blocked");
+    println!("  - With loopback exemption (--features net): the request should succeed\n");
 
     // Start a minimal localhost HTTP server on an ephemeral port.
     let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind localhost");
@@ -144,8 +147,23 @@ fn main() -> rappct::Result<()> {
         ..Default::default()
     };
     println!("- Trying http://127.0.0.1:{} without loopback exemption...", port);
-    let _ = launch_in_container(&network_caps, &curl_no_loopback)?;
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    #[cfg(windows)]
+    {
+        let mut child = launch_in_container_with_io(&network_caps, &curl_no_loopback)?;
+        let mut out = String::new();
+        if let Some(mut s) = child.stdout.take() { let _ = s.read_to_string(&mut out); }
+        let code = child.wait(Some(std::time::Duration::from_secs(4)))?;
+        if code == 0 {
+            println!("? Unexpected success without loopback. Output:\n{}", out);
+        } else {
+            println!("- As expected, localhost is blocked (exit code {}).", code);
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = launch_in_container(&network_caps, &curl_no_loopback)?;
+        std::thread::sleep(std::time::Duration::from_secs(2));
+    }
 
     #[cfg(feature = "net")]
     let mut firewall_guard: Option<FirewallGuard> = None;
@@ -169,8 +187,15 @@ fn main() -> rappct::Result<()> {
                 ..Default::default()
             };
             println!("- Trying http://127.0.0.1:{} with loopback exemption...", port);
-            let _ = launch_in_container(&network_caps, &curl_with_loopback)?;
-            std::thread::sleep(std::time::Duration::from_secs(2));
+            let mut child = launch_in_container_with_io(&network_caps, &curl_with_loopback)?;
+            let mut out = String::new();
+            if let Some(mut s) = child.stdout.take() { let _ = s.read_to_string(&mut out); }
+            let code = child.wait(Some(std::time::Duration::from_secs(5)))?;
+            if code == 0 {
+                println!("  Success (exit 0). Headers:\n{}", out);
+            } else {
+                println!("? Loopback call failed (exit {}). Output:\n{}", code, out);
+            }
         }
     }
 
@@ -181,15 +206,30 @@ fn main() -> rappct::Result<()> {
 
     println!("\nSTEP 3C: Outbound Internet from AppContainer");
     println!("-------------------------------------------");
-    println!("Now demonstrate an outbound HTTP request (does not require loopback)");
+    println!("Now demonstrate an outbound HTTP request (does not require loopback).");
     let internet_curl = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
         cmdline: Some(" -s -I -m 5 http://httpbin.org/ip".to_string()),
         cwd: Some(PathBuf::from("C:\\Windows\\System32")),
         ..Default::default()
     };
-    let _ = launch_in_container(&network_caps, &internet_curl)?;
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    #[cfg(windows)]
+    {
+        let mut child = launch_in_container_with_io(&network_caps, &internet_curl)?;
+        let mut out = String::new();
+        if let Some(mut s) = child.stdout.take() { let _ = s.read_to_string(&mut out); }
+        let code = child.wait(Some(std::time::Duration::from_secs(6)))?;
+        if code == 0 {
+            println!("  Outbound success (exit 0). Headers:\n{}", out);
+        } else {
+            println!("? Outbound request failed (exit {}). Output:\n{}", code, out);
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = launch_in_container(&network_caps, &internet_curl)?;
+        std::thread::sleep(std::time::Duration::from_secs(2));
+    }
 
     let network_caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
