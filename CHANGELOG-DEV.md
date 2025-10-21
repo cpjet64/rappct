@@ -7,6 +7,15 @@ For stable releases, see [CHANGELOG.md](CHANGELOG.md).
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.12.1-dev.1](https://github.com/cpjet64/rappct/compare/dev-v0.12.1-dev.0...dev-v0.12.1-dev.1) (2025-10-21)
+
+
+### Bug Fixes
+
+* configure dev branch to use separate tag prefix (dev-v) and pre-release versions
+* prevents tag conflicts with main branch releases
+* enables both branches to publish to crates.io independently
+
 ## [0.12.0](https://github.com/cpjet64/rappct/compare/rappct-v0.11.1...rappct-v0.12.0) (2025-10-21)
 
 

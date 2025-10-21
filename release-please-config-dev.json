@@ -4,11 +4,14 @@
   "bump-minor-pre-major": true,
   "prerelease": true,
   "prerelease-type": "dev",
+  "tag-separator": "-",
+  "include-component-in-tag": false,
   "packages": {
     ".": {
       "release-type": "rust",
       "package-name": "rappct",
-      "changelog-path": "CHANGELOG-DEV.md"
+      "changelog-path": "CHANGELOG-DEV.md",
+      "tag-prefix": "dev-v"
     }
   }
 }
