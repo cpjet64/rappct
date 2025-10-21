@@ -7,8 +7,8 @@ This document describes rappct's automated dual-branch workflow optimized for AI
 ### `dev` Branch (Development / Pre-releases)
 - **Purpose**: Active development, AI agent experimentation, rapid iteration
 - **Stability**: May contain breaking changes, experimental features
-- **Releases**: Automated pre-releases to crates.io (e.g., `v0.11.2-dev.1`)
-- **Publishing**: Automatic with `-dev` suffix
+- **Releases**: Automated GitHub pre-releases only (e.g., `dev-v0.12.3`)
+- **Publishing**: GitHub releases only - install via git commands
 - **Protection**: None - direct pushes allowed for rapid development
 
 ### `main` Branch (Stable / Production)
@@ -34,8 +34,7 @@ graph LR
     E --> F[Creates PR with version bump]
     F --> G[Merge PR]
     G --> H[GitHub Pre-Release Created]
-    H --> I[Auto-Publish to crates.io]
-    I --> J[v0.x.x-dev.N on crates.io]
+    H --> I[Install via git commands]
 ```
 
 **Steps**:
@@ -52,7 +51,8 @@ graph LR
    - Clippy with `-D warnings`
 
 3. **If CI passes**, `release-please-dev` creates/updates a PR:
-   - Version: `0.11.2-dev.1` (pre-release)
+   - Version: `0.12.3`
+   - Tag: `dev-v0.12.3`
    - Changelog: `CHANGELOG-DEV.md`
 
 4. **Merge the release PR**:
@@ -60,10 +60,9 @@ graph LR
    # Review and merge via GitHub UI
    ```
 
-5. **Automatic publishing**:
-   - GitHub pre-release created (marked as pre-release)
-   - Published to crates.io with `-dev` suffix
-   - Example: `rappct = "0.11.2-dev.1"`
+5. **Automatic GitHub pre-release**:
+   - GitHub pre-release created with tag `dev-v0.12.3`
+   - Install via: `cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-v0.12.3`
 
 ### Main Branch Workflow (Stable Releases)
 
@@ -148,16 +147,18 @@ git commit -m "docs: improve examples documentation"
 ## Version Numbering
 
 ### Dev Branch
-- Format: `MAJOR.MINOR.PATCH-dev.N`
-- Example: `0.11.2-dev.1`, `0.11.2-dev.2`
-- Each merge to dev increments the dev counter
-- Pre-release flag ensures it's not installed by default
+- Format: `MAJOR.MINOR.PATCH`
+- Example: `0.12.3`, `0.12.4`, `0.13.0`
+- Tagged with `dev-v` prefix: `dev-v0.12.3`
+- GitHub pre-releases only (not published to crates.io)
+- Install via git commands
 
 ### Main Branch
 - Format: `MAJOR.MINOR.PATCH`
 - Example: `0.11.2`, `0.12.0`, `1.0.0`
+- Tagged with `rappct-v` prefix: `rappct-v0.12.0`
 - Follows semantic versioning strictly
-- Stable, production-ready
+- Stable, production-ready, published to crates.io
 
 ---
 
@@ -179,31 +180,48 @@ on:
 
 ---
 
-## Publishing to crates.io
+## Installing rappct
 
-### Dev Pre-releases
-```toml
-[dependencies]
-# Latest dev pre-release
-rappct = "0.11.2-dev.1"
+### Development Versions (Git-based)
 
-# Or use version requirement to allow any 0.11.x-dev
-rappct = ">=0.11.0-dev, <0.12.0"
+Dev releases are GitHub pre-releases only. Install via git commands:
+
+```bash
+# Latest dev branch
+cargo add rappct --git https://github.com/cpjet64/rappct.git --branch dev
+
+# Specific dev release tag
+cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-v0.12.3
 ```
 
-**Users opt-in** to dev releases explicitly. `cargo add rappct` will NOT install dev versions.
+Or in `Cargo.toml`:
+```toml
+[dependencies]
+# Latest dev branch
+rappct = { git = "https://github.com/cpjet64/rappct.git", branch = "dev" }
 
-### Stable Releases
+# Specific dev release
+rappct = { git = "https://github.com/cpjet64/rappct.git", tag = "dev-v0.12.3" }
+```
+
+### Stable Releases (crates.io)
+
+Stable releases are published to crates.io:
+
+```bash
+# Latest stable release (recommended)
+cargo add rappct
+```
+
+Or in `Cargo.toml`:
 ```toml
 [dependencies]
 # Latest stable release (default)
-rappct = "0.11"
+rappct = "0.12"
 
 # Or specific version
-rappct = "0.11.2"
+rappct = "0.12.0"
 ```
-
-**Default behavior** - users get stable releases unless they explicitly request dev.
 
 ---
 
@@ -214,7 +232,7 @@ rappct = "0.11.2"
 2. ✅ **Use conventional commits** - enables automatic versioning
 3. ✅ **Push to dev directly** - no PR needed for rapid iteration
 4. ✅ **Merge release PRs promptly** - keep dev releases flowing
-5. ✅ **Test with dev versions** - dogfood your own pre-releases
+5. ✅ **Test with dev versions** - install via git to test your changes
 
 ### When Stabilizing to Main
 1. ✅ **Create PR dev → main** - requires human review
@@ -268,14 +286,17 @@ git commit -m "feat: add capability suggestion fuzzy matching"
 git push origin dev
 
 # CI passes → release-please-dev creates PR
-# Merge PR → v0.11.2-dev.1 published
+# Merge PR → dev-v0.12.3 GitHub pre-release created
 
 # Continue iterating
 git commit -m "fix: improve suggestion threshold"
 git push origin dev
 
 # CI passes → release-please-dev updates PR
-# Merge PR → v0.11.2-dev.2 published
+# Merge PR → dev-v0.12.4 GitHub pre-release created
+
+# Test dev version
+cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-v0.12.4
 ```
 
 **Day 4: Stabilization**
