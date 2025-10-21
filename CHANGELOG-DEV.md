@@ -7,6 +7,13 @@ For stable releases, see [CHANGELOG.md](CHANGELOG.md).
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.13.1-dev.0](https://github.com/cpjet64/rappct/compare/v0.13.0-dev.0...v0.13.1-dev.0) (2025-10-21)
+
+
+### Bug Fixes
+
+* checkout correct tag when publishing to crates.io ([badda1c](https://github.com/cpjet64/rappct/commit/badda1c65cd70e95b770095ba2813d579b1c9861))
+
 ## [0.13.0-dev.0](https://github.com/cpjet64/rappct/compare/v0.12.1-dev.0...v0.13.0-dev.0) (2025-10-21)
 
 
