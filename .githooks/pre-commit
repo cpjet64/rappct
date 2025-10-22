@@ -1,14 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "[pre-commit] Running cargo fmt --all -- --check"
-cargo fmt --all -- --check
+# Prefer PowerShell on Windows if available; otherwise run Bash commands.
+if command -v pwsh >/dev/null 2>&1; then
+  echo "[pre-commit] Using PowerShell for fmt/clippy/tests"
+  pwsh -NoProfile -Command "\
+    Write-Host '[pre-commit] cargo fmt --all -- --check'; \
+    rustup component add rustfmt | Out-Null; \
+    cargo fmt --all -- --check; \
+    Write-Host '[pre-commit] cargo clippy --all-targets --all-features -D warnings'; \
+    rustup component add clippy | Out-Null; \
+    cargo clippy --all-targets --all-features -- -D warnings; \
+    Write-Host '[pre-commit] cargo test (default features)'; \
+    cargo test \
+  "
+else
+  echo "[pre-commit] Using Bash for fmt/clippy/tests"
+  rustup component add rustfmt >/dev/null 2>&1 || true
+  echo "[pre-commit] Running cargo fmt --all -- --check"
+  cargo fmt --all -- --check
 
-echo "[pre-commit] Running cargo clippy --all-targets --all-features -D warnings"
-cargo clippy --all-targets --all-features -- -D warnings
+  rustup component add clippy >/dev/null 2>&1 || true
+  echo "[pre-commit] Running cargo clippy --all-targets --all-features -D warnings"
+  cargo clippy --all-targets --all-features -- -D warnings
 
-echo "[pre-commit] Running cargo test (default features)"
-cargo test
+  echo "[pre-commit] Running cargo test (default features)"
+  cargo test
+fi
 
 echo "[pre-commit] OK"
-
