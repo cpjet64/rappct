@@ -38,8 +38,8 @@ impl OwnedSecurityCapabilities {
 #[cfg(windows)]
 mod tests {
     use super::*;
-    use windows::core::PCWSTR;
     use windows::Win32::Security::ConvertStringSidToSidW;
+    use windows::core::PCWSTR;
 
     #[test]
     fn build_security_capabilities() {
@@ -59,4 +59,3 @@ mod tests {
         }
     }
 }
-

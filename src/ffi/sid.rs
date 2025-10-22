@@ -63,8 +63,8 @@ impl Drop for OwnedSid {
 #[cfg(windows)]
 mod tests {
     use super::*;
-    use windows::core::PCWSTR;
     use windows::Win32::Security::ConvertStringSidToSidW;
+    use windows::core::PCWSTR;
 
     #[test]
     fn owned_sid_localfree_constructs_and_drops() {
@@ -78,4 +78,3 @@ mod tests {
         }
     }
 }
-

@@ -7,7 +7,6 @@ use windows::core::{PCWSTR, PWSTR};
 pub(crate) struct WideString {
     buf: Vec<u16>,
 }
-
 impl WideString {
     pub(crate) fn from_os_str(s: &std::ffi::OsStr) -> Self {
         use std::os::windows::ffi::OsStrExt;
@@ -46,4 +45,3 @@ mod tests {
         let _p = w.as_pcwstr();
     }
 }
-

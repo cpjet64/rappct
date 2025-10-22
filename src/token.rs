@@ -1,9 +1,9 @@
 //! Token introspection (skeleton).
 #![allow(clippy::undocumented_unsafe_blocks)]
 
-use crate::sid::AppContainerSid;
 #[cfg(windows)]
 use crate::ffi::mem::LocalAllocGuard;
+use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
 #[cfg(windows)]
