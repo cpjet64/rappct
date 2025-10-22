@@ -1,5 +1,4 @@
 //! RAII wrapper for Win32 `HANDLE` using the standard library's `OwnedHandle`.
-#![allow(dead_code)]
 
 #![allow(clippy::undocumented_unsafe_blocks)]
 

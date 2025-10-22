@@ -1,5 +1,4 @@
 //! Owned SID wrapper with correct deallocator selection.
-#![allow(dead_code)]
 
 #![allow(clippy::undocumented_unsafe_blocks)]
 

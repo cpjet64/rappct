@@ -1,5 +1,4 @@
 //! Owned wide (UTF-16) string helpers for FFI.
-#![allow(dead_code)]
 
 use windows::core::{PCWSTR, PWSTR};
 

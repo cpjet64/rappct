@@ -1,5 +1,4 @@
 //! Owned SECURITY_CAPABILITIES with owned SIDs and SID_AND_ATTRIBUTES.
-#![allow(dead_code)]
 
 use crate::ffi::sid::OwnedSid;
 use windows::Win32::Security::{SECURITY_CAPABILITIES, SID_AND_ATTRIBUTES};
