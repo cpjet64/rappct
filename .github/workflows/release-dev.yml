@@ -22,23 +22,24 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Create dev release-plz config
+        run: |
+          cat > release-plz-dev.toml << 'EOF'
+          [workspace]
+          changelog_config = "cliff.toml"
+          git_release_enable = true
+          git_tag_enable = true
+
+          [[package]]
+          name = "rappct"
+          changelog_path = "CHANGELOG-DEV.md"
+          git_tag_name = "dev-v{{ version }}"
+          publish = false
+          EOF
+
       - name: Run release-plz (dev - no publish)
         uses: MarcoIeni/release-plz-action@v0.5
         with:
-          # Override config to:
-          # 1. Use dev-v prefix for tags
-          # 2. Use CHANGELOG-DEV.md
-          # 3. Skip crates.io publishing
-          config: |
-            [workspace]
-            changelog_config = "cliff.toml"
-            git_release_enable = true
-            git_tag_enable = true
-
-            [[package]]
-            name = "rappct"
-            changelog_path = "CHANGELOG-DEV.md"
-            git_tag_name = "dev-v{{ version }}"
-            publish = false
+          config_path: release-plz-dev.toml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
