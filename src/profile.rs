@@ -5,7 +5,7 @@
 
 use crate::sid::AppContainerSid;
 #[cfg(windows)]
-use crate::util::{FreeSidGuard, LocalFreeGuard};
+use crate::ffi::{mem::LocalAllocGuard, sid::OwnedSid, wstr::WideString};
 use crate::{AcError, Result};
 
 #[derive(Clone, Debug)]
@@ -40,20 +40,20 @@ impl AppContainerProfile {
             }
 
             unsafe {
-                // Prepare wide strings; keep them alive across FFI calls by binding
-                let name_w: Vec<u16> = crate::util::to_utf16(_name);
-                let display_w: Vec<u16> = crate::util::to_utf16(_display);
-                let desc_storage: Option<Vec<u16>> = _description.map(crate::util::to_utf16);
-                let desc_ptr = desc_storage
+                // Prepare wide strings using stable WideString buffers
+                let name_w = WideString::from_str(_name);
+                let display_w = WideString::from_str(_display);
+                let desc_w = _description.map(WideString::from_str);
+                let desc_ptr = desc_w
                     .as_ref()
-                    .map(|buf| PCWSTR(buf.as_ptr()))
+                    .map(|w| w.as_pcwstr())
                     .unwrap_or(PCWSTR::null());
 
                 let mut sid_ptr = std::ptr::null_mut();
                 // Attempt to create
                 let hr: HRESULT = CreateAppContainerProfile(
-                    PCWSTR(name_w.as_ptr()),
-                    PCWSTR(display_w.as_ptr()),
+                    name_w.as_pcwstr(),
+                    display_w.as_pcwstr(),
                     desc_ptr,
                     std::ptr::null_mut(),
                     0,
@@ -62,8 +62,8 @@ impl AppContainerProfile {
 
                 let already_exists = HRESULT::from_win32(ERROR_ALREADY_EXISTS.0);
                 let invalid_parameter = HRESULT::from_win32(ERROR_INVALID_PARAMETER.0);
-                let sid_guard = if hr.is_ok() {
-                    FreeSidGuard::new(windows::Win32::Security::PSID(sid_ptr))
+                let sid_owned = if hr.is_ok() {
+                    OwnedSid::from_freesid_psid(sid_ptr)
                 } else if hr == already_exists || hr == invalid_parameter {
                     // Fallback to derive SID when profile already exists or metadata mismatches
                     let mut sid2 = std::ptr::null_mut();
@@ -77,7 +77,7 @@ impl AppContainerProfile {
                             hr2.0
                         )));
                     }
-                    FreeSidGuard::new(windows::Win32::Security::PSID(sid2))
+                    OwnedSid::from_freesid_psid(sid2)
                 } else {
                     return Err(AcError::Win32(format!(
                         "CreateAppContainerProfile failed: 0x{:08X}",
@@ -87,9 +87,9 @@ impl AppContainerProfile {
 
                 // Convert to SDDL
                 let mut sddl_ptr = PWSTR::null();
-                ConvertSidToStringSidW(sid_guard.as_psid(), &mut sddl_ptr)
+                ConvertSidToStringSidW(sid_owned.as_psid(), &mut sddl_ptr)
                     .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {}", e)))?;
-                let sddl_guard = LocalFreeGuard::<u16>::new(sddl_ptr.0);
+                let sddl_guard = LocalAllocGuard::<u16>::from_raw(sddl_ptr.0);
                 let sddl = sddl_guard.to_string_lossy();
 
                 Ok(Self {
@@ -113,9 +113,9 @@ impl AppContainerProfile {
                     pszAppContainerName: windows::core::PCWSTR,
                 ) -> windows::core::HRESULT;
             }
-            let name_w: Vec<u16> = crate::util::to_utf16(&self.name);
+            let name_w = WideString::from_str(&self.name);
             unsafe {
-                let hr = DeleteAppContainerProfile(PCWSTR(name_w.as_ptr()));
+                let hr = DeleteAppContainerProfile(name_w.as_pcwstr());
                 if !hr.is_ok() {
                     return Err(AcError::Win32(format!(
                         "DeleteAppContainerProfile failed: 0x{:08X}",
@@ -152,31 +152,31 @@ impl AppContainerProfile {
             use windows::core::{PCWSTR, PWSTR};
             unsafe {
                 // Derive package PSID from name for folder query
-                let name_w: Vec<u16> = crate::util::to_utf16(&self.name);
+                let name_w = WideString::from_str(&self.name);
                 let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
                 let hr_sid =
-                    DeriveAppContainerSidFromAppContainerName(PCWSTR(name_w.as_ptr()), &mut psid);
+                    DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut psid);
                 if !hr_sid.is_ok() {
                     return Err(AcError::Win32(format!(
                         "DeriveAppContainerSidFromAppContainerName failed: 0x{:08X}",
                         hr_sid.0
                     )));
                 }
-                let psid_guard = FreeSidGuard::new(psid);
+                let psid_owned = OwnedSid::from_freesid_psid(psid.0);
                 let mut out: PWSTR = PWSTR::null();
-                let hr = GetAppContainerFolderPath(psid_guard.as_psid(), &mut out);
+                let hr = GetAppContainerFolderPath(psid_owned.as_psid(), &mut out);
                 if hr.is_ok() {
                     // Convert returned PWSTR to PathBuf
                     let path = {
+                        let guard = crate::ffi::mem::CoTaskMem::<u16>::from_raw(out.0);
                         let mut len = 0usize;
-                        while *out.0.add(len) != 0 {
+                        while *guard.as_ptr().add(len) != 0 {
                             len += 1;
                         }
-                        let slice = std::slice::from_raw_parts(out.0, len);
+                        let slice = std::slice::from_raw_parts(guard.as_ptr(), len);
                         let s = String::from_utf16_lossy(slice);
                         PathBuf::from(s)
                     };
-                    CoTaskMemFree(Some(out.0 as _));
                     Ok(path)
                 } else {
                     // Fallback: synthesize under LocalAppData\Packages\{SID}
@@ -214,12 +214,12 @@ impl AppContainerProfile {
             }
             unsafe {
                 // Convert SDDL to PSID
-                let sddl_w: Vec<u16> = crate::util::to_utf16(self.sid.as_string());
+                let sddl_w = WideString::from_str(self.sid.as_string());
                 let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
-                if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid).is_err() {
+                if ConvertStringSidToSidW(sddl_w.as_pcwstr(), &mut psid).is_err() {
                     return Err(AcError::Win32("ConvertStringSidToSidW failed".into()));
                 }
-                let psid_guard = LocalFreeGuard::<std::ffi::c_void>::new(psid.0);
+                let psid_guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(psid.0);
                 let mut needed: u32 = 0;
                 // First call to get required length (chars including NUL)
                 let _ = GetAppContainerNamedObjectPath(
@@ -275,22 +275,22 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
         use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
         use windows::core::{PCWSTR, PWSTR};
         unsafe {
-            let name_w: Vec<u16> = crate::util::to_utf16(name);
+            let name_w = WideString::from_str(name);
             let mut sid_ptr = std::ptr::null_mut();
             let hr =
-                DeriveAppContainerSidFromAppContainerName(PCWSTR(name_w.as_ptr()), &mut sid_ptr);
+                DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut sid_ptr);
             if !hr.is_ok() {
                 return Err(AcError::Win32(format!(
                     "DeriveAppContainerSidFromAppContainerName failed: 0x{:08X}",
                     hr.0
                 )));
             }
-            let sid_guard = FreeSidGuard::new(windows::Win32::Security::PSID(sid_ptr));
+            let sid_owned = OwnedSid::from_freesid_psid(sid_ptr);
             let mut sddl_ptr = PWSTR::null();
-            if ConvertSidToStringSidW(sid_guard.as_psid(), &mut sddl_ptr).is_err() {
+            if ConvertSidToStringSidW(sid_owned.as_psid(), &mut sddl_ptr).is_err() {
                 return Err(AcError::Win32("ConvertSidToStringSidW failed".into()));
             }
-            let sddl_guard = LocalFreeGuard::<u16>::new(sddl_ptr.0);
+            let sddl_guard = LocalAllocGuard::<u16>::from_raw(sddl_ptr.0);
             let sddl = sddl_guard.to_string_lossy();
             Ok(AppContainerSid::from_sddl(sddl))
         }

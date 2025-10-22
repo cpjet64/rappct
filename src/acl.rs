@@ -3,7 +3,7 @@
 
 use crate::sid::AppContainerSid;
 #[cfg(windows)]
-use crate::util::LocalFreeGuard;
+use crate::ffi::mem::LocalAllocGuard;
 use crate::{AcError, Result};
 
 /// Target resource for granting AppContainer or capability access.
@@ -96,7 +96,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
     if unsafe { ConvertStringSidToSidW(PCWSTR(wide.as_ptr()), &mut psid) }.is_err() {
         return Err(AcError::Win32("ConvertStringSidToSidW failed".into()));
     }
-    let psid_guard = unsafe { LocalFreeGuard::new(psid.0) };
+    let psid_guard = unsafe { LocalAllocGuard::from_raw(psid.0) };
     let trustee_psid = windows::Win32::Security::PSID(psid_guard.as_ptr());
 
     // Build trustee and explicit access
@@ -134,7 +134,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st
                 )));
             }
-            let _sd_guard = unsafe { LocalFreeGuard::new(p_sd.0) };
+            let _sd_guard = unsafe { LocalAllocGuard::from_raw(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
             let st2 = unsafe {
@@ -146,7 +146,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st2
                 )));
             }
-            let new_dacl_guard = unsafe { LocalFreeGuard::new(new_dacl) };
+            let new_dacl_guard = unsafe { LocalAllocGuard::from_raw(new_dacl) };
             let st3 = unsafe {
                 SetNamedSecurityInfoW(
                     PCWSTR(path_w.as_ptr()),
@@ -189,7 +189,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st
                 )));
             }
-            let _sd_guard = unsafe { LocalFreeGuard::new(p_sd.0) };
+            let _sd_guard = unsafe { LocalAllocGuard::from_raw(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
             let st2 = unsafe {
@@ -201,7 +201,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st2
                 )));
             }
-            let new_dacl_guard = unsafe { LocalFreeGuard::new(new_dacl) };
+            let new_dacl_guard = unsafe { LocalAllocGuard::from_raw(new_dacl) };
             let st3 = unsafe {
                 SetNamedSecurityInfoW(
                     PCWSTR(path_w.as_ptr()),
