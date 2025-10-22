@@ -90,7 +90,7 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
             )));
         }
         if !cfg_arr.is_null() {
-            let cfg_guard = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cfg_arr);
+            let cfg_guard = LocalAllocGuard::<SID_AND_ATTRIBUTES>::from_raw(cfg_arr);
             let cfg_slice = std::slice::from_raw_parts(
                 cfg_guard.as_ptr() as *const SID_AND_ATTRIBUTES,
                 cfg_count as usize,

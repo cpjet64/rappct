@@ -100,16 +100,18 @@ unsafe extern "system" {
 #[cfg(windows)]
 fn local_free(ptr: *mut c_void) {
     // SAFETY: calling Win32 LocalFree on a pointer provided by a LocalAlloc-compatible API.
-    unsafe { let _ = LocalFree(ptr as isize); }
+    unsafe {
+        let _ = LocalFree(ptr as isize);
+    }
 }
 
 #[cfg(test)]
 #[cfg(windows)]
 mod tests {
     use super::*;
-    use windows::core::PCWSTR;
     use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
     use windows::Win32::Security::ConvertStringSidToSidW;
+    use windows::core::PCWSTR;
 
     #[test]
     fn localalloc_guard_round_trip_string_sid() {

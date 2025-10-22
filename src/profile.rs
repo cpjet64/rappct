@@ -270,7 +270,7 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
             ) -> windows::core::HRESULT;
         }
         use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
-        use windows::core::{PCWSTR, PWSTR};
+        use windows::core::PWSTR;
         unsafe {
             let name_w = WideString::from_str(name);
             let mut sid_ptr = std::ptr::null_mut();

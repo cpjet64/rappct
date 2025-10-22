@@ -107,8 +107,8 @@ impl Drop for AttrList {
 #[cfg(windows)]
 mod tests {
     use super::*;
-    use windows::core::PCWSTR;
     use windows::Win32::Security::ConvertStringSidToSidW;
+    use windows::core::PCWSTR;
 
     #[test]
     fn attr_list_init_and_set_sc() {

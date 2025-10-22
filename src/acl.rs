@@ -279,7 +279,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st2
                 )));
             }
-            let _sd_guard = unsafe { LocalFreeGuard::new(p_sd.0) };
+            let _sd_guard = unsafe { crate::ffi::mem::LocalAllocGuard::from_raw(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
             let st3 = unsafe {
@@ -292,7 +292,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st3
                 )));
             }
-            let new_dacl_guard = unsafe { LocalFreeGuard::new(new_dacl) };
+            let new_dacl_guard = unsafe { crate::ffi::mem::LocalAllocGuard::from_raw(new_dacl) };
             let st4 = unsafe {
                 SetSecurityInfo(
                     HANDLE(hkey.0),

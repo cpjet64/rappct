@@ -68,10 +68,7 @@ mod tests {
             // Use the handle before drop.
             let hr = SetEvent(HANDLE(h.as_borrowed().as_raw_handle() as isize));
             assert!(hr.as_bool());
-            let wr = WaitForSingleObject(
-                HANDLE(h.as_borrowed().as_raw_handle() as isize),
-                1000,
-            );
+            let wr = WaitForSingleObject(HANDLE(h.as_borrowed().as_raw_handle() as isize), 1000);
             assert_eq!(wr, WAIT_OBJECT_0);
             // Drop closes exactly once; any extra close would be UB but OwnedHandle prevents it.
             let _ = h;
