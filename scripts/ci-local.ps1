@@ -1,5 +1,9 @@
 #requires -Version 7
 $ErrorActionPreference = 'Stop'
+$isWindows = $env:OS -eq 'Windows_NT'
+if (-not $isWindows) {
+  Write-Error "[ci-local] Windows-only checks. Detected non-Windows environment. Aborting."; exit 1
+}
 $features = @("", "introspection", "net", "introspection,net")
 $env:RUST_BACKTRACE = "1"
 $env:RUSTFLAGS = "-D warnings"
@@ -38,4 +42,3 @@ foreach ($f in $features) {
 }
 
 Write-Host "[ci-local] OK"
-

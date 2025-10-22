@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Windows-only guard: ensure we run only on Windows hosts
+if [ "${OS:-}" != "Windows_NT" ]; then
+  echo "[pre-commit] Windows-only hooks. Detected non-Windows OS: $(uname -s). Aborting." >&2
+  exit 1
+fi
+
 # Prefer PowerShell on Windows if available; otherwise run Bash commands.
 if command -v pwsh >/dev/null 2>&1; then
   echo "[pre-commit] Using PowerShell for fmt/clippy/tests"

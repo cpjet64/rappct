@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# Windows-only guard: require Windows_NT environment (Git Bash / PowerShell)
+if [[ "${OS:-}" != "Windows_NT" ]]; then
+  echo "[ci-local] Windows-only checks. Detected non-Windows OS: $(uname -s). Aborting." >&2
+  exit 1
+fi
+
 # Mirror CI matrix: rust = [stable, 1.90.0], features = ["", introspection, net, introspection,net]
 features_list=("" "introspection" "net" "introspection,net")
 
@@ -41,4 +47,3 @@ for FEATS in "${features_list[@]}"; do
 done
 
 echo "[ci-local] OK"
-
