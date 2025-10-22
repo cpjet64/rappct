@@ -26,15 +26,11 @@ This document describes rappct's automated dual-branch workflow optimized for AI
 
 ```mermaid
 graph LR
-    A[Push to dev] --> B[CI Runs]
-    B --> C{CI Pass?}
-    C -->|No| D[Fix Issues]
-    D --> A
-    C -->|Yes| E[release-please-dev]
-    E --> F[Creates PR with version bump]
-    F --> G[Merge PR]
-    G --> H[GitHub Pre-Release Created]
-    H --> I[Install via git commands]
+    A[Push to dev] --> B[release-plz]
+    B --> C[Creates PR with version bump]
+    C --> D[Merge PR]
+    D --> E[GitHub Pre-Release Created]
+    E --> F[Install via git commands]
 ```
 
 **Steps**:
@@ -46,21 +42,18 @@ graph LR
    git push origin dev
    ```
 
-2. **CI runs automatically** (4 matrix jobs):
-   - Tests: `[]`, `[introspection]`, `[net]`, `[introspection,net]`
-   - Clippy with `-D warnings`
+2. **release-plz runs automatically** and creates/updates a PR:
+   - Analyzes conventional commits since last release
+   - Updates version in `Cargo.toml`
+   - Generates changelog in `CHANGELOG-DEV.md`
+   - Tag format: `dev-v0.12.3`
 
-3. **If CI passes**, `release-please-dev` creates/updates a PR:
-   - Version: `0.12.3`
-   - Tag: `dev-v0.12.3`
-   - Changelog: `CHANGELOG-DEV.md`
-
-4. **Merge the release PR**:
+3. **Merge the release PR**:
    ```bash
    # Review and merge via GitHub UI
    ```
 
-5. **Automatic GitHub pre-release**:
+4. **Automatic GitHub pre-release**:
    - GitHub pre-release created with tag `dev-v0.12.3`
    - Install via: `cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-v0.12.3`
 
@@ -68,16 +61,12 @@ graph LR
 
 ```mermaid
 graph LR
-    A[Merge dev → main] --> B[CI Runs]
-    B --> C{CI Pass?}
-    C -->|No| D[Fix on dev first]
-    D --> A
-    C -->|Yes| E[release-please]
-    E --> F[Creates PR with version bump]
-    F --> G[Review & Merge PR]
-    G --> H[GitHub Release Created]
-    H --> I[Auto-Publish to crates.io]
-    I --> J[v0.x.x on crates.io]
+    A[Merge dev → main] --> B[release-plz]
+    B --> C[Creates PR with version bump]
+    C --> D[Review & Merge PR]
+    D --> E[GitHub Release Created]
+    E --> F[Auto-Publish to crates.io]
+    F --> G[v0.x.x on crates.io]
 ```
 
 **Steps**:
@@ -87,20 +76,20 @@ graph LR
    # Base: main ← Compare: dev
    ```
 
-2. **CI runs on PR** (all feature combinations)
+2. **Merge PR when ready**
 
-3. **Merge PR when CI passes**
+3. **release-plz runs automatically** and creates/updates a PR:
+   - Analyzes conventional commits since last release
+   - Updates version in `Cargo.toml`
+   - Generates changelog in `CHANGELOG.md`
+   - Tag format: `rappct-v0.12.0`
 
-4. **If CI passes**, `release-please` creates/updates a PR:
-   - Version: `0.12.0` (stable, no suffix)
-   - Changelog: `CHANGELOG.md`
-
-5. **Merge the release PR**:
+4. **Merge the release PR**:
    ```bash
    # Review and merge via GitHub UI
    ```
 
-6. **Automatic publishing**:
+5. **Automatic publishing**:
    - GitHub stable release created
    - Published to crates.io as stable version
    - Example: `rappct = "0.12.0"`
@@ -288,14 +277,14 @@ git checkout dev
 git commit -m "feat: add capability suggestion fuzzy matching"
 git push origin dev
 
-# CI passes → release-please-dev creates PR
+# release-plz creates PR
 # Merge PR → dev-v0.12.3 GitHub pre-release created
 
 # Continue iterating
 git commit -m "fix: improve suggestion threshold"
 git push origin dev
 
-# CI passes → release-please-dev updates PR
+# release-plz updates PR
 # Merge PR → dev-v0.12.4 GitHub pre-release created
 
 # Test dev version
@@ -305,10 +294,9 @@ cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-v0.12.4
 **Day 4: Stabilization**
 ```bash
 # Human reviews dev work, creates PR dev → main
-# CI runs on PR
 # Human merges PR
 
-# release-please creates stable release PR
+# release-plz creates stable release PR
 # Human reviews changelog, merges PR
 # v0.12.0 published to crates.io (stable)
 
@@ -351,5 +339,6 @@ git push origin dev
 
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [Semantic Versioning](https://semver.org/)
-- [release-please](https://github.com/googleapis/release-please)
+- [release-plz](https://release-plz.ieni.dev/) - Rust-native release automation
+- [git-cliff](https://git-cliff.org/) - Changelog generator
 - [GitHub Actions Workflow Syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
