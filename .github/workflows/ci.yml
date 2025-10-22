@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust: [ stable, "1.90.0" ]
+        rust: [ stable, "1.90.0", beta, nightly ]
         features: ["", "introspection", "net", "introspection,net"]
     env:
       RUST_BACKTRACE: 1
@@ -39,6 +39,18 @@ jobs:
       - name: Install Rust (MSRV)
         if: ${{ matrix.rust == '1.90.0' }}
         uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          components: clippy
+
+      - name: Install Rust (beta)
+        if: ${{ matrix.rust == 'beta' }}
+        uses: dtolnay/rust-toolchain@beta
+        with:
+          components: clippy
+
+      - name: Install Rust (nightly)
+        if: ${{ matrix.rust == 'nightly' }}
+        uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
 

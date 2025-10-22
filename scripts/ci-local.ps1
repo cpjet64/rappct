@@ -41,4 +41,32 @@ foreach ($f in $features) {
   }
 }
 
+Write-Host "[ci-local] beta toolchain"
+rustup toolchain install beta | Out-Null
+rustup component add clippy --toolchain beta | Out-Null
+
+foreach ($f in $features) {
+  if ($f -eq "") {
+    Write-Host "[ci-local] test (beta, no features)"; cargo +beta test --all-targets
+    Write-Host "[ci-local] clippy (beta, no features)"; cargo +beta clippy --all-targets -- -D warnings
+  } else {
+    Write-Host "[ci-local] test (beta, features: $f)"; cargo +beta test --all-targets --features "$f"
+    Write-Host "[ci-local] clippy (beta, features: $f)"; cargo +beta clippy --all-targets --features "$f" -- -D warnings
+  }
+}
+
+Write-Host "[ci-local] nightly toolchain"
+rustup toolchain install nightly | Out-Null
+rustup component add clippy --toolchain nightly | Out-Null
+
+foreach ($f in $features) {
+  if ($f -eq "") {
+    Write-Host "[ci-local] test (nightly, no features)"; cargo +nightly test --all-targets
+    Write-Host "[ci-local] clippy (nightly, no features)"; cargo +nightly clippy --all-targets -- -D warnings
+  } else {
+    Write-Host "[ci-local] test (nightly, features: $f)"; cargo +nightly test --all-targets --features "$f"
+    Write-Host "[ci-local] clippy (nightly, features: $f)"; cargo +nightly clippy --all-targets --features "$f" -- -D warnings
+  }
+}
+
 Write-Host "[ci-local] OK"
