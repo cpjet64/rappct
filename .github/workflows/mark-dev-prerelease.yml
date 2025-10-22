@@ -2,7 +2,8 @@ name: mark-dev-prerelease
 
 on:
   release:
-    types: [created, published]
+    # Handle initial creation/publish and any edits that might change metadata
+    types: [created, published, edited]
 
 permissions:
   contents: write
@@ -12,19 +13,25 @@ jobs:
     if: startsWith(github.event.release.tag_name, 'dev-v')
     runs-on: ubuntu-latest
     steps:
-      - name: Mark as prerelease
+      - name: Mark as prerelease and normalize name
         uses: actions/github-script@v8
         with:
           script: |
             const release = context.payload.release;
-            if (!release.prerelease) {
+            const tag = release.tag_name || '';
+            const m = tag.match(/^dev-v(.+)$/);
+            const desiredName = m ? `dev v${m[1]}` : release.name || tag;
+            const needsPrerelease = !release.prerelease;
+            const needsNameUpdate = release.name !== desiredName;
+            if (needsPrerelease || needsNameUpdate) {
               await github.rest.repos.updateRelease({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 release_id: release.id,
                 prerelease: true,
+                name: desiredName,
               });
-              core.info(`Marked ${release.tag_name} as prerelease`);
+              core.info(`Updated release: prerelease=true, name='${desiredName}'`);
             } else {
-              core.info('Already marked as prerelease');
+              core.info('Release already marked prerelease with expected name');
             }
