@@ -7,10 +7,6 @@
 [![Crates.io](https://img.shields.io/crates/v/rappct)](https://crates.io/crates/rappct)
 [![Downloads](https://img.shields.io/crates/d/rappct)](https://crates.io/crates/rappct)
 
-**Development (dev branch)**
-
-[![CI](https://github.com/cpjet64/rappct/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Adev)
-[![Dev Release](https://img.shields.io/github/v/release/cpjet64/rappct?include_prereleases&filter=dev-v*&label=dev%20release)](https://github.com/cpjet64/rappct/releases?q=tag%3Adev-v)
 
 > Rust toolkit for working with Windows AppContainer (AC) and Low Privilege AppContainer (LPAC) security boundaries.
 
@@ -39,10 +35,7 @@ that needs to compose profiles, capabilities, process launches, ACL helpers, and
 
 ## Release & Branching
 
-- Stable releases publish from `main` to crates.io.
-- Pre-releases on `dev` are available via Git tags (no crates.io publish).
-- See `WORKFLOW.md` for the dual-branch details and release-plz automation.
- - Dev GitHub releases (tags like `dev-vX.Y.Z`) are marked as prereleases.
+- Single-branch flow. Pushes to `main` run CI; when green, the release workflow cuts a GitHub release and publishes to crates.io automatically.
 
 ## Prerequisites
 
@@ -77,11 +70,8 @@ cargo add rappct
 # See the latest on crates.io or the release badge
 cargo add rappct@<x.y.z>
 
-# Development version from git (dev branch)
-cargo add rappct --git https://github.com/cpjet64/rappct.git --branch dev
-
-# Specific development release tag (optional)
-cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-vX.Y.Z
+# Development version from git (optional)
+cargo add rappct --git https://github.com/cpjet64/rappct.git --branch main
 ```
 
 ## Usage Snapshot
