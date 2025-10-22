@@ -60,7 +60,7 @@ jobs:
       RUSTFLAGS: -D warnings
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@1.90.0
+      - uses: dtolnay/rust-toolchain@1.100.0
       - name: Show toolchain
         run: rustc -Vv && cargo -V
       - name: Test (${{ matrix.features }})
