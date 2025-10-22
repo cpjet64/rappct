@@ -43,3 +43,4 @@ jobs:
           config: release-plz-dev.toml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_PLZ_LOG: DEBUG
