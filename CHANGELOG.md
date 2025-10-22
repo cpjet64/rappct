@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.13.1] - 2025-10-22
+
+### Miscellaneous Tasks
+
+- MSRV 1.90, toolchain pin; add Windows MSRV job; version/docs sync\n\nfeat(net,launch): RAII loopback guard; env-merge helper; job drop-guard\n\ndocs: add capabilities catalog; README expectations; examples use new helpers\n\ntest: unit tests for helpers; opt-in integration tests for loopback and job guard
+
+### Fmt
+
+- Apply rustfmt changes across examples, src, and tests
+
+
+
 ## [0.12.2](https://github.com/cpjet64/rappct/compare/rappct-v0.12.1...rappct-v0.12.2) (2025-10-21)
 
 
