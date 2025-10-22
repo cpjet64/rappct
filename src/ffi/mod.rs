@@ -5,17 +5,17 @@
 #![warn(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(windows)]
+pub(crate) mod attr_list;
+#[cfg(windows)]
 pub(crate) mod handles;
 #[cfg(windows)]
 pub(crate) mod mem;
 #[cfg(windows)]
+pub(crate) mod sec_caps;
+#[cfg(windows)]
 pub(crate) mod sid;
 #[cfg(windows)]
 pub(crate) mod wstr;
-#[cfg(windows)]
-pub(crate) mod sec_caps;
-#[cfg(windows)]
-pub(crate) mod attr_list;
 
 // Non-Windows stubs so the crate type-checks cross-platform.
 #[cfg(not(windows))]

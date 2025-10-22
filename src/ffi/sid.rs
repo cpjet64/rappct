@@ -3,8 +3,8 @@
 
 #![allow(clippy::undocumented_unsafe_blocks)]
 
-use windows::Win32::Security::PSID;
 use core::ffi::c_void;
+use windows::Win32::Security::PSID;
 
 #[derive(Debug, Clone, Copy)]
 enum FreeKind {
