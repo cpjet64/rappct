@@ -67,7 +67,8 @@ impl AppContainerProfile {
                 } else if hr == already_exists || hr == invalid_parameter {
                     // Fallback to derive SID when profile already exists or metadata mismatches
                     let mut sid2 = std::ptr::null_mut();
-                    let hr2 = DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut sid2);
+                    let hr2 =
+                        DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut sid2);
                     if !hr2.is_ok() {
                         return Err(AcError::Win32(format!(
                             "DeriveAppContainerSidFromAppContainerName failed: 0x{:08X}",
@@ -273,8 +274,7 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
         unsafe {
             let name_w = WideString::from_str(name);
             let mut sid_ptr = std::ptr::null_mut();
-            let hr =
-                DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut sid_ptr);
+            let hr = DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut sid_ptr);
             if !hr.is_ok() {
                 return Err(AcError::Win32(format!(
                     "DeriveAppContainerSidFromAppContainerName failed: 0x{:08X}",

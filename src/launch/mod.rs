@@ -10,11 +10,11 @@ use crate::{AcError, Result};
 #[cfg(windows)]
 use crate::ffi::attr_list::AttrList as FAttrList;
 #[cfg(windows)]
+use crate::ffi::handles::Handle as FHandle;
+#[cfg(windows)]
 use crate::ffi::sec_caps::OwnedSecurityCapabilities;
 #[cfg(windows)]
 use crate::ffi::sid::OwnedSid;
-#[cfg(windows)]
-use crate::ffi::handles::Handle as FHandle;
 use std::ffi::OsString;
 
 // Use fully-qualified macros (tracing::trace!, etc.) to avoid unused import warnings
@@ -24,10 +24,10 @@ use windows::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE, TRUE
 use windows::Win32::Foundation::{HANDLE_FLAG_INHERIT, SetHandleInformation};
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
-#[cfg(windows)]
-use windows::Win32::Security::{PSID, SECURITY_ATTRIBUTES};
 #[cfg(all(windows, feature = "tracing"))]
 use windows::Win32::Security::SECURITY_CAPABILITIES;
+#[cfg(windows)]
+use windows::Win32::Security::{PSID, SECURITY_ATTRIBUTES};
 #[cfg(windows)]
 use windows::Win32::Storage::FileSystem::{
     CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_SHARE_READ,
@@ -367,7 +367,12 @@ impl AttributeContext {
             }
         }
 
-        Ok(Self { attr_list, sc_owned, _handle_list: handle_list, _lpac_policy: lpac_policy })
+        Ok(Self {
+            attr_list,
+            sc_owned,
+            _handle_list: handle_list,
+            _lpac_policy: lpac_policy,
+        })
     }
 
     fn as_mut_ptr(&mut self) -> windows::Win32::System::Threading::LPPROC_THREAD_ATTRIBUTE_LIST {
