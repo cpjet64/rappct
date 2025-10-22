@@ -3,9 +3,9 @@
 //! - Resolve folder and named-object paths
 #![allow(clippy::undocumented_unsafe_blocks)]
 
-use crate::sid::AppContainerSid;
 #[cfg(windows)]
 use crate::ffi::{mem::LocalAllocGuard, sid::OwnedSid, wstr::WideString};
+use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
 #[derive(Clone, Debug)]
