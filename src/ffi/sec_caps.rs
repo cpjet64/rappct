@@ -32,7 +32,12 @@ impl OwnedSecurityCapabilities {
             CapabilityCount: caps.len() as u32,
             Reserved: 0,
         };
-        Self { _appcontainer_sid: app_sid, _cap_sids: cap_sids, _caps: caps, sc }
+        Self {
+            _appcontainer_sid: app_sid,
+            _cap_sids: cap_sids,
+            _caps: caps,
+            sc,
+        }
     }
 
     pub(crate) fn as_ptr(&self) -> *const SECURITY_CAPABILITIES {
@@ -44,7 +49,7 @@ impl OwnedSecurityCapabilities {
 #[cfg(windows)]
 mod tests {
     use super::*;
-    use windows::Win32::Security::ConvertStringSidToSidW;
+    use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
     use windows::core::PCWSTR;
 
     #[test]

@@ -19,7 +19,8 @@ impl AttrList {
         let mut bytes: usize = 0;
         unsafe {
             // SAFETY: Probe for size; passing None and flags=0 per API contract.
-            let _ = InitializeProcThreadAttributeList(None, count, Some(0), &mut bytes as *mut usize);
+            let _ =
+                InitializeProcThreadAttributeList(None, count, Some(0), &mut bytes as *mut usize);
         }
         let mut buf = vec![0u8; bytes];
         let ptr = LPPROC_THREAD_ATTRIBUTE_LIST(buf.as_mut_ptr() as _);
@@ -107,7 +108,7 @@ impl Drop for AttrList {
 #[cfg(windows)]
 mod tests {
     use super::*;
-    use windows::Win32::Security::ConvertStringSidToSidW;
+    use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
     use windows::core::PCWSTR;
 
     #[test]

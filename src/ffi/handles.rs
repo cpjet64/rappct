@@ -54,8 +54,7 @@ impl Handle {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::ptr::null_mut;
-    use windows::Win32::Foundation::{CloseHandle, HANDLE, WAIT_OBJECT_0};
+    use windows::Win32::Foundation::{HANDLE, WAIT_OBJECT_0};
     use windows::Win32::System::Threading::{CreateEventW, SetEvent, WaitForSingleObject};
 
     #[test]
@@ -67,9 +66,9 @@ mod tests {
                 .0 as *mut _;
             let h = Handle::from_raw(raw).expect("wrap handle");
             // Use the handle before drop.
-            let hr = SetEvent(HANDLE(h.as_borrowed().as_raw_handle() as isize));
-            assert!(hr.as_bool());
-            let wr = WaitForSingleObject(HANDLE(h.as_borrowed().as_raw_handle() as isize), 1000);
+            let hr = SetEvent(h.as_win32());
+            assert!(hr.is_ok());
+            let wr = WaitForSingleObject(h.as_win32(), 1000);
             assert_eq!(wr, WAIT_OBJECT_0);
             // Drop closes exactly once; any extra close would be UB but OwnedHandle prevents it.
             let _ = h;

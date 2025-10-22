@@ -111,8 +111,9 @@ fn local_free(ptr: *mut c_void) {
 #[cfg(windows)]
 mod tests {
     use super::*;
-    use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
-    use windows::Win32::Security::ConvertStringSidToSidW;
+    use windows::Win32::Security::Authorization::{
+        ConvertSidToStringSidW, ConvertStringSidToSidW,
+    };
     use windows::core::PCWSTR;
 
     #[test]
