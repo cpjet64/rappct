@@ -11,7 +11,8 @@ fn loopback_guard_roundtrip_opt_in() {
     }
 
     let name = format!("rappct.test.net.guard.{}", std::process::id());
-    let prof = AppContainerProfile::ensure(&name, &name, Some("rappct guard test")).expect("ensure");
+    let prof =
+        AppContainerProfile::ensure(&name, &name, Some("rappct guard test")).expect("ensure");
     let sid = prof.sid.clone();
 
     // Ensure removed before we start
@@ -38,16 +39,30 @@ fn loopback_config_contains<S: AsRef<str>>(sid_str: S) -> rappct::Result<bool> {
         let mut count: u32 = 0;
         let mut arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
         let err = NetworkIsolationGetAppContainerConfig(&mut count, &mut arr);
-        if err != 0 { return Err(rappct::AcError::Win32(format!("NetworkIsolationGetAppContainerConfig failed: {err}"))); }
-        let slice = if arr.is_null() { &[][..] } else { std::slice::from_raw_parts(arr, count as usize) };
+        if err != 0 {
+            return Err(rappct::AcError::Win32(format!(
+                "NetworkIsolationGetAppContainerConfig failed: {err}"
+            )));
+        }
+        let slice = if arr.is_null() {
+            &[][..]
+        } else {
+            std::slice::from_raw_parts(arr, count as usize)
+        };
         let target = sid_str.as_ref();
         for sa in slice {
             let mut raw = PWSTR::null();
-            ConvertSidToStringSidW(sa.Sid, &mut raw).map_err(|e| rappct::AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
+            ConvertSidToStringSidW(sa.Sid, &mut raw).map_err(|e| {
+                rappct::AcError::Win32(format!("ConvertSidToStringSidW failed: {e}"))
+            })?;
             let guard = LocalFreeGuard::<u16>::new(raw.0);
-            if guard.to_string_lossy() == target { return Ok(true); }
+            if guard.to_string_lossy() == target {
+                return Ok(true);
+            }
         }
-        if !arr.is_null() { let _ = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(arr); }
+        if !arr.is_null() {
+            let _ = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(arr);
+        }
         Ok(false)
     }
 }

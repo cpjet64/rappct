@@ -16,8 +16,8 @@ fn job_guard_kills_on_drop() {
     use windows::Win32::System::Threading::WaitForSingleObject;
     use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
 
-    let profile = AppContainerProfile::ensure("rappct.job.guard", "JobGuard", None)
-        .expect("ensure profile");
+    let profile =
+        AppContainerProfile::ensure("rappct.job.guard", "JobGuard", None).expect("ensure profile");
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
         .build()

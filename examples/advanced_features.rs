@@ -411,8 +411,14 @@ fn demo_advanced_launch() -> rappct::Result<()> {
     // Windows needs SystemRoot, ComSpec, etc. for cmd.exe and other tools to work.
     let custom_env = vec![
         (OsString::from("RAPPCT_DEMO"), OsString::from("advanced")),
-        (OsString::from("ISOLATION_LEVEL"), OsString::from("appcontainer")),
-        (OsString::from("PATH"), OsString::from("C:\\Windows\\System32")),
+        (
+            OsString::from("ISOLATION_LEVEL"),
+            OsString::from("appcontainer"),
+        ),
+        (
+            OsString::from("PATH"),
+            OsString::from("C:\\Windows\\System32"),
+        ),
     ];
 
     // Merge essential variables from parent (SystemRoot, ComSpec, etc.)

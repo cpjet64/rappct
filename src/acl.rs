@@ -26,10 +26,12 @@ impl AccessMask {
 
     /// FILE_GENERIC_READ access mask.
     #[cfg(windows)]
-    pub const FILE_GENERIC_READ: Self = Self(windows::Win32::Storage::FileSystem::FILE_GENERIC_READ.0);
+    pub const FILE_GENERIC_READ: Self =
+        Self(windows::Win32::Storage::FileSystem::FILE_GENERIC_READ.0);
     /// FILE_GENERIC_WRITE access mask.
     #[cfg(windows)]
-    pub const FILE_GENERIC_WRITE: Self = Self(windows::Win32::Storage::FileSystem::FILE_GENERIC_WRITE.0);
+    pub const FILE_GENERIC_WRITE: Self =
+        Self(windows::Win32::Storage::FileSystem::FILE_GENERIC_WRITE.0);
 
     /// FILE_GENERIC_READ (non-Windows fallback value)
     #[cfg(not(windows))]

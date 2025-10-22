@@ -24,10 +24,6 @@ use rappct::net::LoopbackExemptionGuard;
 
 // removed old FirewallGuard (replaced by LoopbackExemptionGuard)
 
-
-
-
-
 #[cfg(all(windows, feature = "net"))]
 use std::{
     io::{BufRead, BufReader},
@@ -83,7 +79,6 @@ fn main() -> rappct::Result<()> {
         };
 
         run_network_tests(&profile)?;
-
 
         // FirewallGuard will auto-cleanup on drop
         let _firewall_guard = firewall_guard;
