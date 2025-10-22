@@ -10,8 +10,6 @@ use crate::{AcError, Result};
 #[cfg(windows)]
 use crate::ffi::attr_list::AttrList as FAttrList;
 #[cfg(windows)]
-use crate::ffi::mem::LocalAllocGuard;
-#[cfg(windows)]
 use crate::ffi::sec_caps::OwnedSecurityCapabilities;
 #[cfg(windows)]
 use crate::ffi::sid::OwnedSid;
@@ -27,9 +25,7 @@ use windows::Win32::Foundation::{HANDLE_FLAG_INHERIT, SetHandleInformation};
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
 #[cfg(windows)]
-use windows::Win32::Security::{
-    PSID, SECURITY_ATTRIBUTES, SECURITY_CAPABILITIES, SID_AND_ATTRIBUTES,
-};
+use windows::Win32::Security::{PSID, SECURITY_ATTRIBUTES, SECURITY_CAPABILITIES};
 #[cfg(windows)]
 use windows::Win32::Storage::FileSystem::{
     CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_SHARE_READ,
@@ -49,8 +45,7 @@ use windows::Win32::System::Pipes::CreatePipe;
 use windows::Win32::System::Threading::{
     CREATE_SUSPENDED, CREATE_UNICODE_ENVIRONMENT, CreateProcessW, EXTENDED_STARTUPINFO_PRESENT,
     PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-    PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES, PROCESS_INFORMATION, STARTUPINFOEXW, STARTUPINFOW,
-    UpdateProcThreadAttribute,
+    PROCESS_INFORMATION, STARTUPINFOEXW, STARTUPINFOW, UpdateProcThreadAttribute,
 };
 #[cfg(windows)]
 use windows::Win32::System::WindowsProgramming::PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT;
@@ -167,7 +162,8 @@ impl JobObjectDropGuard {
             .map_err(|_| AcError::Win32("SetInformationJobObject(kill_on_close) failed".into()))?;
         }
         Ok(Self {
-            handle: OwnedHandle(hjob),
+            handle: unsafe { FHandle::from_raw(hjob.0 as *mut _) }
+                .map_err(|_| AcError::Win32("invalid job handle".into()))?,
             kill_on_drop: true,
         })
     }
@@ -194,7 +190,7 @@ impl JobObjectDropGuard {
         let info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
         unsafe {
             SetInformationJobObject(
-                self.handle.as_raw(),
+                self.handle.as_win32(),
                 JobObjectExtendedLimitInformation,
                 &info as *const _ as *const _,
                 std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,

@@ -4,7 +4,9 @@
 #![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::{AcError, Result};
-use std::os::windows::io::{AsHandle, BorrowedHandle, FromRawHandle, OwnedHandle, RawHandle, IntoRawHandle};
+use std::os::windows::io::{
+    AsHandle, AsRawHandle, BorrowedHandle, FromRawHandle, IntoRawHandle, OwnedHandle, RawHandle,
+};
 use windows::Win32::Foundation::HANDLE;
 
 /// Owned Win32 handle that closes exactly once on drop.
