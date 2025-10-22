@@ -23,13 +23,19 @@ impl OwnedSid {
     /// # Safety
     /// `sid` must be a valid PSID allocated by an API requiring `LocalFree`.
     pub(crate) unsafe fn from_localfree_psid(sid: *mut core::ffi::c_void) -> Self {
-        Self { raw: sid, kind: FreeKind::LocalFree }
+        Self {
+            raw: sid,
+            kind: FreeKind::LocalFree,
+        }
     }
 
     /// # Safety
     /// `sid` must be a valid PSID allocated by an API requiring `FreeSid`.
     pub(crate) unsafe fn from_freesid_psid(sid: *mut core::ffi::c_void) -> Self {
-        Self { raw: sid, kind: FreeKind::FreeSid }
+        Self {
+            raw: sid,
+            kind: FreeKind::FreeSid,
+        }
     }
 
     pub(crate) fn as_psid(&self) -> PSID {
@@ -71,7 +77,9 @@ unsafe extern "system" {
 #[cfg(windows)]
 fn local_free(ptr: *mut c_void) {
     // SAFETY: calling Win32 LocalFree on a pointer provided by a LocalAlloc-compatible API.
-    unsafe { let _ = LocalFree(ptr as isize); }
+    unsafe {
+        let _ = LocalFree(ptr as isize);
+    }
 }
 
 #[cfg(test)]
@@ -86,7 +94,8 @@ mod tests {
         unsafe {
             let mut psid = PSID::default();
             let sddl = crate::ffi::wstr::WideString::from_str("S-1-5-32-544");
-            ConvertStringSidToSidW(PCWSTR(sddl.as_pcwstr().0), &mut psid).expect("ConvertStringSidToSidW");
+            ConvertStringSidToSidW(PCWSTR(sddl.as_pcwstr().0), &mut psid)
+                .expect("ConvertStringSidToSidW");
             let sid = OwnedSid::from_localfree_psid(psid.0);
             assert!(sid.is_valid());
             let _ = sid.as_psid();

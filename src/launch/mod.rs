@@ -12,6 +12,10 @@ use crate::launch::attr::AttrList;
 #[cfg(windows)]
 use crate::ffi::mem::LocalAllocGuard;
 #[cfg(windows)]
+use crate::ffi::sec_caps::OwnedSecurityCapabilities;
+#[cfg(windows)]
+use crate::ffi::sid::OwnedSid;
+#[cfg(windows)]
 use crate::util::OwnedHandle;
 use std::ffi::OsString;
 
@@ -259,10 +263,7 @@ const SE_GROUP_ENABLED_CONST: u32 = 0x0000_0004;
 #[cfg(windows)]
 struct AttributeContext {
     attr_list: AttrList,
-    _caps_struct: Box<SECURITY_CAPABILITIES>,
-    _cap_attrs: Vec<SID_AND_ATTRIBUTES>,
-    _cap_sid_guards: Vec<LocalAllocGuard<std::ffi::c_void>>,
-    _package_sid_guard: LocalAllocGuard<std::ffi::c_void>,
+    sc_owned: OwnedSecurityCapabilities,
     _handle_list: Option<Vec<HANDLE>>,
     _lpac_policy: Option<Box<u32>>,
 }
@@ -296,12 +297,8 @@ impl AttributeContext {
                 source: Box::new(std::io::Error::last_os_error()),
             });
         }
-        let package_sid_guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(pkg_psid_raw.0);
-        let package_sid = PSID(package_sid_guard.as_ptr());
-
-        let mut cap_sid_guards: Vec<LocalAllocGuard<std::ffi::c_void>> =
-            Vec::with_capacity(sec.caps.len());
-        let mut cap_attrs: Vec<SID_AND_ATTRIBUTES> = Vec::with_capacity(sec.caps.len());
+        let pkg_owned = OwnedSid::from_localfree_psid(pkg_psid_raw.0);
+        let mut caps_owned: Vec<OwnedSid> = Vec::with_capacity(sec.caps.len());
         for cap in &sec.caps {
             let sddl_w: Vec<u16> = crate::util::to_utf16(&cap.sid_sddl);
             let mut psid_raw = PSID(std::ptr::null_mut());
@@ -312,32 +309,9 @@ impl AttributeContext {
                     source: Box::new(std::io::Error::last_os_error()),
                 });
             }
-            let guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(psid_raw.0);
-            let sid_handle = PSID(guard.as_ptr());
-            cap_attrs.push(SID_AND_ATTRIBUTES {
-                Sid: sid_handle,
-                Attributes: SE_GROUP_ENABLED_CONST,
-            });
-            cap_sid_guards.push(guard);
+            caps_owned.push(OwnedSid::from_localfree_psid(psid_raw.0));
         }
-
-        let mut caps_struct = Box::new(SECURITY_CAPABILITIES {
-            AppContainerSid: package_sid,
-            Capabilities: if cap_attrs.is_empty() {
-                std::ptr::null_mut()
-            } else {
-                cap_attrs.as_mut_ptr()
-            },
-            CapabilityCount: cap_attrs.len() as u32,
-            Reserved: 0,
-        });
-        #[cfg(feature = "tracing")]
-        tracing::trace!(
-            "SECURITY_CAPABILITIES: pkg_sid_ptr={:p}, caps_ptr={:p}, cap_count={}",
-            caps_struct.AppContainerSid.0,
-            caps_struct.Capabilities,
-            caps_struct.CapabilityCount
-        );
+        let sc_owned = OwnedSecurityCapabilities::new(pkg_owned, caps_owned);
 
         let mut attr_count = 1;
         if sec.lpac {
@@ -358,7 +332,7 @@ impl AttributeContext {
             si_ex.lpAttributeList,
             0,
             PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES as usize,
-            Some(caps_struct.as_mut() as *mut _ as *const std::ffi::c_void),
+            Some(sc_owned.as_ptr() as *const std::ffi::c_void),
             std::mem::size_of::<SECURITY_CAPABILITIES>(),
             None,
             None,
@@ -367,7 +341,7 @@ impl AttributeContext {
         tracing::trace!(
             "UpdateProcThreadAttribute(security): attr_list_ptr={:p}, value_ptr={:p}, value_size={}",
             si_ex.lpAttributeList.0,
-            caps_struct.as_ref() as *const _,
+            sc_owned.as_ptr(),
             std::mem::size_of::<SECURITY_CAPABILITIES>()
         );
         if res.is_err() {
@@ -460,15 +434,7 @@ impl AttributeContext {
             }
         }
 
-        Ok(Self {
-            attr_list,
-            _caps_struct: caps_struct,
-            _cap_attrs: cap_attrs,
-            _cap_sid_guards: cap_sid_guards,
-            _package_sid_guard: package_sid_guard,
-            _handle_list: handle_list,
-            _lpac_policy: lpac_policy,
-        })
+        Ok(Self { attr_list, sc_owned, _handle_list: handle_list, _lpac_policy: lpac_policy })
     }
 
     fn as_mut_ptr(&mut self) -> windows::Win32::System::Threading::LPPROC_THREAD_ATTRIBUTE_LIST {
