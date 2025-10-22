@@ -38,7 +38,7 @@ impl AttrList {
         &mut self,
         sc: &crate::ffi::sec_caps::OwnedSecurityCapabilities,
     ) -> Result<()> {
-        let mut size = core::mem::size_of::<windows::Win32::Security::SECURITY_CAPABILITIES>();
+        let size = core::mem::size_of::<windows::Win32::Security::SECURITY_CAPABILITIES>();
         unsafe {
             // SAFETY: `sc` points to stable, owned memory; attribute list initialized.
             UpdateProcThreadAttribute(

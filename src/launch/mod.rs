@@ -10,7 +10,9 @@ use crate::{AcError, Result};
 #[cfg(windows)]
 use crate::launch::attr::AttrList;
 #[cfg(windows)]
-use crate::util::{LocalFreeGuard, OwnedHandle};
+use crate::ffi::mem::LocalAllocGuard;
+#[cfg(windows)]
+use crate::util::OwnedHandle;
 use std::ffi::OsString;
 
 // Use fully-qualified macros (tracing::trace!, etc.) to avoid unused import warnings
@@ -259,8 +261,8 @@ struct AttributeContext {
     attr_list: AttrList,
     _caps_struct: Box<SECURITY_CAPABILITIES>,
     _cap_attrs: Vec<SID_AND_ATTRIBUTES>,
-    _cap_sid_guards: Vec<LocalFreeGuard<std::ffi::c_void>>,
-    _package_sid_guard: LocalFreeGuard<std::ffi::c_void>,
+    _cap_sid_guards: Vec<LocalAllocGuard<std::ffi::c_void>>,
+    _package_sid_guard: LocalAllocGuard<std::ffi::c_void>,
     _handle_list: Option<Vec<HANDLE>>,
     _lpac_policy: Option<Box<u32>>,
 }
@@ -294,10 +296,10 @@ impl AttributeContext {
                 source: Box::new(std::io::Error::last_os_error()),
             });
         }
-        let package_sid_guard = LocalFreeGuard::<std::ffi::c_void>::new(pkg_psid_raw.0);
+        let package_sid_guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(pkg_psid_raw.0);
         let package_sid = PSID(package_sid_guard.as_ptr());
 
-        let mut cap_sid_guards: Vec<LocalFreeGuard<std::ffi::c_void>> =
+        let mut cap_sid_guards: Vec<LocalAllocGuard<std::ffi::c_void>> =
             Vec::with_capacity(sec.caps.len());
         let mut cap_attrs: Vec<SID_AND_ATTRIBUTES> = Vec::with_capacity(sec.caps.len());
         for cap in &sec.caps {
@@ -310,7 +312,7 @@ impl AttributeContext {
                     source: Box::new(std::io::Error::last_os_error()),
                 });
             }
-            let guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
+            let guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(psid_raw.0);
             let sid_handle = PSID(guard.as_ptr());
             cap_attrs.push(SID_AND_ATTRIBUTES {
                 Sid: sid_handle,

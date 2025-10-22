@@ -30,10 +30,8 @@ impl<T> LocalAllocGuard<T> {
 impl<T> Drop for LocalAllocGuard<T> {
     fn drop(&mut self) {
         if !self.ptr.is_null() {
-            // SAFETY: Pointer came from LocalAlloc-compatible API; ok to free once.
-            unsafe {
-                local_free(self.ptr.cast::<c_void>());
-            }
+            // Pointer came from LocalAlloc-compatible API; ok to free once.
+            local_free(self.ptr.cast::<c_void>());
             self.ptr = core::ptr::null_mut();
         }
     }

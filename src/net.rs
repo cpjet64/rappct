@@ -2,8 +2,6 @@
 #![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::sid::AppContainerSid;
-#[cfg(all(windows, feature = "net"))]
-use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
 
 #[cfg(all(windows, feature = "net"))]
