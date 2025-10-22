@@ -1,4 +1,5 @@
 //! Owned `PROC_THREAD_ATTRIBUTE_LIST` with helpers for security capabilities.
+#![allow(dead_code)]
 
 use crate::{AcError, Result};
 use windows::Win32::System::Threading::{

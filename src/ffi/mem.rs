@@ -1,4 +1,5 @@
 //! RAII guards for Windows memory allocators (LocalFree, CoTaskMemFree).
+#![allow(dead_code)]
 
 #![allow(clippy::undocumented_unsafe_blocks)]
 
