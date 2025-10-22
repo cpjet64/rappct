@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.13.2] - 2025-10-22
+
+### Ci
+
+- Run rust on Windows with build-mode=none; drop unsupported manual build
+
+
+
 ## [0.13.1] - 2025-10-22
 
 ### Miscellaneous Tasks
