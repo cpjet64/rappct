@@ -4,7 +4,8 @@
 #![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::{AcError, Result};
-use std::os::windows::io::{AsHandle, BorrowedHandle, FromRawHandle, OwnedHandle, RawHandle};
+use std::os::windows::io::{AsHandle, BorrowedHandle, FromRawHandle, OwnedHandle, RawHandle, IntoRawHandle};
+use windows::Win32::Foundation::HANDLE;
 
 /// Owned Win32 handle that closes exactly once on drop.
 #[derive(Debug)]
@@ -35,6 +36,16 @@ impl Handle {
 
     pub(crate) fn into_owned(self) -> OwnedHandle {
         self.0
+    }
+
+    pub(crate) fn as_win32(&self) -> HANDLE {
+        HANDLE(self.as_borrowed().as_raw_handle() as isize)
+    }
+
+    pub(crate) fn into_file(self) -> std::fs::File {
+        // SAFETY: We take ownership of the raw handle and transfer to File
+        let raw = self.0.into_raw_handle();
+        unsafe { std::fs::File::from_raw_handle(raw) }
     }
 }
 

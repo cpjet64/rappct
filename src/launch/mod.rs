@@ -8,7 +8,7 @@ use crate::capability::SecurityCapabilities;
 use crate::{AcError, Result};
 
 #[cfg(windows)]
-use crate::launch::attr::AttrList;
+use crate::ffi::attr_list::AttrList as FAttrList;
 #[cfg(windows)]
 use crate::ffi::mem::LocalAllocGuard;
 #[cfg(windows)]
@@ -16,7 +16,7 @@ use crate::ffi::sec_caps::OwnedSecurityCapabilities;
 #[cfg(windows)]
 use crate::ffi::sid::OwnedSid;
 #[cfg(windows)]
-use crate::util::OwnedHandle;
+use crate::ffi::handles::Handle as FHandle;
 use std::ffi::OsString;
 
 // Use fully-qualified macros (tracing::trace!, etc.) to avoid unused import warnings
@@ -116,7 +116,7 @@ pub struct LaunchedIo {
     pub stdout: Option<std::fs::File>,
     pub stderr: Option<std::fs::File>,
     pub job_guard: Option<JobGuard>,
-    pub(crate) process: OwnedHandle,
+    pub(crate) process: FHandle,
 }
 
 #[cfg(not(windows))]
@@ -124,12 +124,12 @@ pub struct LaunchedIo;
 
 #[cfg(windows)]
 #[derive(Debug)]
-pub struct JobGuard(OwnedHandle);
+pub struct JobGuard(FHandle);
 #[cfg(windows)]
 impl JobGuard {
     /// Returns the underlying job handle for inspection without taking ownership.
     pub fn as_handle(&self) -> HANDLE {
-        self.0.as_raw()
+        self.0.as_win32()
     }
 }
 
@@ -138,7 +138,7 @@ impl JobGuard {
 #[cfg(windows)]
 #[derive(Debug)]
 pub struct JobObjectDropGuard {
-    handle: OwnedHandle,
+    handle: FHandle,
     kill_on_drop: bool,
 }
 
@@ -173,13 +173,13 @@ impl JobObjectDropGuard {
     }
 
     pub fn as_handle(&self) -> HANDLE {
-        self.handle.as_raw()
+        self.handle.as_win32()
     }
 
     pub fn assign_process_handle(&self, process: HANDLE) -> Result<()> {
         use windows::Win32::System::JobObjects::AssignProcessToJobObject;
         unsafe {
-            AssignProcessToJobObject(self.handle.as_raw(), process)
+            AssignProcessToJobObject(self.handle.as_win32(), process)
                 .map_err(|_| AcError::Win32("AssignProcessToJobObject failed".into()))
         }
     }
@@ -258,11 +258,11 @@ pub fn merge_parent_env(mut custom: Vec<(OsString, OsString)>) -> Vec<(OsString,
 }
 
 #[cfg(windows)]
-const SE_GROUP_ENABLED_CONST: u32 = 0x0000_0004;
+// Capability attributes are built within OwnedSecurityCapabilities (ffi::sec_caps)
 
 #[cfg(windows)]
 struct AttributeContext {
-    attr_list: AttrList,
+    attr_list: FAttrList,
     sc_owned: OwnedSecurityCapabilities,
     _handle_list: Option<Vec<HANDLE>>,
     _lpac_policy: Option<Box<u32>>,
@@ -322,21 +322,14 @@ impl AttributeContext {
         }
         #[cfg(feature = "tracing")]
         tracing::debug!("AttrList: count={}", attr_count);
-        let mut attr_list = AttrList::new(attr_count)?;
+        let mut attr_list = FAttrList::with_capacity(attr_count as u32)?;
 
         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
         si_ex.lpAttributeList = attr_list.as_mut_ptr();
 
-        let res = UpdateProcThreadAttribute(
-            si_ex.lpAttributeList,
-            0,
-            PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES as usize,
-            Some(sc_owned.as_ptr() as *const std::ffi::c_void),
-            std::mem::size_of::<SECURITY_CAPABILITIES>(),
-            None,
-            None,
-        );
+        // Attach security capabilities using wrapper
+        attr_list.set_security_capabilities(&sc_owned)?;
         #[cfg(feature = "tracing")]
         tracing::trace!(
             "UpdateProcThreadAttribute(security): attr_list_ptr={:p}, value_ptr={:p}, value_size={}",
@@ -344,19 +337,7 @@ impl AttributeContext {
             sc_owned.as_ptr(),
             std::mem::size_of::<SECURITY_CAPABILITIES>()
         );
-        if res.is_err() {
-            #[cfg(feature = "tracing")]
-            {
-                use windows::Win32::Foundation::GetLastError;
-                let gle = GetLastError().0;
-                tracing::error!("UpdateProcThreadAttribute(security) failed: GLE={}", gle);
-            }
-            return Err(AcError::LaunchFailed {
-                stage: "UpdateProcThreadAttribute(security)",
-                hint: "attach SECURITY_CAPABILITIES",
-                source: Box::new(std::io::Error::last_os_error()),
-            });
-        }
+        // Wrapper returned Ok, proceed
 
         let mut lpac_policy: Option<Box<u32>> = None;
         if sec.lpac {
@@ -484,9 +465,9 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     let mut child_stdin = HANDLE::default();
     let mut child_stdout = HANDLE::default();
     let mut child_stderr = HANDLE::default();
-    let mut parent_stdin: Option<OwnedHandle> = None;
-    let mut parent_stdout: Option<OwnedHandle> = None;
-    let mut parent_stderr: Option<OwnedHandle> = None;
+    let mut parent_stdin: Option<FHandle> = None;
+    let mut parent_stdout: Option<FHandle> = None;
+    let mut parent_stderr: Option<FHandle> = None;
     let mut inherit_handles = false;
 
     match opts.stdio {
@@ -594,9 +575,12 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             child_stdin = r_in;
             child_stdout = w_out;
             child_stderr = w_err;
-            parent_stdin = Some(unsafe { OwnedHandle::from_raw(w_in) });
-            parent_stdout = Some(unsafe { OwnedHandle::from_raw(r_out) });
-            parent_stderr = Some(unsafe { OwnedHandle::from_raw(r_err) });
+            parent_stdin = Some(unsafe { FHandle::from_raw(w_in.0 as *mut _) }
+                .map_err(|_| AcError::Win32("invalid stdin handle".into()))?);
+            parent_stdout = Some(unsafe { FHandle::from_raw(r_out.0 as *mut _) }
+                .map_err(|_| AcError::Win32("invalid stdout handle".into()))?);
+            parent_stderr = Some(unsafe { FHandle::from_raw(r_err.0 as *mut _) }
+                .map_err(|_| AcError::Win32("invalid stderr handle".into()))?);
         }
     }
 
@@ -757,14 +741,16 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             source: Box::new(std::io::Error::last_os_error()),
         })?;
         if limits.kill_on_job_close {
-            job_guard = Some(JobGuard(OwnedHandle(hjob)));
+            job_guard = Some(JobGuard(unsafe { FHandle::from_raw(hjob.0 as *mut _) }
+                .map_err(|_| AcError::Win32("invalid job handle".into()))?));
         } else {
             let _ = CloseHandle(hjob);
         }
     }
 
     let _ = CloseHandle(pi.hThread);
-    let proc_handle = OwnedHandle(pi.hProcess);
+    let proc_handle = unsafe { FHandle::from_raw(pi.hProcess.0 as *mut _) }
+        .map_err(|_| AcError::Win32("invalid process handle".into()))?;
     Ok(LaunchedIo {
         pid: pi.dwProcessId,
         stdin: parent_stdin.map(|h| h.into_file()),
@@ -794,7 +780,7 @@ impl LaunchedIo {
             let ms = timeout
                 .map(|d| d.as_millis().min(u128::from(u32::MAX)) as u32)
                 .unwrap_or(INFINITE);
-            let r = WaitForSingleObject(self.process.as_raw(), ms);
+            let r = WaitForSingleObject(self.process.as_win32(), ms);
             if r == WAIT_FAILED {
                 return Err(AcError::Win32("WaitForSingleObject failed".into()));
             }
@@ -809,7 +795,7 @@ impl LaunchedIo {
                 });
             }
             let mut code: u32 = STILL_ACTIVE.0 as u32;
-            GetExitCodeProcess(self.process.as_raw(), &mut code)
+            GetExitCodeProcess(self.process.as_win32(), &mut code)
                 .map_err(|_| AcError::Win32("GetExitCodeProcess failed".into()))?;
             Ok(code)
         }
