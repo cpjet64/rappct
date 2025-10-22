@@ -85,7 +85,7 @@ impl<T> Drop for CoTaskMem<T> {
         if !self.ptr.is_null() {
             // SAFETY: Pointer came from CoTaskMem* API; ok to free once.
             unsafe {
-                windows::Win32::System::Com::CoTaskMemFree(self.ptr.cast::<c_void>());
+                windows::Win32::System::Com::CoTaskMemFree(Some(self.ptr.cast::<c_void>()));
             }
             self.ptr = core::ptr::null_mut();
         }
@@ -118,4 +118,3 @@ mod tests {
         }
     }
 }
-

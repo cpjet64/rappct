@@ -16,15 +16,14 @@ impl AttrList {
     pub(crate) fn with_capacity(count: u32) -> Result<Self> {
         let mut bytes: usize = 0;
         unsafe {
-            // SAFETY: Probe for size; passing None per API contract.
-            let _ = InitializeProcThreadAttributeList(None, count, 0, &mut bytes as *mut usize);
+            // SAFETY: Probe for size; passing None and flags=0 per API contract.
+            let _ = InitializeProcThreadAttributeList(None, count, Some(0), &mut bytes as *mut usize);
         }
         let mut buf = vec![0u8; bytes];
         let ptr = buf.as_mut_ptr() as *mut PROC_THREAD_ATTRIBUTE_LIST;
         unsafe {
             // SAFETY: Initialize with computed size.
-            InitializeProcThreadAttributeList(Some(ptr), count, 0, &mut bytes as *mut usize)
-                .ok()
+            InitializeProcThreadAttributeList(Some(ptr), count, Some(0), &mut bytes as *mut usize)
                 .map_err(|e| AcError::Win32(format!("InitializeProcThreadAttributeList: {}", e)))?;
         }
         Ok(Self { buf, ptr })
@@ -50,7 +49,6 @@ impl AttrList {
                 None,
                 None,
             )
-            .ok()
             .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute: {}", e)))
         }
     }
@@ -91,4 +89,3 @@ mod tests {
         }
     }
 }
-

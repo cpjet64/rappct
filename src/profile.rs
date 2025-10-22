@@ -1,9 +1,9 @@
 //! AppContainer profile management (skeleton).
 //! - Create/open/delete
 //! - Resolve folder and named-object paths
+#![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::sid::AppContainerSid;
-#![allow(clippy::undocumented_unsafe_blocks)]
 #[cfg(windows)]
 use crate::util::{FreeSidGuard, LocalFreeGuard};
 use crate::{AcError, Result};
