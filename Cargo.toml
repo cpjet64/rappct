@@ -27,7 +27,13 @@ serde = ["dep:serde"]
 
 [dependencies]
 thiserror = "2.0"
-# Keep windows crate features tight; expand as implementation grows
+# Suggestion helper for capability names (optional; not used yet in skeleton)
+strsim = { version = "0.11", optional = true }
+tracing = { version = "0.1", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+# Windows APIs are only needed/built on Windows hosts.
+[target.'cfg(windows)'.dependencies]
 windows = { version = "0.62", features = [
     "Win32_Foundation",
     "Win32_Security",
@@ -42,10 +48,6 @@ windows = { version = "0.62", features = [
     "Win32_Storage_FileSystem",
     "Win32_System_Pipes"
 ] }
-# Suggestion helper for capability names (optional; not used yet in skeleton)
-strsim = { version = "0.11", optional = true }
-tracing = { version = "0.1", optional = true }
-serde = { version = "1.0", features = ["derive"], optional = true }
 
 [dev-dependencies]
 clap = { version = "4.5", features = ["derive"] }
