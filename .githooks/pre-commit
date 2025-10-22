@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-commit] Running cargo fmt --all -- --check"
+cargo fmt --all -- --check
+
+echo "[pre-commit] Running cargo clippy --all-targets --all-features -D warnings"
+cargo clippy --all-targets --all-features -- -D warnings
+
+echo "[pre-commit] Running cargo test (default features)"
+cargo test
+
+echo "[pre-commit] OK"
+
