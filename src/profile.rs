@@ -68,7 +68,7 @@ impl AppContainerProfile {
                     // Fallback to derive SID when profile already exists or metadata mismatches
                     let mut sid2 = std::ptr::null_mut();
                     let hr2 = DeriveAppContainerSidFromAppContainerName(
-                        PCWSTR(name_w.as_ptr()),
+                        name_w.as_pcwstr(),
                         &mut sid2,
                     );
                     if !hr2.is_ok() {
@@ -106,7 +106,7 @@ impl AppContainerProfile {
     pub fn delete(self) -> Result<()> {
         #[cfg(windows)]
         {
-            use windows::core::PCWSTR;
+            // No local imports needed here
             #[link(name = "Userenv")]
             unsafe extern "system" {
                 fn DeleteAppContainerProfile(
@@ -148,8 +148,7 @@ impl AppContainerProfile {
                     sid: *mut windows::Win32::Security::PSID,
                 ) -> windows::core::HRESULT;
             }
-            use windows::Win32::System::Com::CoTaskMemFree;
-            use windows::core::{PCWSTR, PWSTR};
+            use windows::core::PWSTR;
             unsafe {
                 // Derive package PSID from name for folder query
                 let name_w = WideString::from_str(&self.name);
@@ -201,7 +200,7 @@ impl AppContainerProfile {
         {
             use windows::Win32::Foundation::HANDLE;
             use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
-            use windows::core::{PCWSTR, PWSTR};
+            use windows::core::PWSTR;
             #[link(name = "Userenv")]
             unsafe extern "system" {
                 fn GetAppContainerNamedObjectPath(

@@ -40,7 +40,7 @@ impl Handle {
     }
 
     pub(crate) fn as_win32(&self) -> HANDLE {
-        HANDLE(self.as_borrowed().as_raw_handle() as isize)
+        HANDLE(self.as_borrowed().as_raw_handle())
     }
 
     pub(crate) fn into_file(self) -> std::fs::File {

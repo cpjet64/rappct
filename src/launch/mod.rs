@@ -25,7 +25,9 @@ use windows::Win32::Foundation::{HANDLE_FLAG_INHERIT, SetHandleInformation};
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
 #[cfg(windows)]
-use windows::Win32::Security::{PSID, SECURITY_ATTRIBUTES, SECURITY_CAPABILITIES};
+use windows::Win32::Security::{PSID, SECURITY_ATTRIBUTES};
+#[cfg(all(windows, feature = "tracing"))]
+use windows::Win32::Security::SECURITY_CAPABILITIES;
 #[cfg(windows)]
 use windows::Win32::Storage::FileSystem::{
     CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_SHARE_READ,

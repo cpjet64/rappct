@@ -6,6 +6,8 @@ use crate::{AcError, Result};
 
 #[cfg(all(windows, feature = "net"))]
 use std::collections::HashSet;
+#[cfg(all(windows, feature = "net"))]
+use crate::ffi::mem::LocalAllocGuard;
 
 #[cfg(all(windows, feature = "net"))]
 use windows::core::PWSTR;
@@ -285,8 +287,8 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
                 "NetworkIsolationGetAppContainerConfig failed: {err}"
             )));
         }
-        let current_guard = if !cur_arr.is_null() {
-            Some(LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cur_arr))
+        let current_guard: Option<LocalAllocGuard<SID_AND_ATTRIBUTES>> = if !cur_arr.is_null() {
+            Some(LocalAllocGuard::<SID_AND_ATTRIBUTES>::from_raw(cur_arr))
         } else {
             None
         };
@@ -304,7 +306,7 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
         let mut psid_raw = PSID::default();
         ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
             .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e}")))?;
-        let psid_guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
+        let psid_guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(psid_raw.0);
         let target = PSID(psid_guard.as_ptr());
 
         if allow {
