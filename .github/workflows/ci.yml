@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, dev ]
 
+permissions:
+  contents: read
+
 jobs:
   test-windows:
     runs-on: windows-latest
@@ -16,7 +19,7 @@ jobs:
       RUST_BACKTRACE: 1
       RUSTFLAGS: -D warnings
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: Show toolchain
         run: rustc -Vv && cargo -V
@@ -59,7 +62,7 @@ jobs:
       RUST_BACKTRACE: 1
       RUSTFLAGS: -D warnings
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@1.90.0
       - name: Show toolchain
         run: rustc -Vv && cargo -V

@@ -1,7 +1,5 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+# Dependabot version updates configuration
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
 
 version: 2
 updates:
@@ -18,3 +16,8 @@ updates:
       interval: "weekly"
     target-branch: "dev"
     labels: ["dependencies"]
+    ignore:
+      # Keep MSRV job pinned at 1.90.0; do not bump rust-toolchain action beyond MSRV
+      - dependency-name: "dtolnay/rust-toolchain"
+        versions:
+          - ">= 1.91.0"
