@@ -1,0 +1,23 @@
+# release-plz configuration
+# https://release-plz.ieni.dev/docs/config
+
+[workspace]
+# Use conventional commits for changelog
+changelog_config = "cliff.toml"
+
+# Git configuration
+git_release_enable = true
+git_tag_enable = true
+
+# Default settings for all packages
+[[package]]
+name = "rappct"
+
+# Changelog path
+changelog_path = "CHANGELOG.md"
+
+# Git tag format - will be overridden per branch in GitHub Actions
+git_tag_name = "{{ package }}-v{{ version }}"
+
+# Release settings
+publish = true  # Publish to crates.io by default (main branch)

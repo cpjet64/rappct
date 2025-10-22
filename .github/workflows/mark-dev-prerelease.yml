@@ -1,0 +1,30 @@
+name: mark-dev-prerelease
+
+on:
+  release:
+    types: [created, published]
+
+permissions:
+  contents: write
+
+jobs:
+  mark:
+    if: startsWith(github.event.release.tag_name, 'dev-v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark as prerelease
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const release = context.payload.release;
+            if (!release.prerelease) {
+              await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.id,
+                prerelease: true,
+              });
+              core.info(`Marked ${release.tag_name} as prerelease`);
+            } else {
+              core.info('Already marked as prerelease');
+            }

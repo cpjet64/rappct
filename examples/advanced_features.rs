@@ -17,18 +17,19 @@
 //! See Demo 5 for the correct pattern: copy essential vars from parent, then add custom vars.
 
 use rappct::{
-    acl::{grant_to_capability, AccessMask, ResourcePath},
+    AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
+    acl::{AccessMask, ResourcePath, grant_to_capability},
     launch::{JobLimits, LaunchOptions},
     launch_in_container,
     profile::derive_sid_from_name,
-    supports_lpac, AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
+    supports_lpac,
 };
 
 #[cfg(windows)]
-use rappct::launch::{launch_in_container_with_io, StdioConfig};
+use rappct::launch::{StdioConfig, launch_in_container_with_io};
 
 #[cfg(feature = "introspection")]
-use rappct::diag::{validate_configuration, ConfigWarning};
+use rappct::diag::{ConfigWarning, validate_configuration};
 
 #[cfg(feature = "net")]
 use rappct::net::list_appcontainers;
@@ -419,15 +420,24 @@ fn demo_advanced_launch() -> rappct::Result<()> {
 
     // Add our demo-specific variables
     custom_env.push((OsString::from("RAPPCT_DEMO"), OsString::from("advanced")));
-    custom_env.push((OsString::from("ISOLATION_LEVEL"), OsString::from("appcontainer")));
-    custom_env.push((OsString::from("PATH"), OsString::from("C:\\Windows\\System32")));
+    custom_env.push((
+        OsString::from("ISOLATION_LEVEL"),
+        OsString::from("appcontainer"),
+    ));
+    custom_env.push((
+        OsString::from("PATH"),
+        OsString::from("C:\\Windows\\System32"),
+    ));
 
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
         .build()?;
 
     println!("→ Launching with custom environment and timeout...");
-    println!("  Environment has {} variables (system essentials + custom)", custom_env.len());
+    println!(
+        "  Environment has {} variables (system essentials + custom)",
+        custom_env.len()
+    );
     let opts = LaunchOptions {
         exe: resolve_cmd_exe(),
         cmdline: Some("/C echo RAPPCT_DEMO=%RAPPCT_DEMO% && echo ISOLATION_LEVEL=%ISOLATION_LEVEL% && echo SystemRoot=%SystemRoot% && echo Advanced launch completed".to_string()),

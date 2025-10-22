@@ -1,5 +1,4 @@
 /target
-/Cargo.lock
 **/*.pdb
 .DS_Store
 .vscode/
@@ -9,3 +8,4 @@ ci-run.txt
 rust-analyzer.txt
 claude-updatedocs.md
 codex-updatedocs.md
+release-plz-dev.toml

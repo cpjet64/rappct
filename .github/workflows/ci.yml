@@ -20,6 +20,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Show toolchain
         run: rustc -Vv && cargo -V
+      - name: Install rustfmt
+        run: rustup component add rustfmt
+      - name: Format check (workspace)
+        run: cargo fmt --all -- --check
       - name: Test (${{ matrix.features }})
         shell: bash
         run: |
