@@ -409,25 +409,20 @@ fn demo_advanced_launch() -> rappct::Result<()> {
     // Build custom environment with essential Windows variables
     // NOTE: When passing env to CreateProcessW, it REPLACES the entire parent environment.
     // Windows needs SystemRoot, ComSpec, etc. for cmd.exe and other tools to work.
-    let mut custom_env = vec![];
+    let custom_env = vec![
+        (OsString::from("RAPPCT_DEMO"), OsString::from("advanced")),
+        (
+            OsString::from("ISOLATION_LEVEL"),
+            OsString::from("appcontainer"),
+        ),
+        (
+            OsString::from("PATH"),
+            OsString::from("C:\\Windows\\System32"),
+        ),
+    ];
 
-    // Add essential Windows variables that processes need
-    for var in &["SystemRoot", "windir", "ComSpec", "PATHEXT", "TEMP", "TMP"] {
-        if let Ok(val) = env::var(var) {
-            custom_env.push((OsString::from(*var), OsString::from(val)));
-        }
-    }
-
-    // Add our demo-specific variables
-    custom_env.push((OsString::from("RAPPCT_DEMO"), OsString::from("advanced")));
-    custom_env.push((
-        OsString::from("ISOLATION_LEVEL"),
-        OsString::from("appcontainer"),
-    ));
-    custom_env.push((
-        OsString::from("PATH"),
-        OsString::from("C:\\Windows\\System32"),
-    ));
+    // Merge essential variables from parent (SystemRoot, ComSpec, etc.)
+    let custom_env = rappct::launch::merge_parent_env(custom_env);
 
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
@@ -617,7 +612,7 @@ fn demo_capability_acls() -> rappct::Result<()> {
         match grant_to_capability(
             ResourcePath::File(test_file.clone()),
             cap_sid,
-            AccessMask(0x00120089), // FILE_GENERIC_READ
+            AccessMask::FILE_GENERIC_READ, // FILE_GENERIC_READ
         ) {
             Ok(_) => println!("✓ Capability-based ACL applied successfully"),
             Err(e) => println!("⚠ Capability ACL failed: {}", e),

@@ -10,6 +10,7 @@ use crate::{AcError, Result};
 use crate::launch::attr::AttrList;
 #[cfg(windows)]
 use crate::util::{LocalFreeGuard, OwnedHandle};
+use std::ffi::OsString;
 
 // Use fully-qualified macros (tracing::trace!, etc.) to avoid unused import warnings
 #[cfg(windows)]
@@ -125,6 +126,79 @@ impl JobGuard {
     }
 }
 
+/// Job object drop-guard that enables kill-on-close by default.
+/// Dropping this guard will terminate attached processes unless explicitly disabled.
+#[cfg(windows)]
+#[derive(Debug)]
+pub struct JobObjectDropGuard {
+    handle: OwnedHandle,
+    kill_on_drop: bool,
+}
+
+#[cfg(windows)]
+impl JobObjectDropGuard {
+    pub fn new() -> Result<Self> {
+        use windows::Win32::System::JobObjects::{
+            CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+            JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
+            SetInformationJobObject,
+        };
+        use windows::core::PCWSTR;
+        let hjob = unsafe {
+            CreateJobObjectW(None, PCWSTR::null())
+                .map_err(|e| AcError::Win32(format!("CreateJobObjectW failed: {e}")))?
+        };
+        let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
+        info.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        unsafe {
+            SetInformationJobObject(
+                hjob,
+                JobObjectExtendedLimitInformation,
+                &info as *const _ as *const _,
+                std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+            )
+            .map_err(|_| AcError::Win32("SetInformationJobObject(kill_on_close) failed".into()))?;
+        }
+        Ok(Self {
+            handle: OwnedHandle(hjob),
+            kill_on_drop: true,
+        })
+    }
+
+    pub fn as_handle(&self) -> HANDLE {
+        self.handle.as_raw()
+    }
+
+    pub fn assign_process_handle(&self, process: HANDLE) -> Result<()> {
+        use windows::Win32::System::JobObjects::AssignProcessToJobObject;
+        unsafe {
+            AssignProcessToJobObject(self.handle.as_raw(), process)
+                .map_err(|_| AcError::Win32("AssignProcessToJobObject failed".into()))
+        }
+    }
+
+    /// Clears the kill-on-close flag so dropping this guard will not
+    /// terminate attached processes.
+    pub fn disable_kill_on_drop(&mut self) -> Result<()> {
+        use windows::Win32::System::JobObjects::{
+            JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
+            SetInformationJobObject,
+        };
+        let info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
+        unsafe {
+            SetInformationJobObject(
+                self.handle.as_raw(),
+                JobObjectExtendedLimitInformation,
+                &info as *const _ as *const _,
+                std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+            )
+            .map_err(|_| AcError::Win32("SetInformationJobObject(clear) failed".into()))?;
+        }
+        self.kill_on_drop = false;
+        Ok(())
+    }
+}
+
 pub fn launch_in_container(_sec: &SecurityCapabilities, _opts: &LaunchOptions) -> Result<Launched> {
     #[cfg(windows)]
     {
@@ -150,6 +224,30 @@ fn build_env_block(env: &[(std::ffi::OsString, std::ffi::OsString)]) -> Vec<u16>
     }
     block.push(0);
     block
+}
+
+/// Merge caller-supplied env vars with essential Windows variables.
+/// When passing a custom environment to `CreateProcessW`, the parent env is
+/// fully replaced. Including these keys avoids common failures (e.g., error 203).
+pub fn merge_parent_env(mut custom: Vec<(OsString, OsString)>) -> Vec<(OsString, OsString)> {
+    const KEYS: &[&str] = &[
+        "SystemRoot",
+        "windir",
+        "ComSpec",
+        "PATHEXT",
+        "TEMP",
+        "TMP",
+        "PATH",
+    ];
+    for key in KEYS {
+        if std::env::var_os(key).is_some()
+            && !custom.iter().any(|(k, _)| k == key)
+            && let Some(val) = std::env::var_os(key)
+        {
+            custom.push((OsString::from(key), val));
+        }
+    }
+    custom
 }
 
 #[cfg(windows)]
@@ -755,4 +853,19 @@ pub fn launch_in_container_with_io(
     _opts: &LaunchOptions,
 ) -> Result<LaunchedIo> {
     Err(AcError::UnsupportedPlatform)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::merge_parent_env;
+    use std::ffi::OsString;
+
+    #[test]
+    fn merge_parent_env_includes_essentials_if_present() {
+        let out = merge_parent_env(vec![(OsString::from("RAPPCT_X"), OsString::from("1"))]);
+        assert!(out.iter().any(|(k, v)| k == "RAPPCT_X" && v == "1"));
+        if std::env::var_os("SystemRoot").is_some() {
+            assert!(out.iter().any(|(k, _)| k == "SystemRoot"));
+        }
+    }
 }

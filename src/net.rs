@@ -186,6 +186,56 @@ pub fn remove_loopback_exemption(sid: &AppContainerSid) -> Result<()> {
     }
 }
 
+/// RAII guard that applies a loopback exemption on construction and
+/// always removes it on drop. Intended for debug/testing only.
+///
+/// Note: This uses the built-in safety latch. Callers must be explicit and
+/// opt-in to the operation via `LoopbackAdd::confirm_debug_only()`.
+#[must_use]
+#[derive(Debug)]
+pub struct LoopbackExemptionGuard {
+    sid: AppContainerSid,
+    active: bool,
+}
+
+impl LoopbackExemptionGuard {
+    /// Adds a loopback exemption for the provided AppContainer SID.
+    ///
+    /// This method requires explicit acknowledgement via the safety latch.
+    /// Typical usage:
+    ///
+    /// ```no_run
+    /// # #[cfg(feature = "net")]
+    /// # {
+    /// # use rappct::{AppContainerProfile, net::LoopbackExemptionGuard};
+    /// # let profile = AppContainerProfile::ensure("rappct.guard", "guard", None).unwrap();
+    /// let _guard = LoopbackExemptionGuard::new(&profile.sid).unwrap();
+    /// # }
+    /// ```
+    pub fn new(sid: &AppContainerSid) -> Result<Self> {
+        // Use the safety latch confirm call to acknowledge debug-only usage
+        super::net::add_loopback_exemption(LoopbackAdd(sid.clone()).confirm_debug_only())?;
+        Ok(Self {
+            sid: sid.clone(),
+            active: true,
+        })
+    }
+
+    /// Disable removal on drop (opt-out). Primarily useful for testing.
+    pub fn disable(mut self) -> Self {
+        self.active = false;
+        self
+    }
+}
+
+impl Drop for LoopbackExemptionGuard {
+    fn drop(&mut self) {
+        if self.active {
+            let _ = remove_loopback_exemption(&self.sid);
+        }
+    }
+}
+
 #[cfg(all(windows, feature = "net"))]
 static CONFIRM_NEXT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
