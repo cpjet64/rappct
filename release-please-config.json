@@ -2,13 +2,13 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "bootstrap-sha": "",
   "bump-minor-pre-major": true,
-  "release-type": "rust",
-  "package-name": "rappct",
-  "changelog-path": "CHANGELOG.md",
-  "tag-separator": "-",
-  "include-component-in-tag": false,
-  "tag-prefix": "rappct-v",
   "packages": {
-    ".": {}
-  }
+    ".": {
+      "release-type": "rust",
+      "package-name": "rappct",
+      "changelog-path": "CHANGELOG.md",
+      "include-v-in-tag": false
+    }
+  },
+  "release-tag-prefix": "rappct-v"
 }
