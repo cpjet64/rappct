@@ -3,13 +3,13 @@
 use crate::{AcError, Result};
 use windows::Win32::System::Threading::{
     DeleteProcThreadAttributeList, InitializeProcThreadAttributeList, UpdateProcThreadAttribute,
-    PROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES,
+    LPPROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES,
 };
 
 #[derive(Debug)]
 pub(crate) struct AttrList {
     buf: Vec<u8>,
-    ptr: *mut PROC_THREAD_ATTRIBUTE_LIST,
+    ptr: LPPROC_THREAD_ATTRIBUTE_LIST,
 }
 
 impl AttrList {
@@ -20,7 +20,7 @@ impl AttrList {
             let _ = InitializeProcThreadAttributeList(None, count, Some(0), &mut bytes as *mut usize);
         }
         let mut buf = vec![0u8; bytes];
-        let ptr = buf.as_mut_ptr() as *mut PROC_THREAD_ATTRIBUTE_LIST;
+        let ptr = LPPROC_THREAD_ATTRIBUTE_LIST(buf.as_mut_ptr() as _);
         unsafe {
             // SAFETY: Initialize with computed size.
             InitializeProcThreadAttributeList(Some(ptr), count, Some(0), &mut bytes as *mut usize)
@@ -29,7 +29,7 @@ impl AttrList {
         Ok(Self { buf, ptr })
     }
 
-    pub(crate) fn as_mut_ptr(&mut self) -> *mut PROC_THREAD_ATTRIBUTE_LIST {
+    pub(crate) fn as_mut_ptr(&mut self) -> LPPROC_THREAD_ATTRIBUTE_LIST {
         self.ptr
     }
 

@@ -3,6 +3,7 @@
 #![allow(clippy::undocumented_unsafe_blocks)]
 
 use windows::Win32::Security::PSID;
+use core::ffi::c_void;
 
 #[derive(Debug, Clone, Copy)]
 enum FreeKind {
@@ -48,7 +49,7 @@ impl Drop for OwnedSid {
         unsafe {
             match self.kind {
                 FreeKind::LocalFree => {
-                    let _ = windows::Win32::System::Memory::LocalFree(self.raw);
+                    local_free(self.raw);
                 }
                 FreeKind::FreeSid => {
                     let _ = windows::Win32::Security::FreeSid(self.as_psid());
@@ -57,6 +58,18 @@ impl Drop for OwnedSid {
         }
         self.raw = core::ptr::null_mut();
     }
+}
+
+// Minimal binding for LocalFree for SID memory returned by ConvertStringSidToSidW.
+#[cfg(windows)]
+#[link(name = "Kernel32")]
+extern "system" {
+    fn LocalFree(h: isize) -> isize;
+}
+
+#[cfg(windows)]
+unsafe fn local_free(ptr: *mut c_void) {
+    let _ = LocalFree(ptr as isize);
 }
 
 #[cfg(test)]

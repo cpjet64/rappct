@@ -31,7 +31,7 @@ impl<T> Drop for LocalAllocGuard<T> {
         if !self.ptr.is_null() {
             // SAFETY: Pointer came from LocalAlloc-compatible API; ok to free once.
             unsafe {
-                let _ = windows::Win32::System::Memory::LocalFree(self.ptr.cast::<c_void>());
+                local_free(self.ptr.cast::<c_void>());
             }
             self.ptr = core::ptr::null_mut();
         }
@@ -90,6 +90,18 @@ impl<T> Drop for CoTaskMem<T> {
             self.ptr = core::ptr::null_mut();
         }
     }
+}
+
+// Minimal binding for LocalFree as the windows crate binding is not exposed.
+#[cfg(windows)]
+#[link(name = "Kernel32")]
+extern "system" {
+    fn LocalFree(h: isize) -> isize;
+}
+
+#[cfg(windows)]
+unsafe fn local_free(ptr: *mut c_void) {
+    let _ = LocalFree(ptr as isize);
 }
 
 #[cfg(test)]

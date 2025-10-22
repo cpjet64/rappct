@@ -1,7 +1,10 @@
 //! Owned SECURITY_CAPABILITIES with owned SIDs and SID_AND_ATTRIBUTES.
 
 use crate::ffi::sid::OwnedSid;
-use windows::Win32::Security::{SECURITY_CAPABILITIES, SID_AND_ATTRIBUTES, SE_GROUP_ENABLED};
+use windows::Win32::Security::{SECURITY_CAPABILITIES, SID_AND_ATTRIBUTES};
+
+// Not always available in windows crate: documented value for SE_GROUP_ENABLED
+const SE_GROUP_ENABLED_CONST: u32 = 0x0000_0004;
 
 #[derive(Debug)]
 pub(crate) struct OwnedSecurityCapabilities {
@@ -17,7 +20,10 @@ impl OwnedSecurityCapabilities {
         let cap_sids: Vec<OwnedSid> = caps_in.into_iter().collect();
         let mut caps_vec: Vec<SID_AND_ATTRIBUTES> = cap_sids
             .iter()
-            .map(|sid| SID_AND_ATTRIBUTES { Sid: sid.as_psid(), Attributes: SE_GROUP_ENABLED })
+            .map(|sid| SID_AND_ATTRIBUTES {
+                Sid: sid.as_psid(),
+                Attributes: SE_GROUP_ENABLED_CONST,
+            })
             .collect();
         let caps = caps_vec.into_boxed_slice();
         let sc = SECURITY_CAPABILITIES {
@@ -26,7 +32,12 @@ impl OwnedSecurityCapabilities {
             CapabilityCount: caps.len() as u32,
             Reserved: 0,
         };
-        Self { appcontainer_sid: app_sid, cap_sids, caps, sc }
+        Self {
+            appcontainer_sid: app_sid,
+            cap_sids,
+            caps,
+            sc,
+        }
     }
 
     pub(crate) fn as_ptr(&self) -> *const SECURITY_CAPABILITIES {

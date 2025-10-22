@@ -26,9 +26,14 @@ pub(crate) mod handles {
 #[cfg(not(windows))]
 pub(crate) mod mem {
     #[derive(Debug, Default)]
-    pub(crate) struct LocalAllocGuard { /* no-op */ }
+    pub(crate) struct LocalAllocGuard {
+        /* no-op */
+    }
     #[derive(Debug, Default)]
-    pub(crate) struct CoTaskMem<T> { /* no-op */ _phantom: core::marker::PhantomData<T> }
+    pub(crate) struct CoTaskMem<T> {
+        /* no-op */
+        _phantom: core::marker::PhantomData<T>,
+    }
 }
 #[cfg(not(windows))]
 pub(crate) mod sid {
@@ -50,4 +55,3 @@ pub(crate) mod attr_list {
     #[derive(Debug, Default)]
     pub(crate) struct AttrList;
 }
-
