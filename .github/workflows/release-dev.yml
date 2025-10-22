@@ -41,6 +41,7 @@ jobs:
         uses: MarcoIeni/release-plz-action@v0.5
         with:
           config: release-plz-dev.toml
+          command: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_PLZ_LOG: DEBUG
