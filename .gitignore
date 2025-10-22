@@ -8,5 +8,4 @@ ci-run.txt
 rust-analyzer.txt
 claude-updatedocs.md
 codex-updatedocs.md
-.claude/settings.local.json
-.gitignore
+release-plz-dev.toml
