@@ -63,13 +63,14 @@ impl Drop for OwnedSid {
 // Minimal binding for LocalFree for SID memory returned by ConvertStringSidToSidW.
 #[cfg(windows)]
 #[link(name = "Kernel32")]
-extern "system" {
+unsafe extern "system" {
     fn LocalFree(h: isize) -> isize;
 }
 
 #[cfg(windows)]
-unsafe fn local_free(ptr: *mut c_void) {
-    let _ = LocalFree(ptr as isize);
+fn local_free(ptr: *mut c_void) {
+    // SAFETY: calling Win32 LocalFree on a pointer provided by a LocalAlloc-compatible API.
+    unsafe { let _ = LocalFree(ptr as isize); }
 }
 
 #[cfg(test)]

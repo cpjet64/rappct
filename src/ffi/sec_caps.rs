@@ -18,7 +18,7 @@ pub(crate) struct OwnedSecurityCapabilities {
 impl OwnedSecurityCapabilities {
     pub(crate) fn new(app_sid: OwnedSid, caps_in: impl IntoIterator<Item = OwnedSid>) -> Self {
         let cap_sids: Vec<OwnedSid> = caps_in.into_iter().collect();
-        let mut caps_vec: Vec<SID_AND_ATTRIBUTES> = cap_sids
+        let caps_vec: Vec<SID_AND_ATTRIBUTES> = cap_sids
             .iter()
             .map(|sid| SID_AND_ATTRIBUTES {
                 Sid: sid.as_psid(),

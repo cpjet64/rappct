@@ -44,7 +44,7 @@ impl AttrList {
                 self.ptr,
                 0,
                 PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES as usize,
-                sc.as_ptr() as *mut _,
+                Some(sc.as_ptr() as *const _),
                 size,
                 None,
                 None,
