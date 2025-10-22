@@ -54,7 +54,7 @@ impl Handle {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use windows::Win32::Foundation::{HANDLE, WAIT_OBJECT_0};
+    use windows::Win32::Foundation::WAIT_OBJECT_0;
     use windows::Win32::System::Threading::{CreateEventW, SetEvent, WaitForSingleObject};
 
     #[test]
