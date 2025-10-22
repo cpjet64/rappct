@@ -6,6 +6,23 @@ The crate is organized as a standard Rust library. Core code lives under `src/`,
 ## Build, Test, and Development Commands
 Use `cargo build` for a debug build and `cargo build --release` when you need optimized artifacts. Run `cargo test` to execute unit and integration tests; add `--features net,introspection` when validating optional modules. Examples double as smoke tests: `cargo run --example network_demo --features net` or `cargo run --example comprehensive_demo`. Clippy and formatting are part of CI, so run `cargo fmt` and `cargo clippy --all-targets --all-features` before proposing changes.
 
+## Local Quality Gates (mandatory)
+Before every commit, push, or merge, you must run the same checks CI enforces:
+
+- Formatting: `cargo fmt --all -- --check`
+- Lints: `cargo clippy --all-targets --all-features -- -D warnings`
+- Tests: `cargo test --all-targets` (repeat with feature sets as needed, e.g. `--features net,introspection`)
+
+This repository includes Git hooks and helper scripts to make this easy:
+
+- Enable hooks locally: `git config core.hooksPath .githooks`
+- Pre-commit runs fmt, clippy, and tests for the current toolchain.
+- Pre-push runs the full local CI script (stable + MSRV/1.90.0 across feature matrix):
+  - Bash: `scripts/ci-local.sh`
+  - PowerShell: `scripts/ci-local.ps1`
+
+Bypassing hooks (`--no-verify`) is discouraged and should only be used for emergencies.
+
 ## Coding Style & Naming Conventions
 Follow idiomatic Rust style with `rustfmt` (default configuration). Use `snake_case` for functions and modules, `UpperCamelCase` for types, and `SCREAMING_SNAKE_CASE` for constants. Keep public APIs documented with Rustdoc comments. Prefer explicit module paths over glob imports, except where the library intentionally re-exports helper types (e.g., `rappct::*` in examples).
 
