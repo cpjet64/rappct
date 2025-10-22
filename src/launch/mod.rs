@@ -1,8 +1,7 @@
 //! Process launch in AppContainer / LPAC with STARTUPINFOEX and security capabilities.
 #![allow(clippy::undocumented_unsafe_blocks)]
 
-#[cfg(windows)]
-mod attr;
+// legacy launch::attr module no longer used; relying on ffi::attr_list wrappers
 
 use crate::capability::SecurityCapabilities;
 use crate::{AcError, Result};
