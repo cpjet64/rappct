@@ -1,4 +1,5 @@
 //! Capability mapping and builders.
+#![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::sid::{AppContainerSid, SidAndAttributes};
 #[cfg(windows)]

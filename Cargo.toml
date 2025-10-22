@@ -17,6 +17,8 @@ readme = "README.md"
 default-target = "x86_64-pc-windows-msvc"
 targets = ["x86_64-pc-windows-msvc"]
 all-features = true
+# Enable doc_cfg to render cfg-gated items on docs.rs
+rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 default = []

@@ -1,4 +1,5 @@
 //! STARTUPINFOEX attribute list RAII for Windows.
+#![allow(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(windows)]
 #[derive(Debug)]

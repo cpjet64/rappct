@@ -1,4 +1,5 @@
 //! ACL helpers for files/directories and registry keys (DACL grant).
+#![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::sid::AppContainerSid;
 #[cfg(windows)]

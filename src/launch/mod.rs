@@ -1,4 +1,5 @@
 //! Process launch in AppContainer / LPAC with STARTUPINFOEX and security capabilities.
+#![allow(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(windows)]
 mod attr;

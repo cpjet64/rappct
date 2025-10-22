@@ -3,6 +3,7 @@
 //! - Resolve folder and named-object paths
 
 use crate::sid::AppContainerSid;
+#![allow(clippy::undocumented_unsafe_blocks)]
 #[cfg(windows)]
 use crate::util::{FreeSidGuard, LocalFreeGuard};
 use crate::{AcError, Result};

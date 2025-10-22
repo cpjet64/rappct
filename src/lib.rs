@@ -1,4 +1,7 @@
 //! rappct — Rust AppContainer / LPAC toolkit (Windows)
+#![deny(unsafe_op_in_unsafe_fn)]
+#![warn(clippy::undocumented_unsafe_blocks)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 //!
 //! Windows implementations for AppContainer profiles, capabilities, secure process launch (AC/LPAC),
 //! token introspection, ACLs, optional network isolation helpers, and diagnostics.
@@ -57,6 +60,8 @@ pub mod profile;
 pub mod sid;
 pub mod token;
 pub mod util;
+// Internal FFI safety helpers (crate-private)
+pub(crate) mod ffi;
 
 // Re-exports
 pub use capability::{KnownCapability, SecurityCapabilities, SecurityCapabilitiesBuilder};
@@ -92,6 +97,9 @@ pub fn supports_lpac() -> Result<()> {
         unsafe extern "system" {
             fn RtlGetVersion(info: *mut OsVersionInfoW) -> i32;
         }
+        // SAFETY: Calls a documented OS function (`RtlGetVersion`) with a valid, writable
+        // pointer to our stack-allocated struct and reads the returned fields.
+        // No aliasing beyond this call; struct is fully initialized before use.
         unsafe {
             let mut v = OsVersionInfoW {
                 size: std::mem::size_of::<OsVersionInfoW>() as u32,

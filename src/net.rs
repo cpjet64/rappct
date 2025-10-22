@@ -1,4 +1,5 @@
 //! Network isolation helpers (skeleton). Feature: `net`
+#![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::sid::AppContainerSid;
 #[cfg(all(windows, feature = "net"))]
@@ -35,7 +36,7 @@ unsafe fn psid_to_string(psid: PSID) -> Result<String> {
     unsafe {
         ConvertSidToStringSidW(psid, &mut raw)
             .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
-        let guard = LocalFreeGuard::<u16>::new(raw.0);
+        let guard = crate::ffi::mem::LocalAllocGuard::<u16>::from_raw(raw.0);
         Ok(guard.to_string_lossy())
     }
 }

@@ -1,0 +1,94 @@
+//! Owned `PROC_THREAD_ATTRIBUTE_LIST` with helpers for security capabilities.
+
+use crate::{AcError, Result};
+use windows::Win32::System::Threading::{
+    DeleteProcThreadAttributeList, InitializeProcThreadAttributeList, UpdateProcThreadAttribute,
+    PROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES,
+};
+
+#[derive(Debug)]
+pub(crate) struct AttrList {
+    buf: Vec<u8>,
+    ptr: *mut PROC_THREAD_ATTRIBUTE_LIST,
+}
+
+impl AttrList {
+    pub(crate) fn with_capacity(count: u32) -> Result<Self> {
+        let mut bytes: usize = 0;
+        unsafe {
+            // SAFETY: Probe for size; passing None per API contract.
+            let _ = InitializeProcThreadAttributeList(None, count, 0, &mut bytes as *mut usize);
+        }
+        let mut buf = vec![0u8; bytes];
+        let ptr = buf.as_mut_ptr() as *mut PROC_THREAD_ATTRIBUTE_LIST;
+        unsafe {
+            // SAFETY: Initialize with computed size.
+            InitializeProcThreadAttributeList(Some(ptr), count, 0, &mut bytes as *mut usize)
+                .ok()
+                .map_err(|e| AcError::Win32(format!("InitializeProcThreadAttributeList: {}", e)))?;
+        }
+        Ok(Self { buf, ptr })
+    }
+
+    pub(crate) fn as_mut_ptr(&mut self) -> *mut PROC_THREAD_ATTRIBUTE_LIST {
+        self.ptr
+    }
+
+    pub(crate) fn set_security_capabilities(
+        &mut self,
+        sc: &crate::ffi::sec_caps::OwnedSecurityCapabilities,
+    ) -> Result<()> {
+        let mut size = core::mem::size_of::<windows::Win32::Security::SECURITY_CAPABILITIES>();
+        unsafe {
+            // SAFETY: `sc` points to stable, owned memory; attribute list initialized.
+            UpdateProcThreadAttribute(
+                self.ptr,
+                0,
+                PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES as usize,
+                sc.as_ptr() as *mut _,
+                size,
+                None,
+                None,
+            )
+            .ok()
+            .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute: {}", e)))
+        }
+    }
+}
+
+impl Drop for AttrList {
+    fn drop(&mut self) {
+        unsafe {
+            // SAFETY: Attribute list was initialized; ok to delete once.
+            DeleteProcThreadAttributeList(self.ptr);
+        }
+    }
+}
+
+#[cfg(test)]
+#[cfg(windows)]
+mod tests {
+    use super::*;
+    use windows::core::PCWSTR;
+    use windows::Win32::Security::ConvertStringSidToSidW;
+
+    #[test]
+    fn attr_list_init_and_set_sc() {
+        unsafe {
+            let s_app = crate::ffi::wstr::WideString::from_str("S-1-5-32-544");
+            let mut app_sid = windows::Win32::Security::PSID::default();
+            ConvertStringSidToSidW(PCWSTR(s_app.as_pcwstr().0), &mut app_sid).unwrap();
+            let app_owned = crate::ffi::sid::OwnedSid::from_localfree_psid(app_sid.0);
+
+            let s_cap = crate::ffi::wstr::WideString::from_str("S-1-15-3-1024-0-0-0-0");
+            let mut cap_sid = windows::Win32::Security::PSID::default();
+            ConvertStringSidToSidW(PCWSTR(s_cap.as_pcwstr().0), &mut cap_sid).unwrap();
+            let cap_owned = crate::ffi::sid::OwnedSid::from_localfree_psid(cap_sid.0);
+
+            let sc = crate::ffi::sec_caps::OwnedSecurityCapabilities::new(app_owned, [cap_owned]);
+            let mut al = AttrList::with_capacity(1).unwrap();
+            al.set_security_capabilities(&sc).unwrap();
+        }
+    }
+}
+
