@@ -5,9 +5,9 @@ use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
 #[cfg(all(windows, feature = "net"))]
-use std::collections::HashSet;
-#[cfg(all(windows, feature = "net"))]
 use crate::ffi::mem::LocalAllocGuard;
+#[cfg(all(windows, feature = "net"))]
+use std::collections::HashSet;
 
 #[cfg(all(windows, feature = "net"))]
 use windows::core::PWSTR;

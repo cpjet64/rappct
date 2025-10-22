@@ -527,12 +527,18 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             child_stdin = r_in;
             child_stdout = w_out;
             child_stderr = w_err;
-            parent_stdin = Some(unsafe { FHandle::from_raw(w_in.0 as *mut _) }
-                .map_err(|_| AcError::Win32("invalid stdin handle".into()))?);
-            parent_stdout = Some(unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-                .map_err(|_| AcError::Win32("invalid stdout handle".into()))?);
-            parent_stderr = Some(unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-                .map_err(|_| AcError::Win32("invalid stderr handle".into()))?);
+            parent_stdin = Some(
+                unsafe { FHandle::from_raw(w_in.0 as *mut _) }
+                    .map_err(|_| AcError::Win32("invalid stdin handle".into()))?,
+            );
+            parent_stdout = Some(
+                unsafe { FHandle::from_raw(r_out.0 as *mut _) }
+                    .map_err(|_| AcError::Win32("invalid stdout handle".into()))?,
+            );
+            parent_stderr = Some(
+                unsafe { FHandle::from_raw(r_err.0 as *mut _) }
+                    .map_err(|_| AcError::Win32("invalid stderr handle".into()))?,
+            );
         }
     }
 
@@ -693,8 +699,10 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             source: Box::new(std::io::Error::last_os_error()),
         })?;
         if limits.kill_on_job_close {
-            job_guard = Some(JobGuard(unsafe { FHandle::from_raw(hjob.0 as *mut _) }
-                .map_err(|_| AcError::Win32("invalid job handle".into()))?));
+            job_guard = Some(JobGuard(
+                unsafe { FHandle::from_raw(hjob.0 as *mut _) }
+                    .map_err(|_| AcError::Win32("invalid job handle".into()))?,
+            ));
         } else {
             let _ = CloseHandle(hjob);
         }
