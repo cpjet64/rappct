@@ -73,14 +73,15 @@ The crate is structured as a binary-agnostic library. Add it to your project:
 # Stable release from crates.io (recommended)
 cargo add rappct
 
-# Specific stable version from crates.io
-cargo add rappct@0.13.0
+# Pin a specific version (optional)
+# See the latest on crates.io or the release badge
+cargo add rappct@<x.y.z>
 
 # Development version from git (dev branch)
 cargo add rappct --git https://github.com/cpjet64/rappct.git --branch dev
 
-# Specific development release tag
-cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-v0.13.0
+# Specific development release tag (optional)
+cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-vX.Y.Z
 ```
 
 ## Usage Snapshot
