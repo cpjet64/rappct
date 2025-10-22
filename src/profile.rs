@@ -18,9 +18,9 @@ impl AppContainerProfile {
     pub fn ensure(_name: &str, _display: &str, _description: Option<&str>) -> Result<Self> {
         #[cfg(windows)]
         {
-            use windows::core::{HRESULT, PCWSTR, PWSTR};
             use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, ERROR_INVALID_PARAMETER};
             use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
+            use windows::core::{HRESULT, PCWSTR, PWSTR};
 
             #[link(name = "Userenv")]
             unsafe extern "system" {
@@ -147,8 +147,8 @@ impl AppContainerProfile {
                     sid: *mut windows::Win32::Security::PSID,
                 ) -> windows::core::HRESULT;
             }
-            use windows::core::{PCWSTR, PWSTR};
             use windows::Win32::System::Com::CoTaskMemFree;
+            use windows::core::{PCWSTR, PWSTR};
             unsafe {
                 // Derive package PSID from name for folder query
                 let name_w: Vec<u16> = crate::util::to_utf16(&self.name);
@@ -198,9 +198,9 @@ impl AppContainerProfile {
     pub fn named_object_path(&self) -> Result<String> {
         #[cfg(windows)]
         {
-            use windows::core::{PCWSTR, PWSTR};
             use windows::Win32::Foundation::HANDLE;
             use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
+            use windows::core::{PCWSTR, PWSTR};
             #[link(name = "Userenv")]
             unsafe extern "system" {
                 fn GetAppContainerNamedObjectPath(
@@ -271,8 +271,8 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
                 sid: *mut *mut core::ffi::c_void,
             ) -> windows::core::HRESULT;
         }
-        use windows::core::{PCWSTR, PWSTR};
         use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
+        use windows::core::{PCWSTR, PWSTR};
         unsafe {
             let name_w: Vec<u16> = crate::util::to_utf16(name);
             let mut sid_ptr = std::ptr::null_mut();

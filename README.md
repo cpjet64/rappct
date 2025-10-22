@@ -30,6 +30,13 @@ that needs to compose profiles, capabilities, process launches, ACL helpers, and
 - Optional modules for diagnostics (`introspection`) and network loopback management (`net`).
 - ACL utilities to grant/revoke filesystem and registry access for package SIDs.
 
+## Release & Branching
+
+- Stable releases publish from `main` to crates.io.
+- Pre-releases on `dev` are available via Git tags (no crates.io publish).
+- See `WORKFLOW.md` for the dual-branch details and release-plz automation.
+ - Dev GitHub releases (tags like `dev-vX.Y.Z`) are marked as prereleases.
+
 ## Prerequisites
 
 | Requirement | Notes |

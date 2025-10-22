@@ -4,9 +4,9 @@
 pub mod win {
     use std::os::windows::ffi::OsStrExt;
 
-    use windows::core::PWSTR;
     use windows::Win32::Foundation::{CloseHandle, HANDLE};
     use windows::Win32::Security::{FreeSid, PSID};
+    use windows::core::PWSTR;
 
     #[link(name = "Kernel32")]
     unsafe extern "system" {
@@ -186,4 +186,4 @@ pub use win::to_utf16;
 #[cfg(not(windows))]
 pub use win::to_utf16_os;
 #[cfg(windows)]
-pub use win::{to_utf16, to_utf16_os, FreeSidGuard, LocalFreeGuard, OwnedHandle};
+pub use win::{FreeSidGuard, LocalFreeGuard, OwnedHandle, to_utf16, to_utf16_os};
