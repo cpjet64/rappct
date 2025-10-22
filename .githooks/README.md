@@ -12,3 +12,7 @@ Enable hooks locally by pointing Git at the hooks directory:
 
 You can disable or override this per-repo as needed.
 
+Pre-push runs the full local CI script (scripts/ci-local.sh). To bypass for an emergency push:
+
+  git push --no-verify
+

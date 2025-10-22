@@ -10,24 +10,46 @@ permissions:
   contents: read
 
 jobs:
-  test-windows:
+  test:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
+        rust: [ stable, "1.90.0" ]
         features: ["", "introspection", "net", "introspection,net"]
     env:
       RUST_BACKTRACE: 1
       RUSTFLAGS: -D warnings
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
+
+      # Cache to speed up Windows builds
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          save-if: true
+
+      - name: Install Rust (stable)
+        if: ${{ matrix.rust == 'stable' }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Rust (MSRV)
+        if: ${{ matrix.rust == '1.90.0' }}
+        uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          components: clippy
+
       - name: Show toolchain
         run: rustc -Vv && cargo -V
-      - name: Install rustfmt
-        run: rustup component add rustfmt
+
       - name: Format check (workspace)
+        if: ${{ matrix.rust == 'stable' && matrix.features == '' }}
         run: cargo fmt --all -- --check
-      - name: Test (${{ matrix.features }})
+
+      - name: Test (${{ matrix.features }} | ${{ matrix.rust }})
         shell: bash
         run: |
           if [[ "${{ matrix.features }}" == "" ]]; then
@@ -35,7 +57,9 @@ jobs:
           else
             cargo test --all-targets --features "${{ matrix.features }}"
           fi
+
       - name: Dependency Duplicates (cargo tree -d)
+        if: ${{ matrix.rust == 'stable' }}
         shell: bash
         run: |
           if [[ "${{ matrix.features }}" == "" ]]; then
@@ -43,40 +67,8 @@ jobs:
           else
             cargo tree -d --features "${{ matrix.features }}" || true
           fi
-      - name: Install clippy
-        run: rustup component add clippy
-      - name: Clippy (${{ matrix.features }})
-        shell: bash
-        run: |
-          if [[ "${{ matrix.features }}" == "" ]]; then
-            cargo clippy --all-targets -- -D warnings
-          else
-            cargo clippy --all-targets --features "${{ matrix.features }}" -- -D warnings
-          fi
-  msrv-windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        features: ["", "introspection", "net", "introspection,net"]
-    env:
-      RUST_BACKTRACE: 1
-      RUSTFLAGS: -D warnings
-    steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@1.90.0
-      - name: Show toolchain
-        run: rustc -Vv && cargo -V
-      - name: Test (${{ matrix.features }})
-        shell: bash
-        run: |
-          if [[ "${{ matrix.features }}" == "" ]]; then
-            cargo test --all-targets
-          else
-            cargo test --all-targets --features "${{ matrix.features }}"
-          fi
-      - name: Install clippy
-        run: rustup component add clippy
-      - name: Clippy (${{ matrix.features }})
+
+      - name: Clippy (${{ matrix.features }} | ${{ matrix.rust }})
         shell: bash
         run: |
           if [[ "${{ matrix.features }}" == "" ]]; then

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if command -v bash >/dev/null 2>&1; then
+  echo "[pre-push] Running scripts/ci-local.sh"
+  bash scripts/ci-local.sh
+else
+  echo "[pre-push] Bash not found; skipping local CI. Use --no-verify to bypass." >&2
+fi
+
