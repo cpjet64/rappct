@@ -15,11 +15,11 @@
 //! 4. Auto-cleanup: `del "{temp_file}" 2>nul`
 
 use rappct::{
-    acl::{grant_to_package, AccessMask, ResourcePath},
+    AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
+    acl::{AccessMask, ResourcePath, grant_to_package},
     launch::{JobLimits, LaunchOptions, StdioConfig},
     launch_in_container, supports_lpac,
     token::query_current_process_token,
-    AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
 };
 use std::{
     env, fs,
@@ -195,7 +195,13 @@ fn demo_network_capabilities() -> rappct::Result<()> {
     let client_opts = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
         // PowerShell output redirected to file to avoid console buffer access errors
-        cmdline: Some(format!("/C echo [NET-CLIENT] Testing Internet Client && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){{ try {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && ping -n 2 8.8.8.8 && timeout /T 2 /NOBREAK >nul", http_out1.display(), http_out1.display(), http_out1.display(), http_out1.display())),
+        cmdline: Some(format!(
+            "/C echo [NET-CLIENT] Testing Internet Client && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){{ try {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && ping -n 2 8.8.8.8 && timeout /T 2 /NOBREAK >nul",
+            http_out1.display(),
+            http_out1.display(),
+            http_out1.display(),
+            http_out1.display()
+        )),
         ..Default::default()
     };
 
@@ -217,7 +223,13 @@ fn demo_network_capabilities() -> rappct::Result<()> {
     let server_opts = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
         // PowerShell output redirected to file to avoid console buffer access errors
-        cmdline: Some(format!("/C echo [NET-SERVER] Can act as both client and server && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; $proxy=$env:HTTPS_PROXY; if(-not $proxy){{ $proxy=$env:HTTP_PROXY }}; foreach($u in $urls){{ try {{ if($proxy){{ $r=Invoke-WebRequest -Uri $u -Proxy $proxy -UseBasicParsing -TimeoutSec 5 }} else {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5 }}; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && netstat -an | findstr LISTENING && timeout /T 2 /NOBREAK >nul", http_out2.display(), http_out2.display(), http_out2.display(), http_out2.display())),
+        cmdline: Some(format!(
+            "/C echo [NET-SERVER] Can act as both client and server && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; $proxy=$env:HTTPS_PROXY; if(-not $proxy){{ $proxy=$env:HTTP_PROXY }}; foreach($u in $urls){{ try {{ if($proxy){{ $r=Invoke-WebRequest -Uri $u -Proxy $proxy -UseBasicParsing -TimeoutSec 5 }} else {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5 }}; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && netstat -an | findstr LISTENING && timeout /T 2 /NOBREAK >nul",
+            http_out2.display(),
+            http_out2.display(),
+            http_out2.display(),
+            http_out2.display()
+        )),
         ..Default::default()
     };
 
@@ -239,7 +251,13 @@ fn demo_network_capabilities() -> rappct::Result<()> {
     let private_opts = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
         // PowerShell output redirected to file to avoid console buffer access errors
-        cmdline: Some(format!("/C echo [NET-PRIVATE] Access to private networks && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){{ try {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && timeout /T 2 /NOBREAK >nul", http_out3.display(), http_out3.display(), http_out3.display(), http_out3.display())),
+        cmdline: Some(format!(
+            "/C echo [NET-PRIVATE] Access to private networks && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){{ try {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && timeout /T 2 /NOBREAK >nul",
+            http_out3.display(),
+            http_out3.display(),
+            http_out3.display(),
+            http_out3.display()
+        )),
         ..Default::default()
     };
 

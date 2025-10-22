@@ -1,6 +1,6 @@
 //! Diagnostics and configuration validation (skeleton). Feature: `introspection`
 
-use crate::capability::{derive_named_capability_sids, SecurityCapabilities};
+use crate::capability::{SecurityCapabilities, derive_named_capability_sids};
 use crate::launch::LaunchOptions;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

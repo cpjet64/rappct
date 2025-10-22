@@ -11,16 +11,16 @@
 //! `Out-File -FilePath '{temp_file}'` -> `type "{temp_file}"` -> `del "{temp_file}"`
 
 #[cfg(feature = "net")]
-use rappct::{supports_lpac, AppContainerProfile, KnownCapability};
+use rappct::{AppContainerProfile, KnownCapability, supports_lpac};
 
 #[cfg(all(windows, feature = "net"))]
 use rappct::SecurityCapabilitiesBuilder;
 
 #[cfg(all(windows, feature = "net"))]
-use rappct::launch::{launch_in_container_with_io, LaunchOptions, StdioConfig};
+use rappct::launch::{LaunchOptions, StdioConfig, launch_in_container_with_io};
 
 #[cfg(feature = "net")]
-use rappct::net::{add_loopback_exemption, remove_loopback_exemption, LoopbackAdd};
+use rappct::net::{LoopbackAdd, add_loopback_exemption, remove_loopback_exemption};
 
 #[cfg(feature = "net")]
 struct FirewallGuard {

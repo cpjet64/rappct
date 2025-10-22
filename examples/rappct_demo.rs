@@ -9,12 +9,12 @@
 #[cfg(windows)]
 use rappct::launch::launch_in_container_with_io;
 use rappct::{
-    launch::LaunchOptions, launch_in_container, AppContainerProfile, KnownCapability,
-    SecurityCapabilitiesBuilder,
+    AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder, launch::LaunchOptions,
+    launch_in_container,
 };
 
 #[cfg(feature = "net")]
-use rappct::net::{add_loopback_exemption, remove_loopback_exemption, LoopbackAdd};
+use rappct::net::{LoopbackAdd, add_loopback_exemption, remove_loopback_exemption};
 
 #[cfg(feature = "net")]
 struct FirewallGuard {

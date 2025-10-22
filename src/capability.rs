@@ -53,11 +53,7 @@ fn suggest_capability_name(name: &str) -> Option<&'static str> {
             suggestion = Some(candidate);
         }
     }
-    if best < 0.80 {
-        None
-    } else {
-        suggestion
-    }
+    if best < 0.80 { None } else { suggestion }
 }
 
 /// Derive capability SIDs from names.
@@ -67,8 +63,8 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
     }
     #[cfg(windows)]
     {
-        use windows::core::{PCWSTR, PWSTR};
         use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
+        use windows::core::{PCWSTR, PWSTR};
         // Some toolchains don't surface DeriveCapabilitySidsFromName via windows-rs; bind manually.
         #[link(name = "Userenv")]
         unsafe extern "system" {

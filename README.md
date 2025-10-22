@@ -30,6 +30,13 @@ that needs to compose profiles, capabilities, process launches, ACL helpers, and
 - Optional modules for diagnostics (`introspection`) and network loopback management (`net`).
 - ACL utilities to grant/revoke filesystem and registry access for package SIDs.
 
+## Release & Branching
+
+- Stable releases publish from `main` to crates.io.
+- Pre-releases on `dev` are available via Git tags (no crates.io publish).
+- See `WORKFLOW.md` for the dual-branch details and release-plz automation.
+ - Dev GitHub releases (tags like `dev-vX.Y.Z`) are marked as prereleases.
+
 ## Prerequisites
 
 | Requirement | Notes |
@@ -53,20 +60,20 @@ cargo build
 cargo run --example acrun -- --help
 ```
 
-The crate is structured as a binary-agnostic library. Add it to your project from crates.io:
+The crate is structured as a binary-agnostic library. Add it to your project:
 
 ```bash
-# Stable release (main branch)
+# Stable release from crates.io (recommended)
 cargo add rappct
 
-# Pre-release/development version (dev branch)
-cargo add rappct@0.11.2-dev.1
-```
+# Specific stable version from crates.io
+cargo add rappct@0.12.2
 
-If crates.io is unavailable, you can use git as an alternative:
+# Development version from git (dev branch)
+cargo add rappct --git https://github.com/cpjet64/rappct.git --branch dev
 
-```bash
-cargo add rappct --git https://github.com/cpjet64/rappct.git
+# Specific development release tag
+cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-v0.12.3
 ```
 
 ## Usage Snapshot
@@ -88,7 +95,79 @@ fn main() -> rappct::Result<()> {
 }
 ```
 
-### Feature Flags
+## Examples
+
+The `examples/` directory contains runnable demonstrations of rappct features:
+
+### [rappct_demo.rs](examples/rappct_demo.rs)
+
+Simple demonstration of essential features:
+
+- Creating AppContainer profiles
+- Launching sandboxed processes
+- Granting specific capabilities
+- Automatic network configuration (with `net` feature)
+
+```bash
+cargo run --example rappct_demo --all-features
+```
+
+### [comprehensive_demo.rs](examples/comprehensive_demo.rs)
+
+Comprehensive demonstrations with isolated examples for each capability:
+
+- Individual demos for filesystem, registry, network, and COM capabilities
+- PowerShell in AppContainers (output redirection pattern)
+- Combined multi-capability example
+- Best for understanding each feature in isolation
+
+```bash
+cargo run --example comprehensive_demo --all-features
+```
+
+### [advanced_features.rs](examples/advanced_features.rs)
+
+Advanced and less common features:
+
+- Profile path resolution (folder_path, named_object_path)
+- Custom named capabilities
+- Configuration diagnostics
+- Advanced launch options with custom environment variables
+- Network enumeration
+- Direct SID derivation
+
+```bash
+cargo run --example advanced_features --all-features
+```
+
+### [network_demo.rs](examples/network_demo.rs)
+
+Network capability demonstration with automatic firewall configuration:
+
+- Built-in firewall loopback exemption functionality
+- PowerShell network testing in AppContainers
+- Automatic cleanup patterns
+
+```bash
+cargo run --example network_demo --features net
+```
+
+### [acrun.rs](examples/acrun.rs)
+
+Developer CLI tool for managing AppContainer profiles and launching sandboxed processes:
+
+```bash
+# Create a profile
+cargo run --example acrun -- ensure demo.app
+
+# Launch a process in an AppContainer
+cargo run --example acrun -- launch demo.app notepad.exe
+
+# View help for all commands
+cargo run --example acrun -- --help
+```
+
+## Feature Flags
 
 | Feature | Description |
 |---------|-------------|

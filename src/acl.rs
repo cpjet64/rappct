@@ -55,18 +55,18 @@ pub fn grant_to_capability(
 #[cfg(windows)]
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) -> Result<()> {
-    use windows::core::{PCWSTR, PWSTR};
     use windows::Win32::Foundation::HANDLE;
     use windows::Win32::Security::Authorization::{
-        ConvertStringSidToSidW, GetNamedSecurityInfoW, GetSecurityInfo, SetEntriesInAclW,
-        SetNamedSecurityInfoW, SetSecurityInfo, EXPLICIT_ACCESS_W, SE_FILE_OBJECT, SE_REGISTRY_KEY,
+        ConvertStringSidToSidW, EXPLICIT_ACCESS_W, GetNamedSecurityInfoW, GetSecurityInfo,
+        SE_FILE_OBJECT, SE_REGISTRY_KEY, SetEntriesInAclW, SetNamedSecurityInfoW, SetSecurityInfo,
         TRUSTEE_FORM, TRUSTEE_IS_SID, TRUSTEE_IS_WELL_KNOWN_GROUP, TRUSTEE_TYPE, TRUSTEE_W,
     };
     use windows::Win32::Security::{ACE_FLAGS, ACL, DACL_SECURITY_INFORMATION};
     use windows::Win32::System::Registry::{
-        RegCloseKey, RegOpenKeyExW, HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ,
-        KEY_WRITE,
+        HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WRITE, RegCloseKey,
+        RegOpenKeyExW,
     };
+    use windows::core::{PCWSTR, PWSTR};
 
     // Convert SDDL to PSID
     let wide: Vec<u16> = crate::util::to_utf16(sid_sddl);

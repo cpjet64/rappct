@@ -49,10 +49,10 @@ pub mod util;
 
 // Re-exports
 pub use capability::{KnownCapability, SecurityCapabilities, SecurityCapabilitiesBuilder};
-pub use launch::{launch_in_container, JobLimits, LaunchOptions, Launched, StdioConfig};
+pub use launch::{JobLimits, LaunchOptions, Launched, StdioConfig, launch_in_container};
 #[cfg(windows)]
-pub use launch::{launch_in_container_with_io, LaunchedIo};
-pub use profile::{derive_sid_from_name, AppContainerProfile};
+pub use launch::{LaunchedIo, launch_in_container_with_io};
+pub use profile::{AppContainerProfile, derive_sid_from_name};
 pub use sid::AppContainerSid;
 
 /// Returns Ok(()) if LPAC is supported on this OS (Windows 10 1703+).

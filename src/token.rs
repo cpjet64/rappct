@@ -6,8 +6,6 @@ use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
 
 #[cfg(windows)]
-use windows::core::HRESULT;
-#[cfg(windows)]
 use windows::Win32::Foundation::{
     CloseHandle, ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, HANDLE,
 };
@@ -15,12 +13,15 @@ use windows::Win32::Foundation::{
 use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 #[cfg(windows)]
 use windows::Win32::Security::{
-    GetTokenInformation, TokenAppContainerSid, TokenCapabilities, TokenIsAppContainer,
-    TokenIsLessPrivilegedAppContainer, TOKEN_APPCONTAINER_INFORMATION, TOKEN_GROUPS,
-    TOKEN_INFORMATION_CLASS, TOKEN_QUERY,
+    GetTokenInformation, TOKEN_APPCONTAINER_INFORMATION, TOKEN_GROUPS, TOKEN_INFORMATION_CLASS,
+    TOKEN_QUERY, TokenAppContainerSid, TokenCapabilities, TokenIsAppContainer,
+    TokenIsLessPrivilegedAppContainer,
 };
 #[cfg(windows)]
 use windows::Win32::System::Threading::GetCurrentProcess;
+
+#[cfg(windows)]
+use windows::core::HRESULT;
 
 #[cfg(windows)]
 #[link(name = "Advapi32")]
