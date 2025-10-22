@@ -7,14 +7,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    target-branch: "dev"
+    target-branch: "main"
     labels: ["dependencies"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    target-branch: "dev"
+    target-branch: "main"
     labels: ["dependencies"]
     ignore:
       # Keep MSRV job pinned at 1.90.0; do not bump rust-toolchain action beyond MSRV
