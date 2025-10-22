@@ -36,6 +36,7 @@ impl Handle {
     }
 
     pub(crate) fn into_owned(self) -> OwnedHandle {
+        #[allow(dead_code)]
         self.0
     }
 

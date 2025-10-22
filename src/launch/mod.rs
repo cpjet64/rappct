@@ -256,11 +256,10 @@ pub fn merge_parent_env(mut custom: Vec<(OsString, OsString)>) -> Vec<(OsString,
 
 #[cfg(windows)]
 // Capability attributes are built within OwnedSecurityCapabilities (ffi::sec_caps)
-
 #[cfg(windows)]
 struct AttributeContext {
     attr_list: FAttrList,
-    sc_owned: OwnedSecurityCapabilities,
+    _sc_owned: OwnedSecurityCapabilities,
     _handle_list: Option<Vec<HANDLE>>,
     _lpac_policy: Option<Box<u32>>,
 }
@@ -369,7 +368,7 @@ impl AttributeContext {
 
         Ok(Self {
             attr_list,
-            sc_owned,
+            _sc_owned: sc_owned,
             _handle_list: handle_list,
             _lpac_policy: lpac_policy,
         })

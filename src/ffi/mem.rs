@@ -19,6 +19,7 @@ impl<T> LocalAllocGuard<T> {
     pub(crate) fn as_ptr(&self) -> *mut T {
         self.ptr
     }
+    #[allow(dead_code)]
     pub(crate) fn into_raw(mut self) -> *mut T {
         let p = self.ptr;
         self.ptr = core::ptr::null_mut();
@@ -71,6 +72,7 @@ impl<T> CoTaskMem<T> {
     pub(crate) fn as_ptr(&self) -> *mut T {
         self.ptr
     }
+    #[allow(dead_code)]
     pub(crate) fn into_raw(mut self) -> *mut T {
         let p = self.ptr;
         self.ptr = core::ptr::null_mut();

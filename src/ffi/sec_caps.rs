@@ -8,10 +8,10 @@ const SE_GROUP_ENABLED_CONST: u32 = 0x0000_0004;
 
 #[derive(Debug)]
 pub(crate) struct OwnedSecurityCapabilities {
-    appcontainer_sid: OwnedSid,
+    _appcontainer_sid: OwnedSid,
     // Keep capability SIDs alive for the lifetime of SECURITY_CAPABILITIES
-    cap_sids: Vec<OwnedSid>,
-    caps: Box<[SID_AND_ATTRIBUTES]>,
+    _cap_sids: Vec<OwnedSid>,
+    _caps: Box<[SID_AND_ATTRIBUTES]>,
     sc: SECURITY_CAPABILITIES,
 }
 
@@ -32,12 +32,7 @@ impl OwnedSecurityCapabilities {
             CapabilityCount: caps.len() as u32,
             Reserved: 0,
         };
-        Self {
-            appcontainer_sid: app_sid,
-            cap_sids,
-            caps,
-            sc,
-        }
+        Self { _appcontainer_sid: app_sid, _cap_sids: cap_sids, _caps: caps, sc }
     }
 
     pub(crate) fn as_ptr(&self) -> *const SECURITY_CAPABILITIES {

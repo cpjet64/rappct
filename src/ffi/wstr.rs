@@ -8,6 +8,7 @@ pub(crate) struct WideString {
     buf: Vec<u16>,
 }
 impl WideString {
+    #[allow(dead_code)]
     pub(crate) fn from_os_str(s: &std::ffi::OsStr) -> Self {
         use std::os::windows::ffi::OsStrExt;
         let mut v: Vec<u16> = s.encode_wide().collect();

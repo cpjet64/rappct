@@ -1,16 +1,16 @@
 //! Owned `PROC_THREAD_ATTRIBUTE_LIST` with helpers for security capabilities.
 
 use crate::{AcError, Result};
-use windows::Win32::System::Threading::{
-    DeleteProcThreadAttributeList, InitializeProcThreadAttributeList, UpdateProcThreadAttribute,
-    LPPROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES,
-};
-use windows::Win32::Foundation::HANDLE;
 use core::ffi::c_void;
+use windows::Win32::Foundation::HANDLE;
+use windows::Win32::System::Threading::{
+    DeleteProcThreadAttributeList, InitializeProcThreadAttributeList, LPPROC_THREAD_ATTRIBUTE_LIST,
+    PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES, UpdateProcThreadAttribute,
+};
 
 #[derive(Debug)]
 pub(crate) struct AttrList {
-    buf: Vec<u8>,
+    _buf: Vec<u8>,
     ptr: LPPROC_THREAD_ATTRIBUTE_LIST,
 }
 
@@ -28,7 +28,7 @@ impl AttrList {
             InitializeProcThreadAttributeList(Some(ptr), count, Some(0), &mut bytes as *mut usize)
                 .map_err(|e| AcError::Win32(format!("InitializeProcThreadAttributeList: {}", e)))?;
         }
-        Ok(Self { buf, ptr })
+        Ok(Self { _buf: buf, ptr })
     }
 
     pub(crate) fn as_mut_ptr(&mut self) -> LPPROC_THREAD_ATTRIBUTE_LIST {
