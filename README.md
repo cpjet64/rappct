@@ -30,6 +30,13 @@ that needs to compose profiles, capabilities, process launches, ACL helpers, and
 - Optional modules for diagnostics (`introspection`) and network loopback management (`net`).
 - ACL utilities to grant/revoke filesystem and registry access for package SIDs.
 
+## What To Expect
+
+- Network isolation by default; use capability sets and optional loopback exemption for localhost-only testing.
+- DNS/HTTP behavior varies by capability and Windows version; LPAC is stricter.
+- File system and registry are isolated; grant specific paths/keys via ACL helpers when needed.
+- Examples and docs show cleanup patterns to avoid lingering policy changes.
+
 ## Release & Branching
 
 - Stable releases publish from `main` to crates.io.
@@ -67,13 +74,13 @@ The crate is structured as a binary-agnostic library. Add it to your project:
 cargo add rappct
 
 # Specific stable version from crates.io
-cargo add rappct@0.12.2
+cargo add rappct@0.13.0
 
 # Development version from git (dev branch)
 cargo add rappct --git https://github.com/cpjet64/rappct.git --branch dev
 
 # Specific development release tag
-cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-v0.12.3
+cargo add rappct --git https://github.com/cpjet64/rappct.git --tag dev-v0.13.0
 ```
 
 ## Usage Snapshot
@@ -187,6 +194,8 @@ feature is not compiled in.
 - When something fails due to missing capabilities or OS prerequisites, rappct surfaces detailed error messages instead
   of falling back silently. Use `supports_lpac()` to guard LPAC-specific code paths.
   For tests/CI, you can set `RAPPCT_TEST_LPAC_STATUS=ok|unsupported` to force detection.
+
+See also: docs/capabilities.md for common capability SIDs and starter sets.
 
 ## Repository Layout
 

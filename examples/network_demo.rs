@@ -20,42 +20,13 @@ use rappct::SecurityCapabilitiesBuilder;
 use rappct::launch::{LaunchOptions, StdioConfig, launch_in_container_with_io};
 
 #[cfg(feature = "net")]
-use rappct::net::{LoopbackAdd, add_loopback_exemption, remove_loopback_exemption};
+use rappct::net::LoopbackExemptionGuard;
 
-#[cfg(feature = "net")]
-struct FirewallGuard {
-    sid: rappct::sid::AppContainerSid,
-    intro: Option<&'static str>,
-    success: &'static str,
-}
+// removed old FirewallGuard (replaced by LoopbackExemptionGuard)
 
-#[cfg(feature = "net")]
-impl FirewallGuard {
-    fn new(
-        sid: rappct::sid::AppContainerSid,
-        intro: Option<&'static str>,
-        success: &'static str,
-    ) -> Self {
-        Self {
-            sid,
-            intro,
-            success,
-        }
-    }
-}
 
-#[cfg(feature = "net")]
-impl Drop for FirewallGuard {
-    fn drop(&mut self) {
-        if let Some(message) = self.intro {
-            println!("{}", message);
-        }
-        match remove_loopback_exemption(&self.sid) {
-            Ok(_) => println!("{}", self.success),
-            Err(e) => println!("⚠ Firewall exemption cleanup failed: {}", e),
-        }
-    }
-}
+
+
 
 #[cfg(all(windows, feature = "net"))]
 use std::{
@@ -98,25 +69,21 @@ fn main() -> rappct::Result<()> {
         println!("✓ Created test profile: {}", profile.sid.as_string());
 
         // Add firewall loopback exemption for localhost access
-        println!("→ Adding firewall loopback exemption for network access...");
-        let firewall_guard =
-            match add_loopback_exemption(LoopbackAdd(profile.sid.clone()).confirm_debug_only()) {
-                Ok(_) => {
-                    println!("✓ Firewall loopback exemption added");
-                    Some(FirewallGuard::new(
-                        profile.sid.clone(),
-                        Some("\n→ Removing firewall loopback exemption..."),
-                        "✓ Firewall exemption removed",
-                    ))
-                }
-                Err(e) => {
-                    println!("⚠ Firewall exemption failed: {}", e);
-                    println!("  Network tests may have limited functionality");
-                    None
-                }
-            };
+        println!("Adding firewall loopback exemption for network access...");
+        let firewall_guard = match LoopbackExemptionGuard::new(&profile.sid) {
+            Ok(g) => {
+                println!("Firewall loopback exemption added");
+                Some(g)
+            }
+            Err(e) => {
+                println!("? Firewall exemption failed: {}", e);
+                println!("  Network tests may have limited functionality");
+                None
+            }
+        };
 
         run_network_tests(&profile)?;
+
 
         // FirewallGuard will auto-cleanup on drop
         let _firewall_guard = firewall_guard;

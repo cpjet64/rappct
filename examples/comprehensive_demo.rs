@@ -177,7 +177,7 @@ fn demo_network_capabilities() -> rappct::Result<()> {
     grant_to_package(
         ResourcePath::Directory(temp_dir.clone()),
         &profile.sid,
-        AccessMask(0x001F01FF), // GENERIC_ALL - full access to write temp files
+        AccessMask::GENERIC_ALL, // GENERIC_ALL - full access to write temp files
     )?;
 
     // Example 1: Internet Client only
@@ -360,13 +360,13 @@ fn demo_file_acls() -> rappct::Result<()> {
     grant_to_package(
         ResourcePath::Directory(allowed_dir.clone()),
         &profile.sid,
-        AccessMask(0x001F01FF), // GENERIC_ALL - full access
+        AccessMask::GENERIC_ALL, // GENERIC_ALL - full access
     )?;
 
     grant_to_package(
         ResourcePath::File(allowed_file.clone()),
         &profile.sid,
-        AccessMask(0x001F01FF), // GENERIC_ALL - full access
+        AccessMask::GENERIC_ALL, // GENERIC_ALL - full access
     )?;
     println!("✓ ACLs applied - AppContainer can now access the allowed directory");
 
@@ -589,7 +589,7 @@ fn demo_comprehensive() -> rappct::Result<()> {
     grant_to_package(
         ResourcePath::Directory(work_dir.clone()),
         &profile.sid,
-        AccessMask(0x001F01FF), // GENERIC_ALL for the work directory
+        AccessMask::GENERIC_ALL, // GENERIC_ALL for the work directory
     )?;
     println!("  ✓ File system ACLs configured");
 
