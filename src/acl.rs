@@ -20,6 +20,27 @@ pub enum ResourcePath {
 #[derive(Clone, Copy, Debug)]
 pub struct AccessMask(pub u32);
 
+impl AccessMask {
+    /// Full (generic) access commonly used in examples/tests.
+    pub const GENERIC_ALL: Self = Self(0x001F_01FF);
+
+    /// FILE_GENERIC_READ access mask.
+    #[cfg(windows)]
+    pub const FILE_GENERIC_READ: Self =
+        Self(windows::Win32::Storage::FileSystem::FILE_GENERIC_READ.0);
+    /// FILE_GENERIC_WRITE access mask.
+    #[cfg(windows)]
+    pub const FILE_GENERIC_WRITE: Self =
+        Self(windows::Win32::Storage::FileSystem::FILE_GENERIC_WRITE.0);
+
+    /// FILE_GENERIC_READ (non-Windows fallback value)
+    #[cfg(not(windows))]
+    pub const FILE_GENERIC_READ: Self = Self(0x0001_20089);
+    /// FILE_GENERIC_WRITE (non-Windows fallback value)
+    #[cfg(not(windows))]
+    pub const FILE_GENERIC_WRITE: Self = Self(0x0001_20116);
+}
+
 #[cfg_attr(not(windows), allow(unused_variables))]
 pub fn grant_to_package(
     target: ResourcePath,
@@ -290,6 +311,21 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 )));
             }
             Ok(())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AccessMask;
+    #[test]
+    fn constants_are_consistent() {
+        assert_eq!(AccessMask::GENERIC_ALL.0, 0x001F_01FF);
+        #[cfg(windows)]
+        {
+            use windows::Win32::Storage::FileSystem::{FILE_GENERIC_READ, FILE_GENERIC_WRITE};
+            assert_eq!(AccessMask::FILE_GENERIC_READ.0, FILE_GENERIC_READ.0);
+            assert_eq!(AccessMask::FILE_GENERIC_WRITE.0, FILE_GENERIC_WRITE.0);
         }
     }
 }
