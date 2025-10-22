@@ -6,6 +6,8 @@ use windows::Win32::System::Threading::{
     DeleteProcThreadAttributeList, InitializeProcThreadAttributeList, UpdateProcThreadAttribute,
     LPPROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES,
 };
+use windows::Win32::Foundation::HANDLE;
+use core::ffi::c_void;
 
 #[derive(Debug)]
 pub(crate) struct AttrList {
@@ -51,6 +53,44 @@ impl AttrList {
                 None,
             )
             .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute: {}", e)))
+        }
+    }
+
+    /// Attach the All App Packages policy (LPAC opt-out) attribute.
+    /// Caller must ensure `policy` outlives CreateProcessW.
+    pub(crate) fn set_all_app_packages_policy(&mut self, policy: &u32) -> Result<()> {
+        use windows::Win32::System::Threading::PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY;
+        let size = core::mem::size_of::<u32>();
+        unsafe {
+            UpdateProcThreadAttribute(
+                self.ptr,
+                0,
+                PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY as usize,
+                Some(policy as *const u32 as *const c_void),
+                size,
+                None,
+                None,
+            )
+            .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute(AAPolicy): {}", e)))
+        }
+    }
+
+    /// Attach a handle inheritance list.
+    /// The slice must remain valid until CreateProcessW returns.
+    pub(crate) fn set_handle_list(&mut self, handles: &[HANDLE]) -> Result<()> {
+        use windows::Win32::System::Threading::PROC_THREAD_ATTRIBUTE_HANDLE_LIST;
+        let bytes = core::mem::size_of::<HANDLE>() * handles.len();
+        unsafe {
+            UpdateProcThreadAttribute(
+                self.ptr,
+                0,
+                PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
+                Some(handles.as_ptr() as *const c_void),
+                bytes,
+                None,
+                None,
+            )
+            .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute(HandleList): {}", e)))
         }
     }
 }

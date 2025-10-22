@@ -338,56 +338,24 @@ impl AttributeContext {
         let mut lpac_policy: Option<Box<u32>> = None;
         if sec.lpac {
             lpac_policy = Some(Box::new(PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT));
-            let res = UpdateProcThreadAttribute(
-                si_ex.lpAttributeList,
-                0,
-                PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY as usize,
-                lpac_policy
-                    .as_mut()
-                    .map(|p| &mut **p as *mut u32 as *const std::ffi::c_void),
-                std::mem::size_of::<u32>(),
-                None,
-                None,
-            );
+            // SAFETY: lpac_policy is stored in context to outlive CreateProcessW
+            let p = lpac_policy.as_ref().unwrap();
+            attr_list.set_all_app_packages_policy(&*p)?;
             #[cfg(feature = "tracing")]
             tracing::trace!(
-                "UpdateProcThreadAttribute(AAPolicy): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
+                "UpdateProcThreadAttribute(AAPolicy via wrapper): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
                 si_ex.lpAttributeList.0,
-                lpac_policy
-                    .as_ref()
-                    .map(|p| &**p as *const u32)
-                    .unwrap_or(std::ptr::null()),
+                &**p as *const u32,
                 std::mem::size_of::<u32>()
             );
-            if res.is_err() {
-                #[cfg(feature = "tracing")]
-                {
-                    use windows::Win32::Foundation::GetLastError;
-                    let gle = GetLastError().0;
-                    tracing::error!("UpdateProcThreadAttribute(AAPolicy) failed: GLE={}", gle);
-                }
-                return Err(AcError::LaunchFailed {
-                    stage: "UpdateProcThreadAttribute(lpac)",
-                    hint: "opt-out AAP policy",
-                    source: Box::new(std::io::Error::last_os_error()),
-                });
-            }
         }
 
         if let Some(ref handles) = handle_list {
-            let res = UpdateProcThreadAttribute(
-                si_ex.lpAttributeList,
-                0,
-                PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
-                Some(handles.as_ptr() as *const std::ffi::c_void),
-                std::mem::size_of::<HANDLE>() * handles.len(),
-                None,
-                None,
-            );
+            attr_list.set_handle_list(handles)?;
             #[cfg(feature = "tracing")]
             {
                 tracing::trace!(
-                    "UpdateProcThreadAttribute(handles): attr_list_ptr={:p}, count={}, bytes={}",
+                    "UpdateProcThreadAttribute(handles via wrapper): attr_list_ptr={:p}, count={}, bytes={}",
                     si_ex.lpAttributeList.0,
                     handles.len(),
                     std::mem::size_of::<HANDLE>() * handles.len()
@@ -395,19 +363,6 @@ impl AttributeContext {
                 for (idx, handle) in handles.iter().enumerate() {
                     tracing::trace!("inherit_handle[{}]=0x{:X}", idx, handle.0 as usize);
                 }
-            }
-            if res.is_err() {
-                #[cfg(feature = "tracing")]
-                {
-                    use windows::Win32::Foundation::GetLastError;
-                    let gle = GetLastError().0;
-                    tracing::error!("UpdateProcThreadAttribute(handles) failed: GLE={}", gle);
-                }
-                return Err(AcError::LaunchFailed {
-                    stage: "UpdateProcThreadAttribute(handles)",
-                    hint: "inherit handles",
-                    source: Box::new(std::io::Error::last_os_error()),
-                });
             }
         }
 
