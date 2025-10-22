@@ -21,13 +21,16 @@ pub(crate) mod wstr;
 #[cfg(not(windows))]
 pub(crate) mod handles {
     #[derive(Debug, Default)]
+    #[allow(dead_code)]
     pub(crate) struct Handle;
 }
 #[cfg(not(windows))]
 pub(crate) mod mem {
     #[derive(Debug, Default)]
+    #[allow(dead_code)]
     pub(crate) struct LocalAllocGuard {/* no-op */}
     #[derive(Debug, Default)]
+    #[allow(dead_code)]
     pub(crate) struct CoTaskMem<T> {
         /* no-op */
         _phantom: core::marker::PhantomData<T>,
@@ -36,20 +39,24 @@ pub(crate) mod mem {
 #[cfg(not(windows))]
 pub(crate) mod sid {
     #[derive(Debug, Default)]
+    #[allow(dead_code)]
     pub(crate) struct OwnedSid;
 }
 #[cfg(not(windows))]
 pub(crate) mod wstr {
     #[derive(Debug, Default)]
+    #[allow(dead_code)]
     pub(crate) struct WideString;
 }
 #[cfg(not(windows))]
 pub(crate) mod sec_caps {
     #[derive(Debug, Default)]
+    #[allow(dead_code)]
     pub(crate) struct OwnedSecurityCapabilities;
 }
 #[cfg(not(windows))]
 pub(crate) mod attr_list {
     #[derive(Debug, Default)]
+    #[allow(dead_code)]
     pub(crate) struct AttrList;
 }

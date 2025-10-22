@@ -102,8 +102,9 @@ The crate is organized into focused modules that compose together:
 
 8. **diag** (`src/diag.rs`, feature-gated): Diagnostics and validation
 
-9. **util** (`src/util.rs`): UTF-16 conversion, RAII guards
-   - `OwnedHandle`, `LocalFreeGuard<T>`, `FreeSidGuard` ensure proper cleanup
+9. **ffi** (`src/ffi/*`): crate-private FFI RAII helpers
+   - `handles::Handle`, `mem::{LocalAllocGuard, CoTaskMem}`, `sid::OwnedSid`, `wstr::WideString`, `sec_caps::OwnedSecurityCapabilities`, `attr_list::AttrList`
+   - Prefer these over legacy `util` guards; `src/util.rs` remains for compatibility but should not be used in new code
 
 ### Key Architectural Patterns
 

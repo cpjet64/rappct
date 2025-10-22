@@ -255,10 +255,9 @@ pub fn merge_parent_env(mut custom: Vec<(OsString, OsString)>) -> Vec<(OsString,
 
 #[cfg(windows)]
 // Capability attributes are built within OwnedSecurityCapabilities (ffi::sec_caps)
-#[cfg(windows)]
 struct AttributeContext {
     attr_list: FAttrList,
-    _sc_owned: OwnedSecurityCapabilities,
+    _sc_owned: Box<OwnedSecurityCapabilities>,
     _handle_list: Option<Vec<HANDLE>>,
     _lpac_policy: Option<Box<u32>>,
 }
@@ -306,7 +305,9 @@ impl AttributeContext {
             }
             caps_owned.push(OwnedSid::from_localfree_psid(psid_raw.0));
         }
-        let sc_owned = OwnedSecurityCapabilities::new(pkg_owned, caps_owned);
+        // Allocate on the heap to ensure the address of the inner
+        // SECURITY_CAPABILITIES remains stable until CreateProcessW returns.
+        let sc_owned = Box::new(OwnedSecurityCapabilities::new(pkg_owned, caps_owned));
 
         let mut attr_count = 1;
         if sec.lpac {
@@ -339,7 +340,7 @@ impl AttributeContext {
             lpac_policy = Some(Box::new(PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT));
             // SAFETY: lpac_policy is stored in context to outlive CreateProcessW
             let p = lpac_policy.as_ref().unwrap();
-            attr_list.set_all_app_packages_policy(&*p)?;
+            attr_list.set_all_app_packages_policy(p)?;
             #[cfg(feature = "tracing")]
             tracing::trace!(
                 "UpdateProcThreadAttribute(AAPolicy via wrapper): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
@@ -403,15 +404,34 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     }
 
     // Environment
-    let env_block = opts.env.as_ref().map(|e| build_env_block(e));
+    let force_env = std::env::var_os("RAPPCT_TEST_FORCE_ENV").is_some();
+    let env_block = if let Some(e) = opts.env.as_ref() {
+        Some(build_env_block(e))
+    } else if force_env {
+        // Test assist: build an explicit environment block from the full parent environment.
+        // Sort case-insensitively to match Win32 expectations for Unicode blocks.
+        let mut all: Vec<(OsString, OsString)> = std::env::vars_os().collect();
+        all.sort_by(|a, b| {
+            a.0.to_string_lossy()
+                .to_ascii_lowercase()
+                .cmp(&b.0.to_string_lossy().to_ascii_lowercase())
+        });
+        Some(build_env_block(&all))
+    } else {
+        None
+    };
 
     // Command
     let exe_w: Vec<u16> = crate::util::to_utf16_os(opts.exe.as_os_str());
     let mut args_w = make_cmd_args(&opts.cmdline);
-    let cwd_w = opts
+    let mut cwd_w = opts
         .cwd
         .as_ref()
         .map(|p| crate::util::to_utf16_os(p.as_os_str()));
+    // Test assist: allow disabling explicit cwd to isolate environment issues
+    if std::env::var_os("RAPPCT_TEST_NO_CWD").is_some() {
+        cwd_w = None;
+    }
 
     // stdio: Inherit/Null or Pipes
     let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
@@ -579,7 +599,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             env_bytes
         );
     }
-    let ok = CreateProcessW(
+    let cp_res = CreateProcessW(
         PCWSTR(exe_w.as_ptr()),
         args_w.as_mut().map(|v| PWSTR(v.as_mut_ptr())),
         None,
@@ -595,23 +615,38 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             .unwrap_or(PCWSTR::null()),
         &mut si_ex as *mut STARTUPINFOEXW as *mut STARTUPINFOW,
         &mut pi,
-    )
-    .is_ok();
+    );
+    let ok = cp_res.is_ok();
 
     if !ok {
         #[cfg(feature = "tracing")]
         {
             use windows::Win32::Foundation::GetLastError;
             let gle = unsafe { GetLastError().0 };
-            tracing::error!("CreateProcessW failed: GLE={}", gle);
+            let (hr, msg) = match &cp_res {
+                Ok(_) => (0, String::new()),
+                Err(e) => (e.code().0, format!("{}", e)),
+            };
+            tracing::error!(
+                "CreateProcessW failed: GLE={}, hr=0x{:X}, msg={}",
+                gle,
+                hr,
+                msg
+            );
         }
         // Optional debug log without requiring a tracing subscriber
         if std::env::var_os("RAPPCT_DEBUG_LAUNCH").is_some() {
             use windows::Win32::Foundation::GetLastError;
             let gle = unsafe { GetLastError().0 };
+            let (hr, msg) = match &cp_res {
+                Ok(_) => (0, String::new()),
+                Err(e) => (e.code().0, format!("{}", e)),
+            };
             eprintln!(
-                "[rappct] CreateProcessW failed: GLE={} exe={:?} args_present={} cwd_present={} inherit_handles={} flags=0x{:X}",
+                "[rappct] CreateProcessW failed: GLE={} hr=0x{:X} msg={} exe={:?} args_present={} cwd_present={} inherit_handles={} flags=0x{:X}",
                 gle,
+                hr,
+                msg,
                 opts.exe,
                 args_w.as_ref().map(|v| v.len()).is_some(),
                 cwd_w.as_ref().is_some(),

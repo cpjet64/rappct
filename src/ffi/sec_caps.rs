@@ -54,6 +54,7 @@ mod tests {
 
     #[test]
     fn build_security_capabilities() {
+        // SAFETY: SDDL strings are valid; resulting PSIDs are converted into owned SIDs.
         unsafe {
             let s_app = crate::ffi::wstr::WideString::from_str("S-1-5-32-544");
             let mut app_sid = windows::Win32::Security::PSID::default();

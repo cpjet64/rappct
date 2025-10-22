@@ -1,6 +1,6 @@
 # ADR 0001: FFI Safety & Ownership Boundaries
 
-Status: Proposed
+Status: In Progress
 
 Date: 2025-10-22
 
@@ -35,12 +35,11 @@ The crate interacts with Windows APIs via the `windows` crate and retains severa
 
 ## Checklist
 
-- [ ] Enumerate all `unsafe` blocks and FFI calls (per file above).
-- [ ] Introduce/verify `FreeSidGuard`, `CoTaskMemGuard`, `HandleGuard` (or equivalents) in a shared module.
-- [ ] Replace ad-hoc frees/closes with guards.
-- [ ] Add Rustdoc for invariants and safety notes.
-- [ ] Add unit tests for guard behaviors and edge cases.
-- [ ] Add smoke tests in `tests/` honoring feature gates.
+- [x] Introduce crate-private FFI RAII wrappers in `src/ffi/` (handles, mem: LocalAlloc/CoTaskMem, sid: OwnedSid, wstr, sec_caps, attr_list).
+- [x] Replace ad-hoc frees/closes with wrappers across `launch/`, `profile.rs`, `acl.rs`, `net.rs`, and `capability.rs`.
+- [x] Add unit tests for guard behaviors and conversions (e.g., SID string round-trips, handle close-on-drop).
+- [x] Add Windows-only smoke tests; gate networking under `net` feature.
+- [ ] Enumerate all remaining `unsafe` blocks and add explicit safety notes where missing (ongoing; most hot paths covered).
 
 ## Risks
 
@@ -49,8 +48,7 @@ The crate interacts with Windows APIs via the `windows` crate and retains severa
 
 ## Rollout
 
-- Phase 1: Inventory + helpers with no call-site changes.
-- Phase 2: Adopt helpers in `util.rs`, `token.rs`.
-- Phase 3: Expand to `profile.rs`, `launch/`, `net.rs` (feature-gated).
-- Phase 4: Documentation sweep and finalize tests.
-
+- Phase 1: Inventory + helpers with no call-site changes. [Done]
+- Phase 2: Adopt helpers in core modules; keep legacy util as shim for now. [Done]
+- Phase 3: Expand to `profile.rs`, `launch/`, `net.rs`, `capability.rs` (feature-gated). [Done]
+- Phase 4: Documentation sweep and finalize tests. [In Progress]

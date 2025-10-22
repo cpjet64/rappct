@@ -1,7 +1,7 @@
 #requires -Version 7
 $ErrorActionPreference = 'Stop'
-$isWindows = $env:OS -eq 'Windows_NT'
-if (-not $isWindows) {
+# Use PowerShell's built-in read-only $IsWindows automatic variable
+if (-not $IsWindows) {
   Write-Error "[ci-local] Windows-only checks. Detected non-Windows environment. Aborting."; exit 1
 }
 $features = @("", "introspection", "net", "introspection,net")

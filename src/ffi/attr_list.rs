@@ -17,15 +17,15 @@ pub(crate) struct AttrList {
 impl AttrList {
     pub(crate) fn with_capacity(count: u32) -> Result<Self> {
         let mut bytes: usize = 0;
+        // SAFETY: Probe for size; passing None and flags=0 per API contract.
         unsafe {
-            // SAFETY: Probe for size; passing None and flags=0 per API contract.
             let _ =
                 InitializeProcThreadAttributeList(None, count, Some(0), &mut bytes as *mut usize);
         }
         let mut buf = vec![0u8; bytes];
         let ptr = LPPROC_THREAD_ATTRIBUTE_LIST(buf.as_mut_ptr() as _);
+        // SAFETY: Initialize with computed size.
         unsafe {
-            // SAFETY: Initialize with computed size.
             InitializeProcThreadAttributeList(Some(ptr), count, Some(0), &mut bytes as *mut usize)
                 .map_err(|e| AcError::Win32(format!("InitializeProcThreadAttributeList: {}", e)))?;
         }
@@ -41,8 +41,8 @@ impl AttrList {
         sc: &crate::ffi::sec_caps::OwnedSecurityCapabilities,
     ) -> Result<()> {
         let size = core::mem::size_of::<windows::Win32::Security::SECURITY_CAPABILITIES>();
+        // SAFETY: `sc` points to stable, owned memory; attribute list initialized.
         unsafe {
-            // SAFETY: `sc` points to stable, owned memory; attribute list initialized.
             UpdateProcThreadAttribute(
                 self.ptr,
                 0,
@@ -61,6 +61,7 @@ impl AttrList {
     pub(crate) fn set_all_app_packages_policy(&mut self, policy: &u32) -> Result<()> {
         use windows::Win32::System::Threading::PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY;
         let size = core::mem::size_of::<u32>();
+        // SAFETY: `policy` points to stable memory alive until CreateProcessW returns.
         unsafe {
             UpdateProcThreadAttribute(
                 self.ptr,
@@ -79,7 +80,8 @@ impl AttrList {
     /// The slice must remain valid until CreateProcessW returns.
     pub(crate) fn set_handle_list(&mut self, handles: &[HANDLE]) -> Result<()> {
         use windows::Win32::System::Threading::PROC_THREAD_ATTRIBUTE_HANDLE_LIST;
-        let bytes = core::mem::size_of::<HANDLE>() * handles.len();
+        let bytes = std::mem::size_of_val(handles);
+        // SAFETY: `handles` points to a valid slice alive until CreateProcessW returns.
         unsafe {
             UpdateProcThreadAttribute(
                 self.ptr,
@@ -97,8 +99,8 @@ impl AttrList {
 
 impl Drop for AttrList {
     fn drop(&mut self) {
+        // SAFETY: Attribute list was initialized; ok to delete once.
         unsafe {
-            // SAFETY: Attribute list was initialized; ok to delete once.
             DeleteProcThreadAttributeList(self.ptr);
         }
     }
@@ -113,6 +115,7 @@ mod tests {
 
     #[test]
     fn attr_list_init_and_set_sc() {
+        // SAFETY: SDDL strings are valid; PSIDs are converted into owned SIDs and kept alive.
         unsafe {
             let s_app = crate::ffi::wstr::WideString::from_str("S-1-5-32-544");
             let mut app_sid = windows::Win32::Security::PSID::default();

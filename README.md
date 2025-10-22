@@ -2,7 +2,10 @@
 
 **Stable (main branch)**
 
-[![CI](https://github.com/cpjet64/rappct/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
+[![CI stable](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20stable)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
+[![CI 1.90.0](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%201.90.0)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
+[![CI (beta)](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20beta)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
+[![CI (nightly)](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20nightly)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
 [![Release](https://img.shields.io/github/v/release/cpjet64/rappct)](https://github.com/cpjet64/rappct/releases?q=exclude-prereleases%3Atrue)
 [![Crates.io](https://img.shields.io/crates/v/rappct)](https://crates.io/crates/rappct)
 [![Downloads](https://img.shields.io/crates/d/rappct)](https://crates.io/crates/rappct)

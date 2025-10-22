@@ -1,9 +1,9 @@
 //! Capability mapping and builders.
 #![allow(clippy::undocumented_unsafe_blocks)]
 
-use crate::sid::{AppContainerSid, SidAndAttributes};
 #[cfg(windows)]
-use crate::util::LocalFreeGuard;
+use crate::ffi::mem::LocalAllocGuard;
+use crate::sid::{AppContainerSid, SidAndAttributes};
 use crate::{AcError, Result};
 
 // windows::Win32::Security::SE_GROUP_ENABLED is not consistently available across crate versions.
@@ -130,14 +130,14 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
                 for i in 0..group_count as isize {
                     let sid_ptr: *mut std::ffi::c_void = *group_sids.offset(i);
                     if !sid_ptr.is_null() {
-                        let _guard = LocalFreeGuard::<std::ffi::c_void>::new(sid_ptr);
+                        let _guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(sid_ptr);
                     }
                 }
                 // Convert capability SIDs
                 for i in 0..cap_count as isize {
                     let sid_ptr: *mut std::ffi::c_void = *cap_sids.offset(i);
                     if !sid_ptr.is_null() {
-                        let sid_guard = LocalFreeGuard::<std::ffi::c_void>::new(sid_ptr);
+                        let sid_guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(sid_ptr);
                         let mut sddl = PWSTR::null();
                         if ConvertSidToStringSidW(
                             windows::Win32::Security::PSID(sid_guard.as_ptr()),
@@ -145,7 +145,7 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
                         )
                         .is_ok()
                         {
-                            let sddl_guard = LocalFreeGuard::<u16>::new(sddl.0);
+                            let sddl_guard = LocalAllocGuard::<u16>::from_raw(sddl.0);
                             let s = sddl_guard.to_string_lossy();
                             out.push(SidAndAttributes {
                                 sid_sddl: s,
@@ -156,10 +156,10 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
                 }
                 // Free arrays
                 if !group_sids.is_null() {
-                    let _ = LocalFreeGuard::<*mut std::ffi::c_void>::new(group_sids);
+                    let _ = LocalAllocGuard::<*mut std::ffi::c_void>::from_raw(group_sids);
                 }
                 if !cap_sids.is_null() {
-                    let _ = LocalFreeGuard::<*mut std::ffi::c_void>::new(cap_sids);
+                    let _ = LocalAllocGuard::<*mut std::ffi::c_void>::from_raw(cap_sids);
                 }
             }
         }

@@ -61,7 +61,7 @@ mod tests {
     fn handle_wraps_event_and_closes() {
         unsafe {
             // SAFETY: CreateEventW returns a live handle on success.
-            let raw = CreateEventW(None, true.into(), false.into(), None)
+            let raw = CreateEventW(None, true, false, None)
                 .expect("create event")
                 .0 as *mut _;
             let h = Handle::from_raw(raw).expect("wrap handle");
