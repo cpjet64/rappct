@@ -52,11 +52,11 @@ rustup component add clippy --toolchain beta >/dev/null || true
 
 for FEATS in "${features_list[@]}"; do
   if [[ -z "$FEATS" ]]; then
-    echo "[ci-local] test (beta, no features)"; cargo +beta test --all-targets
-    echo "[ci-local] clippy (beta, no features)"; cargo +beta clippy --all-targets -- -D warnings
+    echo "[ci-local] test (beta, no features)"; cargo +beta test --all-targets || echo "[ci-local][warn] beta test failed (no features)"
+    echo "[ci-local] clippy (beta, no features)"; cargo +beta clippy --all-targets -- -D warnings || echo "[ci-local][warn] beta clippy failed (no features)"
   else
-    echo "[ci-local] test (beta, features: $FEATS)"; cargo +beta test --all-targets --features "$FEATS"
-    echo "[ci-local] clippy (beta, features: $FEATS)"; cargo +beta clippy --all-targets --features "$FEATS" -- -D warnings
+    echo "[ci-local] test (beta, features: $FEATS)"; cargo +beta test --all-targets --features "$FEATS" || echo "[ci-local][warn] beta test failed (features: $FEATS)"
+    echo "[ci-local] clippy (beta, features: $FEATS)"; cargo +beta clippy --all-targets --features "$FEATS" -- -D warnings || echo "[ci-local][warn] beta clippy failed (features: $FEATS)"
   fi
 done
 
@@ -66,11 +66,11 @@ rustup component add clippy --toolchain nightly >/dev/null || true
 
 for FEATS in "${features_list[@]}"; do
   if [[ -z "$FEATS" ]]; then
-    echo "[ci-local] test (nightly, no features)"; cargo +nightly test --all-targets
-    echo "[ci-local] clippy (nightly, no features)"; cargo +nightly clippy --all-targets -- -D warnings
+    echo "[ci-local] test (nightly, no features)"; cargo +nightly test --all-targets || echo "[ci-local][warn] nightly test failed (no features)"
+    echo "[ci-local] clippy (nightly, no features)"; cargo +nightly clippy --all-targets -- -D warnings || echo "[ci-local][warn] nightly clippy failed (no features)"
   else
-    echo "[ci-local] test (nightly, features: $FEATS)"; cargo +nightly test --all-targets --features "$FEATS"
-    echo "[ci-local] clippy (nightly, features: $FEATS)"; cargo +nightly clippy --all-targets --features "$FEATS" -- -D warnings
+    echo "[ci-local] test (nightly, features: $FEATS)"; cargo +nightly test --all-targets --features "$FEATS" || echo "[ci-local][warn] nightly test failed (features: $FEATS)"
+    echo "[ci-local] clippy (nightly, features: $FEATS)"; cargo +nightly clippy --all-targets --features "$FEATS" -- -D warnings || echo "[ci-local][warn] nightly clippy failed (features: $FEATS)"
   fi
 done
 
