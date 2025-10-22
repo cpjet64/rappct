@@ -40,6 +40,6 @@ jobs:
       - name: Run release-plz (dev - no publish)
         uses: MarcoIeni/release-plz-action@v0.5
         with:
-          config_path: release-plz-dev.toml
+          config: release-plz-dev.toml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
