@@ -38,6 +38,23 @@ cargo fmt
 cargo run --example acrun -- --help
 ```
 
+## Local Quality Gates & Hooks (required before commit/push/merge)
+
+Run the same checks that CI enforces locally, every time:
+
+- `cargo fmt --all -- --check`
+- `cargo clippy --all-targets --all-features -- -D warnings`
+- `cargo test --all-targets` (repeat with feature sets as needed: `--features net`, `--features introspection`, or both)
+
+Repository-provided hooks and scripts:
+
+- Enable hooks once: `git config core.hooksPath .githooks`
+- `.githooks/pre-commit` runs fmt, clippy, and tests.
+- `.githooks/pre-push` runs the full local CI matrix via:
+  - `scripts/ci-local.sh` (Bash) or `scripts/ci-local.ps1` (PowerShell)
+
+Do not bypass hooks except in emergencies (`git push --no-verify`). Keeping local gates green will keep CI green.
+
 **Note**: Some tests require elevated PowerShell when they involve loopback exemptions or ACL adjustments.
 
 ## Architecture Overview
@@ -85,8 +102,9 @@ The crate is organized into focused modules that compose together:
 
 8. **diag** (`src/diag.rs`, feature-gated): Diagnostics and validation
 
-9. **util** (`src/util.rs`): UTF-16 conversion, RAII guards
-   - `OwnedHandle`, `LocalFreeGuard<T>`, `FreeSidGuard` ensure proper cleanup
+9. **ffi** (`src/ffi/*`): crate-private FFI RAII helpers
+   - `handles::Handle`, `mem::{LocalAllocGuard, CoTaskMem}`, `sid::OwnedSid`, `wstr::WideString`, `sec_caps::OwnedSecurityCapabilities`, `attr_list::AttrList`
+   - Prefer these over legacy `util` guards; `src/util.rs` remains for compatibility but should not be used in new code
 
 ### Key Architectural Patterns
 

@@ -1,10 +1,11 @@
 //! Network isolation helpers (skeleton). Feature: `net`
+#![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::sid::AppContainerSid;
-#[cfg(all(windows, feature = "net"))]
-use crate::util::LocalFreeGuard;
 use crate::{AcError, Result};
 
+#[cfg(all(windows, feature = "net"))]
+use crate::ffi::mem::LocalAllocGuard;
 #[cfg(all(windows, feature = "net"))]
 use std::collections::HashSet;
 
@@ -35,7 +36,7 @@ unsafe fn psid_to_string(psid: PSID) -> Result<String> {
     unsafe {
         ConvertSidToStringSidW(psid, &mut raw)
             .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
-        let guard = LocalFreeGuard::<u16>::new(raw.0);
+        let guard = crate::ffi::mem::LocalAllocGuard::<u16>::from_raw(raw.0);
         Ok(guard.to_string_lossy())
     }
 }
@@ -89,7 +90,7 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
             )));
         }
         if !cfg_arr.is_null() {
-            let cfg_guard = LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cfg_arr);
+            let cfg_guard = LocalAllocGuard::<SID_AND_ATTRIBUTES>::from_raw(cfg_arr);
             let cfg_slice = std::slice::from_raw_parts(
                 cfg_guard.as_ptr() as *const SID_AND_ATTRIBUTES,
                 cfg_count as usize,
@@ -286,8 +287,8 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
                 "NetworkIsolationGetAppContainerConfig failed: {err}"
             )));
         }
-        let current_guard = if !cur_arr.is_null() {
-            Some(LocalFreeGuard::<SID_AND_ATTRIBUTES>::new(cur_arr))
+        let current_guard: Option<LocalAllocGuard<SID_AND_ATTRIBUTES>> = if !cur_arr.is_null() {
+            Some(LocalAllocGuard::<SID_AND_ATTRIBUTES>::from_raw(cur_arr))
         } else {
             None
         };
@@ -305,7 +306,7 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
         let mut psid_raw = PSID::default();
         ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
             .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e}")))?;
-        let psid_guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
+        let psid_guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(psid_raw.0);
         let target = PSID(psid_guard.as_ptr());
 
         if allow {

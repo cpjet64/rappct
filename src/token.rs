@@ -1,8 +1,9 @@
 //! Token introspection (skeleton).
+#![allow(clippy::undocumented_unsafe_blocks)]
 
-use crate::sid::AppContainerSid;
 #[cfg(windows)]
-use crate::util::LocalFreeGuard;
+use crate::ffi::mem::LocalAllocGuard;
+use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
 #[cfg(windows)]
@@ -217,7 +218,7 @@ unsafe fn sid_to_string(psid: windows::Win32::Security::PSID) -> Result<String> 
     let mut out = windows::core::PWSTR::null();
     unsafe { ConvertSidToStringSidW(psid, &mut out) }
         .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {}", e)))?;
-    let guard = unsafe { LocalFreeGuard::<u16>::new(out.0) };
+    let guard = unsafe { LocalAllocGuard::<u16>::from_raw(out.0) };
     Ok(unsafe { guard.to_string_lossy() })
 }
 

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Windows-only guard: ensure we run only on Windows hosts
+if [ "${OS:-}" != "Windows_NT" ]; then
+  echo "[pre-commit] Windows-only hooks. Detected non-Windows OS: $(uname -s). Aborting." >&2
+  exit 1
+fi
+
+# Prefer PowerShell on Windows if available; otherwise run Bash commands.
+if command -v pwsh >/dev/null 2>&1; then
+  echo "[pre-commit] Using PowerShell for fmt/clippy/tests"
+  pwsh -NoProfile -Command "\
+    \$env:RUSTFLAGS = '-D warnings'; \
+    Write-Host '[pre-commit] cargo fmt --all -- --check'; \
+    rustup component add rustfmt | Out-Null; \
+    cargo fmt --all -- --check; \
+    Write-Host '[pre-commit] cargo clippy --all-targets --all-features -D warnings'; \
+    rustup component add clippy | Out-Null; \
+    cargo clippy --all-targets --all-features -- -D warnings; \
+    Write-Host '[pre-commit] cargo test --all-targets (default features)'; \
+    cargo test --all-targets \
+  "
+else
+  echo "[pre-commit] Using Bash for fmt/clippy/tests"
+  export RUSTFLAGS='-D warnings'
+  rustup component add rustfmt >/dev/null 2>&1 || true
+  echo "[pre-commit] Running cargo fmt --all -- --check"
+  cargo fmt --all -- --check
+
+  rustup component add clippy >/dev/null 2>&1 || true
+  echo "[pre-commit] Running cargo clippy --all-targets --all-features -D warnings"
+  cargo clippy --all-targets --all-features -- -D warnings
+
+  echo "[pre-commit] Running cargo test --all-targets (default features)"
+  cargo test --all-targets
+fi
+
+echo "[pre-commit] OK"

@@ -1,4 +1,5 @@
 //! Shared utility helpers for platform interop.
+#![allow(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(windows)]
 pub mod win {

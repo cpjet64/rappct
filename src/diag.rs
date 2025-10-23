@@ -1,4 +1,5 @@
 //! Diagnostics and configuration validation (skeleton). Feature: `introspection`
+#![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::capability::{SecurityCapabilities, derive_named_capability_sids};
 use crate::launch::LaunchOptions;

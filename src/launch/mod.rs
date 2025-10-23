@@ -1,15 +1,19 @@
 //! Process launch in AppContainer / LPAC with STARTUPINFOEX and security capabilities.
+#![allow(clippy::undocumented_unsafe_blocks)]
 
-#[cfg(windows)]
-mod attr;
+// legacy launch::attr module no longer used; relying on ffi::attr_list wrappers
 
 use crate::capability::SecurityCapabilities;
 use crate::{AcError, Result};
 
 #[cfg(windows)]
-use crate::launch::attr::AttrList;
+use crate::ffi::attr_list::AttrList as FAttrList;
 #[cfg(windows)]
-use crate::util::{LocalFreeGuard, OwnedHandle};
+use crate::ffi::handles::Handle as FHandle;
+#[cfg(windows)]
+use crate::ffi::sec_caps::OwnedSecurityCapabilities;
+#[cfg(windows)]
+use crate::ffi::sid::OwnedSid;
 use std::ffi::OsString;
 
 // Use fully-qualified macros (tracing::trace!, etc.) to avoid unused import warnings
@@ -19,10 +23,10 @@ use windows::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE, TRUE
 use windows::Win32::Foundation::{HANDLE_FLAG_INHERIT, SetHandleInformation};
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
+#[cfg(all(windows, feature = "tracing"))]
+use windows::Win32::Security::SECURITY_CAPABILITIES;
 #[cfg(windows)]
-use windows::Win32::Security::{
-    PSID, SECURITY_ATTRIBUTES, SECURITY_CAPABILITIES, SID_AND_ATTRIBUTES,
-};
+use windows::Win32::Security::{PSID, SECURITY_ATTRIBUTES};
 #[cfg(windows)]
 use windows::Win32::Storage::FileSystem::{
     CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_SHARE_READ,
@@ -41,9 +45,7 @@ use windows::Win32::System::Pipes::CreatePipe;
 #[cfg(windows)]
 use windows::Win32::System::Threading::{
     CREATE_SUSPENDED, CREATE_UNICODE_ENVIRONMENT, CreateProcessW, EXTENDED_STARTUPINFO_PRESENT,
-    PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-    PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES, PROCESS_INFORMATION, STARTUPINFOEXW, STARTUPINFOW,
-    UpdateProcThreadAttribute,
+    PROCESS_INFORMATION, STARTUPINFOEXW, STARTUPINFOW,
 };
 #[cfg(windows)]
 use windows::Win32::System::WindowsProgramming::PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT;
@@ -109,7 +111,7 @@ pub struct LaunchedIo {
     pub stdout: Option<std::fs::File>,
     pub stderr: Option<std::fs::File>,
     pub job_guard: Option<JobGuard>,
-    pub(crate) process: OwnedHandle,
+    pub(crate) process: FHandle,
 }
 
 #[cfg(not(windows))]
@@ -117,12 +119,12 @@ pub struct LaunchedIo;
 
 #[cfg(windows)]
 #[derive(Debug)]
-pub struct JobGuard(OwnedHandle);
+pub struct JobGuard(FHandle);
 #[cfg(windows)]
 impl JobGuard {
     /// Returns the underlying job handle for inspection without taking ownership.
     pub fn as_handle(&self) -> HANDLE {
-        self.0.as_raw()
+        self.0.as_win32()
     }
 }
 
@@ -131,7 +133,7 @@ impl JobGuard {
 #[cfg(windows)]
 #[derive(Debug)]
 pub struct JobObjectDropGuard {
-    handle: OwnedHandle,
+    handle: FHandle,
     kill_on_drop: bool,
 }
 
@@ -160,19 +162,20 @@ impl JobObjectDropGuard {
             .map_err(|_| AcError::Win32("SetInformationJobObject(kill_on_close) failed".into()))?;
         }
         Ok(Self {
-            handle: OwnedHandle(hjob),
+            handle: unsafe { FHandle::from_raw(hjob.0 as *mut _) }
+                .map_err(|_| AcError::Win32("invalid job handle".into()))?,
             kill_on_drop: true,
         })
     }
 
     pub fn as_handle(&self) -> HANDLE {
-        self.handle.as_raw()
+        self.handle.as_win32()
     }
 
     pub fn assign_process_handle(&self, process: HANDLE) -> Result<()> {
         use windows::Win32::System::JobObjects::AssignProcessToJobObject;
         unsafe {
-            AssignProcessToJobObject(self.handle.as_raw(), process)
+            AssignProcessToJobObject(self.handle.as_win32(), process)
                 .map_err(|_| AcError::Win32("AssignProcessToJobObject failed".into()))
         }
     }
@@ -187,7 +190,7 @@ impl JobObjectDropGuard {
         let info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
         unsafe {
             SetInformationJobObject(
-                self.handle.as_raw(),
+                self.handle.as_win32(),
                 JobObjectExtendedLimitInformation,
                 &info as *const _ as *const _,
                 std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
@@ -251,15 +254,10 @@ pub fn merge_parent_env(mut custom: Vec<(OsString, OsString)>) -> Vec<(OsString,
 }
 
 #[cfg(windows)]
-const SE_GROUP_ENABLED_CONST: u32 = 0x0000_0004;
-
-#[cfg(windows)]
+// Capability attributes are built within OwnedSecurityCapabilities (ffi::sec_caps)
 struct AttributeContext {
-    attr_list: AttrList,
-    _caps_struct: Box<SECURITY_CAPABILITIES>,
-    _cap_attrs: Vec<SID_AND_ATTRIBUTES>,
-    _cap_sid_guards: Vec<LocalFreeGuard<std::ffi::c_void>>,
-    _package_sid_guard: LocalFreeGuard<std::ffi::c_void>,
+    attr_list: FAttrList,
+    _sc_owned: Box<OwnedSecurityCapabilities>,
     _handle_list: Option<Vec<HANDLE>>,
     _lpac_policy: Option<Box<u32>>,
 }
@@ -293,12 +291,8 @@ impl AttributeContext {
                 source: Box::new(std::io::Error::last_os_error()),
             });
         }
-        let package_sid_guard = LocalFreeGuard::<std::ffi::c_void>::new(pkg_psid_raw.0);
-        let package_sid = PSID(package_sid_guard.as_ptr());
-
-        let mut cap_sid_guards: Vec<LocalFreeGuard<std::ffi::c_void>> =
-            Vec::with_capacity(sec.caps.len());
-        let mut cap_attrs: Vec<SID_AND_ATTRIBUTES> = Vec::with_capacity(sec.caps.len());
+        let pkg_owned = OwnedSid::from_localfree_psid(pkg_psid_raw.0);
+        let mut caps_owned: Vec<OwnedSid> = Vec::with_capacity(sec.caps.len());
         for cap in &sec.caps {
             let sddl_w: Vec<u16> = crate::util::to_utf16(&cap.sid_sddl);
             let mut psid_raw = PSID(std::ptr::null_mut());
@@ -309,32 +303,11 @@ impl AttributeContext {
                     source: Box::new(std::io::Error::last_os_error()),
                 });
             }
-            let guard = LocalFreeGuard::<std::ffi::c_void>::new(psid_raw.0);
-            let sid_handle = PSID(guard.as_ptr());
-            cap_attrs.push(SID_AND_ATTRIBUTES {
-                Sid: sid_handle,
-                Attributes: SE_GROUP_ENABLED_CONST,
-            });
-            cap_sid_guards.push(guard);
+            caps_owned.push(OwnedSid::from_localfree_psid(psid_raw.0));
         }
-
-        let mut caps_struct = Box::new(SECURITY_CAPABILITIES {
-            AppContainerSid: package_sid,
-            Capabilities: if cap_attrs.is_empty() {
-                std::ptr::null_mut()
-            } else {
-                cap_attrs.as_mut_ptr()
-            },
-            CapabilityCount: cap_attrs.len() as u32,
-            Reserved: 0,
-        });
-        #[cfg(feature = "tracing")]
-        tracing::trace!(
-            "SECURITY_CAPABILITIES: pkg_sid_ptr={:p}, caps_ptr={:p}, cap_count={}",
-            caps_struct.AppContainerSid.0,
-            caps_struct.Capabilities,
-            caps_struct.CapabilityCount
-        );
+        // Allocate on the heap to ensure the address of the inner
+        // SECURITY_CAPABILITIES remains stable until CreateProcessW returns.
+        let sc_owned = Box::new(OwnedSecurityCapabilities::new(pkg_owned, caps_owned));
 
         let mut attr_count = 1;
         if sec.lpac {
@@ -345,95 +318,44 @@ impl AttributeContext {
         }
         #[cfg(feature = "tracing")]
         tracing::debug!("AttrList: count={}", attr_count);
-        let mut attr_list = AttrList::new(attr_count)?;
+        let mut attr_list = FAttrList::with_capacity(attr_count as u32)?;
 
         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
         si_ex.lpAttributeList = attr_list.as_mut_ptr();
 
-        let res = UpdateProcThreadAttribute(
-            si_ex.lpAttributeList,
-            0,
-            PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES as usize,
-            Some(caps_struct.as_mut() as *mut _ as *const std::ffi::c_void),
-            std::mem::size_of::<SECURITY_CAPABILITIES>(),
-            None,
-            None,
-        );
+        // Attach security capabilities using wrapper
+        attr_list.set_security_capabilities(&sc_owned)?;
         #[cfg(feature = "tracing")]
         tracing::trace!(
             "UpdateProcThreadAttribute(security): attr_list_ptr={:p}, value_ptr={:p}, value_size={}",
             si_ex.lpAttributeList.0,
-            caps_struct.as_ref() as *const _,
+            sc_owned.as_ptr(),
             std::mem::size_of::<SECURITY_CAPABILITIES>()
         );
-        if res.is_err() {
-            #[cfg(feature = "tracing")]
-            {
-                use windows::Win32::Foundation::GetLastError;
-                let gle = GetLastError().0;
-                tracing::error!("UpdateProcThreadAttribute(security) failed: GLE={}", gle);
-            }
-            return Err(AcError::LaunchFailed {
-                stage: "UpdateProcThreadAttribute(security)",
-                hint: "attach SECURITY_CAPABILITIES",
-                source: Box::new(std::io::Error::last_os_error()),
-            });
-        }
+        // Wrapper returned Ok, proceed
 
         let mut lpac_policy: Option<Box<u32>> = None;
         if sec.lpac {
             lpac_policy = Some(Box::new(PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT));
-            let res = UpdateProcThreadAttribute(
-                si_ex.lpAttributeList,
-                0,
-                PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY as usize,
-                lpac_policy
-                    .as_mut()
-                    .map(|p| &mut **p as *mut u32 as *const std::ffi::c_void),
-                std::mem::size_of::<u32>(),
-                None,
-                None,
-            );
+            // SAFETY: lpac_policy is stored in context to outlive CreateProcessW
+            let p = lpac_policy.as_ref().unwrap();
+            attr_list.set_all_app_packages_policy(p)?;
             #[cfg(feature = "tracing")]
             tracing::trace!(
-                "UpdateProcThreadAttribute(AAPolicy): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
+                "UpdateProcThreadAttribute(AAPolicy via wrapper): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
                 si_ex.lpAttributeList.0,
-                lpac_policy
-                    .as_ref()
-                    .map(|p| &**p as *const u32)
-                    .unwrap_or(std::ptr::null()),
+                &**p as *const u32,
                 std::mem::size_of::<u32>()
             );
-            if res.is_err() {
-                #[cfg(feature = "tracing")]
-                {
-                    use windows::Win32::Foundation::GetLastError;
-                    let gle = GetLastError().0;
-                    tracing::error!("UpdateProcThreadAttribute(AAPolicy) failed: GLE={}", gle);
-                }
-                return Err(AcError::LaunchFailed {
-                    stage: "UpdateProcThreadAttribute(lpac)",
-                    hint: "opt-out AAP policy",
-                    source: Box::new(std::io::Error::last_os_error()),
-                });
-            }
         }
 
         if let Some(ref handles) = handle_list {
-            let res = UpdateProcThreadAttribute(
-                si_ex.lpAttributeList,
-                0,
-                PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
-                Some(handles.as_ptr() as *const std::ffi::c_void),
-                std::mem::size_of::<HANDLE>() * handles.len(),
-                None,
-                None,
-            );
+            attr_list.set_handle_list(handles)?;
             #[cfg(feature = "tracing")]
             {
                 tracing::trace!(
-                    "UpdateProcThreadAttribute(handles): attr_list_ptr={:p}, count={}, bytes={}",
+                    "UpdateProcThreadAttribute(handles via wrapper): attr_list_ptr={:p}, count={}, bytes={}",
                     si_ex.lpAttributeList.0,
                     handles.len(),
                     std::mem::size_of::<HANDLE>() * handles.len()
@@ -442,27 +364,11 @@ impl AttributeContext {
                     tracing::trace!("inherit_handle[{}]=0x{:X}", idx, handle.0 as usize);
                 }
             }
-            if res.is_err() {
-                #[cfg(feature = "tracing")]
-                {
-                    use windows::Win32::Foundation::GetLastError;
-                    let gle = GetLastError().0;
-                    tracing::error!("UpdateProcThreadAttribute(handles) failed: GLE={}", gle);
-                }
-                return Err(AcError::LaunchFailed {
-                    stage: "UpdateProcThreadAttribute(handles)",
-                    hint: "inherit handles",
-                    source: Box::new(std::io::Error::last_os_error()),
-                });
-            }
         }
 
         Ok(Self {
             attr_list,
-            _caps_struct: caps_struct,
-            _cap_attrs: cap_attrs,
-            _cap_sid_guards: cap_sid_guards,
-            _package_sid_guard: package_sid_guard,
+            _sc_owned: sc_owned,
             _handle_list: handle_list,
             _lpac_policy: lpac_policy,
         })
@@ -498,15 +404,34 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     }
 
     // Environment
-    let env_block = opts.env.as_ref().map(|e| build_env_block(e));
+    let force_env = std::env::var_os("RAPPCT_TEST_FORCE_ENV").is_some();
+    let env_block = if let Some(e) = opts.env.as_ref() {
+        Some(build_env_block(e))
+    } else if force_env {
+        // Test assist: build an explicit environment block from the full parent environment.
+        // Sort case-insensitively to match Win32 expectations for Unicode blocks.
+        let mut all: Vec<(OsString, OsString)> = std::env::vars_os().collect();
+        all.sort_by(|a, b| {
+            a.0.to_string_lossy()
+                .to_ascii_lowercase()
+                .cmp(&b.0.to_string_lossy().to_ascii_lowercase())
+        });
+        Some(build_env_block(&all))
+    } else {
+        None
+    };
 
     // Command
     let exe_w: Vec<u16> = crate::util::to_utf16_os(opts.exe.as_os_str());
     let mut args_w = make_cmd_args(&opts.cmdline);
-    let cwd_w = opts
+    let mut cwd_w = opts
         .cwd
         .as_ref()
         .map(|p| crate::util::to_utf16_os(p.as_os_str()));
+    // Test assist: allow disabling explicit cwd to isolate environment issues
+    if std::env::var_os("RAPPCT_TEST_NO_CWD").is_some() {
+        cwd_w = None;
+    }
 
     // stdio: Inherit/Null or Pipes
     let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
@@ -515,9 +440,9 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     let mut child_stdin = HANDLE::default();
     let mut child_stdout = HANDLE::default();
     let mut child_stderr = HANDLE::default();
-    let mut parent_stdin: Option<OwnedHandle> = None;
-    let mut parent_stdout: Option<OwnedHandle> = None;
-    let mut parent_stderr: Option<OwnedHandle> = None;
+    let mut parent_stdin: Option<FHandle> = None;
+    let mut parent_stdout: Option<FHandle> = None;
+    let mut parent_stderr: Option<FHandle> = None;
     let mut inherit_handles = false;
 
     match opts.stdio {
@@ -625,9 +550,18 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             child_stdin = r_in;
             child_stdout = w_out;
             child_stderr = w_err;
-            parent_stdin = Some(unsafe { OwnedHandle::from_raw(w_in) });
-            parent_stdout = Some(unsafe { OwnedHandle::from_raw(r_out) });
-            parent_stderr = Some(unsafe { OwnedHandle::from_raw(r_err) });
+            parent_stdin = Some(
+                unsafe { FHandle::from_raw(w_in.0 as *mut _) }
+                    .map_err(|_| AcError::Win32("invalid stdin handle".into()))?,
+            );
+            parent_stdout = Some(
+                unsafe { FHandle::from_raw(r_out.0 as *mut _) }
+                    .map_err(|_| AcError::Win32("invalid stdout handle".into()))?,
+            );
+            parent_stderr = Some(
+                unsafe { FHandle::from_raw(r_err.0 as *mut _) }
+                    .map_err(|_| AcError::Win32("invalid stderr handle".into()))?,
+            );
         }
     }
 
@@ -665,7 +599,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             env_bytes
         );
     }
-    let ok = CreateProcessW(
+    let cp_res = CreateProcessW(
         PCWSTR(exe_w.as_ptr()),
         args_w.as_mut().map(|v| PWSTR(v.as_mut_ptr())),
         None,
@@ -681,23 +615,38 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             .unwrap_or(PCWSTR::null()),
         &mut si_ex as *mut STARTUPINFOEXW as *mut STARTUPINFOW,
         &mut pi,
-    )
-    .is_ok();
+    );
+    let ok = cp_res.is_ok();
 
     if !ok {
         #[cfg(feature = "tracing")]
         {
             use windows::Win32::Foundation::GetLastError;
             let gle = unsafe { GetLastError().0 };
-            tracing::error!("CreateProcessW failed: GLE={}", gle);
+            let (hr, msg) = match &cp_res {
+                Ok(_) => (0, String::new()),
+                Err(e) => (e.code().0, format!("{}", e)),
+            };
+            tracing::error!(
+                "CreateProcessW failed: GLE={}, hr=0x{:X}, msg={}",
+                gle,
+                hr,
+                msg
+            );
         }
         // Optional debug log without requiring a tracing subscriber
         if std::env::var_os("RAPPCT_DEBUG_LAUNCH").is_some() {
             use windows::Win32::Foundation::GetLastError;
             let gle = unsafe { GetLastError().0 };
+            let (hr, msg) = match &cp_res {
+                Ok(_) => (0, String::new()),
+                Err(e) => (e.code().0, format!("{}", e)),
+            };
             eprintln!(
-                "[rappct] CreateProcessW failed: GLE={} exe={:?} args_present={} cwd_present={} inherit_handles={} flags=0x{:X}",
+                "[rappct] CreateProcessW failed: GLE={} hr=0x{:X} msg={} exe={:?} args_present={} cwd_present={} inherit_handles={} flags=0x{:X}",
                 gle,
+                hr,
+                msg,
                 opts.exe,
                 args_w.as_ref().map(|v| v.len()).is_some(),
                 cwd_w.as_ref().is_some(),
@@ -788,14 +737,18 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             source: Box::new(std::io::Error::last_os_error()),
         })?;
         if limits.kill_on_job_close {
-            job_guard = Some(JobGuard(OwnedHandle(hjob)));
+            job_guard = Some(JobGuard(
+                unsafe { FHandle::from_raw(hjob.0 as *mut _) }
+                    .map_err(|_| AcError::Win32("invalid job handle".into()))?,
+            ));
         } else {
             let _ = CloseHandle(hjob);
         }
     }
 
     let _ = CloseHandle(pi.hThread);
-    let proc_handle = OwnedHandle(pi.hProcess);
+    let proc_handle = unsafe { FHandle::from_raw(pi.hProcess.0 as *mut _) }
+        .map_err(|_| AcError::Win32("invalid process handle".into()))?;
     Ok(LaunchedIo {
         pid: pi.dwProcessId,
         stdin: parent_stdin.map(|h| h.into_file()),
@@ -825,7 +778,7 @@ impl LaunchedIo {
             let ms = timeout
                 .map(|d| d.as_millis().min(u128::from(u32::MAX)) as u32)
                 .unwrap_or(INFINITE);
-            let r = WaitForSingleObject(self.process.as_raw(), ms);
+            let r = WaitForSingleObject(self.process.as_win32(), ms);
             if r == WAIT_FAILED {
                 return Err(AcError::Win32("WaitForSingleObject failed".into()));
             }
@@ -840,7 +793,7 @@ impl LaunchedIo {
                 });
             }
             let mut code: u32 = STILL_ACTIVE.0 as u32;
-            GetExitCodeProcess(self.process.as_raw(), &mut code)
+            GetExitCodeProcess(self.process.as_win32(), &mut code)
                 .map_err(|_| AcError::Win32("GetExitCodeProcess failed".into()))?;
             Ok(code)
         }
