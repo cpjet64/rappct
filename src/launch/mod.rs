@@ -362,7 +362,7 @@ impl AttributeContext {
             {
                 tracing::trace!(
                     "UpdateProcThreadAttribute(handles via wrapper): attr_list_ptr={:p}, count={}, bytes={}",
-                    si_ex.lpAttributeList.0,
+                    _attr_list_ptr.0,
                     handles.len(),
                     std::mem::size_of::<HANDLE>() * handles.len()
                 );

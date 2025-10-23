@@ -6,9 +6,7 @@ use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
 #[cfg(windows)]
-use windows::Win32::Foundation::{
-    ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, HANDLE,
-};
+use windows::Win32::Foundation::{ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, HANDLE};
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 #[cfg(windows)]
@@ -110,7 +108,8 @@ unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bo
 unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid>> {
     let mut needed: u32 = 0;
     // SAFETY: Size probe with null buffer; API fills `needed` with required size.
-    let size_probe = unsafe { GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) };
+    let size_probe =
+        unsafe { GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) };
     if let Err(err) = size_probe {
         if is_win32_error(&err, ERROR_INVALID_PARAMETER.0) {
             return Ok(None);

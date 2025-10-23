@@ -48,6 +48,7 @@ pub fn grant_to_package(
     access: AccessMask,
 ) -> Result<()> {
     #[cfg(windows)]
+    // SAFETY: Calls platform ACL helper; pointer and lifetime contracts are encapsulated in `grant_sid_access`.
     unsafe {
         grant_sid_access(target, sid.as_string(), access.0)
     }
@@ -64,6 +65,7 @@ pub fn grant_to_capability(
     access: AccessMask,
 ) -> Result<()> {
     #[cfg(windows)]
+    // SAFETY: Calls platform ACL helper; pointer and lifetime contracts are encapsulated in `grant_sid_access`.
     unsafe {
         grant_sid_access(target, cap_sid_sddl, access.0)
     }
@@ -117,8 +119,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
-            // SAFETY: Query security info for file/dir to obtain DACL and security descriptor pointers.
-            // SAFETY: Query security info for directory to obtain DACL and security descriptor pointers.
+            // SAFETY: Query file security info; the OS returns DACL/SD pointers we consume immediately.
             let st = unsafe {
                 GetNamedSecurityInfoW(
                     PCWSTR(path_w.as_ptr()),
@@ -137,13 +138,11 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st
                 )));
             }
-            // SAFETY: `p_sd` must be freed with LocalFree when done; guard handles this.
-            // SAFETY: Guard SD pointer which must be freed via LocalFree.
+            // SAFETY: Wrap the LocalAlloc security descriptor so it is released exactly once.
             let _sd_guard = unsafe { LocalAllocGuard::from_raw(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
-            // SAFETY: Build a new ACL from explicit entries and existing DACL; writes LocalAlloc ACL.
-            // SAFETY: Build a new ACL from entry and existing DACL; LocalAlloc allocation.
+            // SAFETY: Build a new ACL from the existing pointers; API allocates via LocalAlloc.
             let st2 = unsafe {
                 SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
             };
@@ -153,9 +152,9 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st2
                 )));
             }
-            // SAFETY: `new_dacl` is LocalAlloc-managed; pass it to SetNamedSecurityInfoW.
+            // SAFETY: `new_dacl` is LocalAlloc-managed; pass a valid pointer/type to SetNamedSecurityInfoW.
             let new_dacl_guard = unsafe { LocalAllocGuard::from_raw(new_dacl) };
-            // SAFETY: Apply DACL to file/dir with correct object type and pointer.
+            // SAFETY: Apply the new DACL using valid pointers/object type.
             let st3 = unsafe {
                 SetNamedSecurityInfoW(
                     PCWSTR(path_w.as_ptr()),
@@ -180,6 +179,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
+            // SAFETY: Query directory security info; Win32 returns DACL/SD pointers used immediately.
             let st = unsafe {
                 GetNamedSecurityInfoW(
                     PCWSTR(path_w.as_ptr()),
@@ -198,9 +198,11 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st
                 )));
             }
+            // SAFETY: Wrap the LocalAlloc security descriptor so it is freed exactly once.
             let _sd_guard = unsafe { LocalAllocGuard::from_raw(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
+            // SAFETY: Build a new ACL from the existing pointers; API allocates via LocalAlloc.
             let st2 = unsafe {
                 SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
             };
@@ -212,6 +214,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             }
             // SAFETY: Guard new DACL; apply to directory.
             let new_dacl_guard = unsafe { LocalAllocGuard::from_raw(new_dacl) };
+            // SAFETY: Apply the new DACL using valid pointers/object type.
             let st3 = unsafe {
                 SetNamedSecurityInfoW(
                     PCWSTR(path_w.as_ptr()),
@@ -308,6 +311,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             }
             // SAFETY: Apply the new DACL to the registry key; pass valid pointers.
             let new_dacl_guard = unsafe { crate::ffi::mem::LocalAllocGuard::from_raw(new_dacl) };
+            // SAFETY: Apply new DACL to registry key; pass valid pointers.
             let st4 = unsafe {
                 SetSecurityInfo(
                     HANDLE(hkey.0),
