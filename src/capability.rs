@@ -8,6 +8,7 @@
 //! See: <https://learn.microsoft.com/windows/win32/secauthz/appcontainer-capabilities>
 
 use std::collections::BTreeMap;
+#[cfg(windows)]
 use std::collections::btree_map::Entry;
 
 #[cfg(windows)]
@@ -180,6 +181,7 @@ pub struct CapabilityCatalog {
 }
 
 impl Capability {
+    #[cfg_attr(not(windows), allow(dead_code))]
     fn from_name(name: CapabilityName) -> Result<Self> {
         #[cfg(windows)]
         {
