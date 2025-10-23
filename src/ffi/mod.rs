@@ -50,9 +50,22 @@ pub(crate) mod wstr {
 }
 #[cfg(not(windows))]
 pub(crate) mod sec_caps {
+    use crate::capability::CapabilityName;
+    use crate::{AcError, Result};
+
     #[derive(Debug, Default)]
     #[allow(dead_code)]
     pub(crate) struct OwnedSecurityCapabilities;
+
+    impl OwnedSecurityCapabilities {
+        #[allow(dead_code)]
+        pub fn from_catalog(
+            _app_sid: crate::ffi::sid::OwnedSid,
+            _caps: &[CapabilityName],
+        ) -> Result<Self> {
+            Err(AcError::UnsupportedPlatform)
+        }
+    }
 }
 #[cfg(not(windows))]
 pub(crate) mod attr_list {

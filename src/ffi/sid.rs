@@ -1,9 +1,12 @@
 //! Owned SID wrapper with correct deallocator selection.
-
 #![allow(clippy::undocumented_unsafe_blocks)]
 
+use crate::ffi::wstr::WideString;
+use crate::{AcError, Result};
 use core::ffi::c_void;
+use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
 use windows::Win32::Security::PSID;
+use windows::core::PCWSTR;
 
 #[derive(Debug, Clone, Copy)]
 enum FreeKind {
@@ -44,6 +47,16 @@ impl OwnedSid {
     #[allow(dead_code)]
     pub(crate) fn is_valid(&self) -> bool {
         !self.raw.is_null()
+    }
+
+    pub(crate) fn from_sddl(sddl: &str) -> Result<Self> {
+        let wide = WideString::from_str(sddl);
+        let mut psid = PSID::default();
+        unsafe {
+            ConvertStringSidToSidW(PCWSTR(wide.as_pcwstr().0), &mut psid)
+                .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e:?}")))?;
+            Ok(OwnedSid::from_localfree_psid(psid.0))
+        }
     }
 }
 

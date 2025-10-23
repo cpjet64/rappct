@@ -58,13 +58,19 @@ pub mod launch;
 pub mod net;
 pub mod profile;
 pub mod sid;
+#[cfg(windows)]
+#[doc(hidden)]
+pub mod test_support;
 pub mod token;
 pub mod util;
 // Internal FFI safety helpers (crate-private)
 pub(crate) mod ffi;
 
 // Re-exports
-pub use capability::{KnownCapability, SecurityCapabilities, SecurityCapabilitiesBuilder};
+pub use capability::{
+    Capability, CapabilityCatalog, CapabilityName, KnownCapability, SecurityCapabilities,
+    SecurityCapabilitiesBuilder,
+};
 pub use launch::{JobLimits, LaunchOptions, Launched, StdioConfig, launch_in_container};
 #[cfg(windows)]
 pub use launch::{LaunchedIo, launch_in_container_with_io};
