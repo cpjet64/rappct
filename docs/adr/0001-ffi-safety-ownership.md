@@ -51,4 +51,9 @@ The crate interacts with Windows APIs via the `windows` crate and retains severa
 - Phase 1: Inventory + helpers with no call-site changes. [Done]
 - Phase 2: Adopt helpers in core modules; keep legacy util as shim for now. [Done]
 - Phase 3: Expand to `profile.rs`, `launch/`, `net.rs`, `capability.rs` (feature-gated). [Done]
-- Phase 4: Documentation sweep and finalize tests. [In Progress]
+- Phase 4: Documentation sweep and finalize tests. [Done]
+
+## Verification
+
+- 2025-10-23: `cargo clippy --all-targets --all-features -- -D warnings`
+- 2025-10-23: `cargo test --features net`

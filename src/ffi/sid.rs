@@ -52,6 +52,8 @@ impl Drop for OwnedSid {
         if self.raw.is_null() {
             return;
         }
+        // SAFETY: Constructor guarantees `raw` originated from the matching allocator and is
+        // uniquely owned by this guard, so freeing exactly once is valid.
         unsafe {
             match self.kind {
                 FreeKind::LocalFree => {
