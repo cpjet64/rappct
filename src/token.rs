@@ -192,6 +192,7 @@ unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
     })?;
 
     let groups = buffer.as_ptr() as *const TOKEN_GROUPS;
+    // SAFETY: Read the group count from the TOKEN_GROUPS header.
     let count = unsafe { (*groups).GroupCount as usize };
     let mut out = Vec::with_capacity(count);
     if count == 0 {
@@ -203,6 +204,7 @@ unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
         if entry.Sid.0.is_null() {
             continue;
         }
+        // SAFETY: Convert a valid SID to SDDL via helper; returns owned String.
         let sid_str = unsafe { sid_to_string(entry.Sid)? };
         out.push(sid_str);
     }

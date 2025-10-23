@@ -327,16 +327,15 @@ impl AttributeContext {
         tracing::debug!("AttrList: count={}", attr_count);
         let mut attr_list = FAttrList::with_capacity(attr_count as u32)?;
 
-        let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-        si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-        si_ex.lpAttributeList = attr_list.as_mut_ptr();
+        #[cfg(feature = "tracing")]
+        let _attr_list_ptr = attr_list.as_mut_ptr();
 
         // Attach security capabilities using wrapper
         attr_list.set_security_capabilities(&sc_owned)?;
         #[cfg(feature = "tracing")]
         tracing::trace!(
             "UpdateProcThreadAttribute(security): attr_list_ptr={:p}, value_ptr={:p}, value_size={}",
-            si_ex.lpAttributeList.0,
+            _attr_list_ptr.0,
             sc_owned.as_ptr(),
             std::mem::size_of::<SECURITY_CAPABILITIES>()
         );
@@ -351,7 +350,7 @@ impl AttributeContext {
             #[cfg(feature = "tracing")]
             tracing::trace!(
                 "UpdateProcThreadAttribute(AAPolicy via wrapper): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
-                si_ex.lpAttributeList.0,
+                _attr_list_ptr.0,
                 &**p as *const u32,
                 std::mem::size_of::<u32>()
             );
@@ -558,14 +557,17 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             child_stdout = w_out;
             child_stderr = w_err;
             // SAFETY: Wrap inheritable pipe ends with RAII handles to ensure close-on-drop.
+            // SAFETY: `w_in` is a live HANDLE returned by CreatePipe; wrap to close once.
             parent_stdin = Some(
                 unsafe { FHandle::from_raw(w_in.0 as *mut _) }
                     .map_err(|_| AcError::Win32("invalid stdin handle".into()))?,
             );
+            // SAFETY: `r_out` is a live HANDLE returned by CreatePipe; wrap to close once.
             parent_stdout = Some(
                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
                     .map_err(|_| AcError::Win32("invalid stdout handle".into()))?,
             );
+            // SAFETY: `r_err` is a live HANDLE returned by CreatePipe; wrap to close once.
             parent_stderr = Some(
                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
                     .map_err(|_| AcError::Win32("invalid stderr handle".into()))?,
