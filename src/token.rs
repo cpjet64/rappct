@@ -1,5 +1,4 @@
 //! Token introspection (skeleton).
-#![allow(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(windows)]
 use crate::ffi::mem::LocalAllocGuard;
@@ -34,17 +33,7 @@ unsafe extern "system" {
     ) -> i32;
 }
 
-#[cfg(windows)]
-struct HandleGuard(HANDLE);
-
-#[cfg(windows)]
-impl Drop for HandleGuard {
-    fn drop(&mut self) {
-        unsafe {
-            let _ = CloseHandle(self.0);
-        }
-    }
-}
+// Use crate-private RAII handle wrapper for safety
 
 #[derive(Debug, Default)]
 pub struct TokenInfo {
@@ -59,11 +48,16 @@ pub fn query_current_process_token() -> Result<TokenInfo> {
     {
         unsafe {
             let mut raw = HANDLE::default();
+            // SAFETY: We pass a valid process handle from GetCurrentProcess and request TOKEN_QUERY.
+            // On success, `raw` receives a live HANDLE which we immediately wrap in RAII to ensure
+            // it is closed exactly once on all paths.
             if OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY.0, &mut raw) == 0 {
                 return Err(AcError::Win32("OpenProcessToken failed".into()));
             }
-            let guard = HandleGuard(raw);
-            let token = guard.0;
+            // SAFETY: `raw` is a live, uniquely-owned HANDLE from OpenProcessToken; wrap it.
+            let token_handle = crate::ffi::handles::Handle::from_raw(raw.0 as *mut _)
+                .map_err(|_| AcError::Win32("invalid token handle".into()))?;
+            let token = token_handle.as_win32();
 
             let info = TokenInfo {
                 is_appcontainer: query_bool(token, TokenIsAppContainer)?,
@@ -85,6 +79,8 @@ pub fn query_current_process_token() -> Result<TokenInfo> {
 unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bool> {
     let mut value: u32 = 0;
     let mut retlen: u32 = 0;
+    // SAFETY: `token` is a live HANDLE, and we pass a valid output buffer for a u32 value.
+    // Size matches the buffer and retlen is writable.
     match unsafe {
         GetTokenInformation(
             token,
@@ -112,6 +108,7 @@ unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bo
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid>> {
     let mut needed: u32 = 0;
+    // SAFETY: Size probe with null buffer; API fills `needed` with required size.
     if let Err(err) =
         unsafe { GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) }
     {
@@ -129,6 +126,7 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
         return Ok(None);
     }
     let mut buffer = vec![0u8; needed as usize];
+    // SAFETY: Buffer is allocated with `needed` bytes; API writes into it and updates retlen.
     unsafe {
         GetTokenInformation(
             token,
@@ -146,6 +144,7 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
     })?;
 
     let info_ptr = buffer.as_ptr() as *const TOKEN_APPCONTAINER_INFORMATION;
+    // SAFETY: Buffer holds a TOKEN_APPCONTAINER_INFORMATION per API contract; read the SID field.
     let sid = unsafe { (*info_ptr).TokenAppContainer };
     if sid.0.is_null() {
         return Ok(None);
@@ -158,6 +157,7 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
     let mut needed: u32 = 0;
+    // SAFETY: Size probe to retrieve required bytes for TOKEN_GROUPS.
     if let Err(err) = unsafe { GetTokenInformation(token, TokenCapabilities, None, 0, &mut needed) }
     {
         if is_win32_error(&err, ERROR_INVALID_PARAMETER.0) {
@@ -174,6 +174,7 @@ unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
         return Ok(Vec::new());
     }
     let mut buffer = vec![0u8; needed as usize];
+    // SAFETY: Buffer is large enough for TOKEN_GROUPS; API writes the groups and size back.
     unsafe {
         GetTokenInformation(
             token,
@@ -196,6 +197,7 @@ unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
     if count == 0 {
         return Ok(out);
     }
+    // SAFETY: TOKEN_GROUPS header indicates `count`; Groups points to an array of that length.
     let slice = unsafe { std::slice::from_raw_parts((*groups).Groups.as_ptr(), count) };
     for entry in slice {
         if entry.Sid.0.is_null() {
@@ -216,9 +218,12 @@ unsafe fn sid_to_string(psid: windows::Win32::Security::PSID) -> Result<String> 
         ));
     }
     let mut out = windows::core::PWSTR::null();
+    // SAFETY: `psid` is a valid SID from the token. API returns a LocalAlloc-managed PWSTR.
     unsafe { ConvertSidToStringSidW(psid, &mut out) }
         .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {}", e)))?;
+    // SAFETY: `out` now points to a LocalAlloc buffer; wrap to free exactly once.
     let guard = unsafe { LocalAllocGuard::<u16>::from_raw(out.0) };
+    // SAFETY: Guarded pointer references a NUL-terminated UTF-16 string.
     Ok(unsafe { guard.to_string_lossy() })
 }
 

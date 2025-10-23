@@ -1,5 +1,4 @@
 //! Network isolation helpers (skeleton). Feature: `net`
-#![allow(clippy::undocumented_unsafe_blocks)]
 
 use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
@@ -16,11 +15,14 @@ use windows::core::PWSTR;
 use windows::Win32::Security::PSID;
 
 #[cfg(all(windows, feature = "net"))]
+/// # Safety
+/// `ptr` must be a valid PWSTR to a NUL-terminated UTF-16 buffer.
 unsafe fn pwstr_to_string(ptr: PWSTR) -> String {
     if ptr.is_null() {
         return String::new();
     }
     let mut len = 0usize;
+    // SAFETY: Walk until trailing NUL; then build a slice over initialized code units.
     unsafe {
         while *ptr.0.add(len) != 0 {
             len += 1;
@@ -33,6 +35,7 @@ unsafe fn pwstr_to_string(ptr: PWSTR) -> String {
 unsafe fn psid_to_string(psid: PSID) -> Result<String> {
     use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
     let mut raw = PWSTR::null();
+    // SAFETY: `psid` is a valid SID; API returns a LocalAlloc PWSTR which we free via guard.
     unsafe {
         ConvertSidToStringSidW(psid, &mut raw)
             .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
@@ -53,6 +56,7 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
 
         let mut count: u32 = 0;
         let mut arr: *mut INET_FIREWALL_APP_CONTAINER = std::ptr::null_mut();
+        // SAFETY: Enumerates app containers; returns count and array to be freed via API.
         let err = NetworkIsolationEnumAppContainers(
             NETISO_FLAG_FORCE_COMPUTE_BINARIES.0 as u32,
             &mut count,
@@ -83,6 +87,7 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
 
         let mut cfg_count: u32 = 0;
         let mut cfg_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
+        // SAFETY: Retrieves current loopback config; returns SID_AND_ATTRIBUTES array to be LocalFreed.
         let cfg_err = NetworkIsolationGetAppContainerConfig(&mut cfg_count, &mut cfg_arr);
         if cfg_err != 0 {
             return Err(AcError::Win32(format!(
@@ -304,6 +309,7 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
 
         let sddl_w: Vec<u16> = crate::util::to_utf16(sid.as_string());
         let mut psid_raw = PSID::default();
+        // SAFETY: Convert SDDL to a LocalAlloc-managed PSID; wrap with guard.
         ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
             .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e}")))?;
         let psid_guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(psid_raw.0);

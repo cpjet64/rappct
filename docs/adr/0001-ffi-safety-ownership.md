@@ -1,6 +1,6 @@
 # ADR 0001: FFI Safety & Ownership Boundaries
 
-Status: In Progress
+Status: Accepted
 
 Date: 2025-10-22
 
@@ -39,7 +39,7 @@ The crate interacts with Windows APIs via the `windows` crate and retains severa
 - [x] Replace ad-hoc frees/closes with wrappers across `launch/`, `profile.rs`, `acl.rs`, `net.rs`, and `capability.rs`.
 - [x] Add unit tests for guard behaviors and conversions (e.g., SID string round-trips, handle close-on-drop).
 - [x] Add Windows-only smoke tests; gate networking under `net` feature.
-- [ ] Enumerate all remaining `unsafe` blocks and add explicit safety notes where missing (ongoing; most hot paths covered).
+- [x] Enumerate all remaining `unsafe` blocks and add explicit safety notes where missing (final sweep complete; residual wrappers in `src/ffi/` are documented or gated).
 
 ## Risks
 

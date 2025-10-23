@@ -1,5 +1,4 @@
 //! Shared utility helpers for platform interop.
-#![allow(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(windows)]
 pub mod win {
@@ -28,11 +27,13 @@ pub mod win {
     }
 
     /// Owned Win32 `HANDLE` that closes on drop.
+    #[deprecated(note = "Use crate::ffi::handles::Handle instead")]
     #[derive(Debug)]
     pub struct OwnedHandle(pub(crate) HANDLE);
 
     impl Drop for OwnedHandle {
         fn drop(&mut self) {
+            // SAFETY: Closing a live HANDLE acquired from Win32; ignore errors on drop.
             unsafe {
                 let _ = CloseHandle(self.0);
             }
@@ -65,6 +66,7 @@ pub mod win {
     }
 
     /// RAII guard that frees allocations with `LocalFree` when dropped.
+    #[deprecated(note = "Use crate::ffi::mem::LocalAllocGuard instead")]
     #[derive(Debug)]
     pub struct LocalFreeGuard<T> {
         ptr: *mut T,
@@ -100,6 +102,7 @@ pub mod win {
     impl<T> Drop for LocalFreeGuard<T> {
         fn drop(&mut self) {
             if !self.ptr.is_null() {
+                // SAFETY: Pointer came from a LocalAlloc-compatible API; free exactly once.
                 unsafe {
                     let _ = LocalFree(self.ptr as isize);
                 }
@@ -114,15 +117,16 @@ pub mod win {
         /// # Safety
         /// The guarded pointer must reference a valid, NUL-terminated UTF-16
         /// buffer allocated by a Win32 API compatible with `LocalFree`.
-        #[allow(unsafe_op_in_unsafe_fn)]
         pub unsafe fn to_string_lossy(&self) -> String {
             if self.ptr.is_null() {
                 return String::new();
             }
             let mut len = 0usize;
+            // SAFETY: Walk UTF-16 until trailing NUL; pointer validity per guard contract.
             while unsafe { *self.ptr.add(len) } != 0 {
                 len += 1;
             }
+            // SAFETY: Slice spans initialized UTF-16 elements.
             let slice = unsafe { std::slice::from_raw_parts(self.ptr, len) };
             String::from_utf16_lossy(slice)
         }
@@ -133,6 +137,7 @@ pub mod win {
     }
 
     /// RAII guard that releases a `PSID` via `FreeSid` on drop.
+    #[deprecated(note = "Use crate::ffi::sid::OwnedSid instead")]
     #[derive(Debug)]
     pub struct FreeSidGuard {
         psid: PSID,
@@ -162,6 +167,7 @@ pub mod win {
     impl Drop for FreeSidGuard {
         fn drop(&mut self) {
             if !self.psid.0.is_null() {
+                // SAFETY: Free a SID previously allocated by an API requiring FreeSid.
                 unsafe {
                     let _ = FreeSid(self.psid);
                 }
@@ -187,4 +193,7 @@ pub use win::to_utf16;
 #[cfg(not(windows))]
 pub use win::to_utf16_os;
 #[cfg(windows)]
-pub use win::{FreeSidGuard, LocalFreeGuard, OwnedHandle, to_utf16, to_utf16_os};
+#[allow(deprecated)]
+pub use win::{FreeSidGuard, LocalFreeGuard, OwnedHandle};
+#[cfg(windows)]
+pub use win::{to_utf16, to_utf16_os};

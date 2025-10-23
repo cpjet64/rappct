@@ -1,5 +1,4 @@
 //! Capability mapping and builders.
-#![allow(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(windows)]
 use crate::ffi::mem::LocalAllocGuard;
@@ -78,6 +77,9 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
             ) -> i32;
         }
         let mut out: Vec<SidAndAttributes> = Vec::new();
+        // SAFETY: For each capability name, we pass a valid PCWSTR and receive LocalAlloc-managed
+        // SID arrays. We immediately wrap returned pointers in LocalAllocGuard to ensure single free
+        // and only dereference within reported bounds. See Windows API docs for contracts.
         unsafe {
             for &name in names {
                 #[cfg(feature = "tracing")]

@@ -1,5 +1,4 @@
 //! ACL helpers for files/directories and registry keys (DACL grant).
-#![allow(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(windows)]
 use crate::ffi::mem::LocalAllocGuard;
@@ -93,9 +92,11 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
     // Convert SDDL to PSID
     let wide: Vec<u16> = crate::util::to_utf16(sid_sddl);
     let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
+    // SAFETY: `wide` is a valid, NUL-terminated UTF-16 string; `psid` receives a LocalAlloc SID.
     if unsafe { ConvertStringSidToSidW(PCWSTR(wide.as_ptr()), &mut psid) }.is_err() {
         return Err(AcError::Win32("ConvertStringSidToSidW failed".into()));
     }
+    // SAFETY: The SID pointer is LocalAlloc-managed; guard ensures single free.
     let psid_guard = unsafe { LocalAllocGuard::from_raw(psid.0) };
     let trustee_psid = windows::Win32::Security::PSID(psid_guard.as_ptr());
 
@@ -116,6 +117,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
+            // SAFETY: Query security info for file/dir to obtain DACL and security descriptor pointers.
             let st = unsafe {
                 GetNamedSecurityInfoW(
                     PCWSTR(path_w.as_ptr()),
@@ -134,9 +136,11 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st
                 )));
             }
+            // SAFETY: `p_sd` must be freed with LocalFree when done; guard handles this.
             let _sd_guard = unsafe { LocalAllocGuard::from_raw(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
+            // SAFETY: Build a new ACL from explicit entries and existing DACL; writes LocalAlloc ACL.
             let st2 = unsafe {
                 SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
             };
@@ -146,7 +150,9 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st2
                 )));
             }
+            // SAFETY: `new_dacl` is LocalAlloc-managed; pass it to SetNamedSecurityInfoW.
             let new_dacl_guard = unsafe { LocalAllocGuard::from_raw(new_dacl) };
+            // SAFETY: Apply DACL to file/dir with correct object type and pointer.
             let st3 = unsafe {
                 SetNamedSecurityInfoW(
                     PCWSTR(path_w.as_ptr()),
@@ -245,6 +251,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 ));
             };
             let mut hkey = HKEY(std::ptr::null_mut());
+            // SAFETY: Open the registry key under the parsed root with read/write access.
             let st = unsafe {
                 RegOpenKeyExW(
                     root,
@@ -260,6 +267,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
 
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
+            // SAFETY: Query security info for registry key; retrieve DACL and security descriptor.
             let st2 = unsafe {
                 GetSecurityInfo(
                     HANDLE(hkey.0),
@@ -279,9 +287,11 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st2
                 )));
             }
+            // SAFETY: Guard the security descriptor allocation to ensure it is freed.
             let _sd_guard = unsafe { crate::ffi::mem::LocalAllocGuard::from_raw(p_sd.0) };
             let mut new_dacl: *mut ACL = std::ptr::null_mut();
             let entries = [ea];
+            // SAFETY: Build a new DACL for the registry key as with files.
             let st3 = unsafe {
                 SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
             };
@@ -292,6 +302,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     st3
                 )));
             }
+            // SAFETY: Apply the new DACL to the registry key; pass valid pointers.
             let new_dacl_guard = unsafe { crate::ffi::mem::LocalAllocGuard::from_raw(new_dacl) };
             let st4 = unsafe {
                 SetSecurityInfo(
@@ -304,6 +315,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                     None,
                 )
             };
+            // SAFETY: Close the opened registry key handle.
             let _ = unsafe { RegCloseKey(hkey) };
             if st4.0 != 0 {
                 return Err(AcError::Win32(format!(

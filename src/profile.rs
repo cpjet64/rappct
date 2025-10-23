@@ -1,7 +1,6 @@
 //! AppContainer profile management (skeleton).
 //! - Create/open/delete
 //! - Resolve folder and named-object paths
-#![allow(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(windows)]
 use crate::ffi::{mem::LocalAllocGuard, sid::OwnedSid, wstr::WideString};
@@ -39,6 +38,7 @@ impl AppContainerProfile {
                 ) -> HRESULT;
             }
 
+            // SAFETY: Pass stable PCWSTR buffers and receive owned SIDs; wrap pointers in RAII guards.
             unsafe {
                 // Prepare wide strings using stable WideString buffers
                 let name_w = WideString::from_str(_name);
@@ -85,8 +85,10 @@ impl AppContainerProfile {
 
                 // Convert to SDDL
                 let mut sddl_ptr = PWSTR::null();
+                // SAFETY: Convert a valid PSID to a LocalAlloc-managed SDDL string.
                 ConvertSidToStringSidW(sid_owned.as_psid(), &mut sddl_ptr)
                     .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {}", e)))?;
+                // SAFETY: Wrap LocalAlloc PWSTR for proper free.
                 let sddl_guard = LocalAllocGuard::<u16>::from_raw(sddl_ptr.0);
                 let sddl = sddl_guard.to_string_lossy();
 
@@ -112,6 +114,7 @@ impl AppContainerProfile {
                 ) -> windows::core::HRESULT;
             }
             let name_w = WideString::from_str(&self.name);
+            // SAFETY: Delete profile by its name using a stable PCWSTR buffer.
             unsafe {
                 let hr = DeleteAppContainerProfile(name_w.as_pcwstr());
                 if !hr.is_ok() {
@@ -147,6 +150,7 @@ impl AppContainerProfile {
                 ) -> windows::core::HRESULT;
             }
             use windows::core::PWSTR;
+            // SAFETY: Derive PSID from profile name, then query folder path returning CoTaskMem PWSTR.
             unsafe {
                 // Derive package PSID from name for folder query
                 let name_w = WideString::from_str(&self.name);
@@ -165,11 +169,14 @@ impl AppContainerProfile {
                 if hr.is_ok() {
                     // Convert returned PWSTR to PathBuf
                     let path = {
+                        // SAFETY: `out` is a CoTaskMem PWSTR; guard ensures single free.
                         let guard = crate::ffi::mem::CoTaskMem::<u16>::from_raw(out.0);
                         let mut len = 0usize;
+                        // SAFETY: Walk until NUL; pointer validity per API contract.
                         while *guard.as_ptr().add(len) != 0 {
                             len += 1;
                         }
+                        // SAFETY: Slice over initialized UTF-16 code units.
                         let slice = std::slice::from_raw_parts(guard.as_ptr(), len);
                         let s = String::from_utf16_lossy(slice);
                         PathBuf::from(s)
@@ -209,6 +216,7 @@ impl AppContainerProfile {
                     returnlength: *mut u32,
                 ) -> i32;
             }
+            // SAFETY: Convert SID to PSID; size-probe and fetch named object path.
             unsafe {
                 // Convert SDDL to PSID
                 let sddl_w = WideString::from_str(self.sid.as_string());
@@ -271,6 +279,7 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
         }
         use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
         use windows::core::PWSTR;
+        // SAFETY: Derive AppContainer SID from name and convert to SDDL string via LocalAlloc PWSTR.
         unsafe {
             let name_w = WideString::from_str(name);
             let mut sid_ptr = std::ptr::null_mut();
@@ -283,6 +292,7 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
             }
             let sid_owned = OwnedSid::from_freesid_psid(sid_ptr);
             let mut sddl_ptr = PWSTR::null();
+            // SAFETY: Convert valid PSID to SDDL string; LocalAlloc PWSTR returned.
             if ConvertSidToStringSidW(sid_owned.as_psid(), &mut sddl_ptr).is_err() {
                 return Err(AcError::Win32("ConvertSidToStringSidW failed".into()));
             }

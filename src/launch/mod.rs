@@ -1,5 +1,4 @@
 //! Process launch in AppContainer / LPAC with STARTUPINFOEX and security capabilities.
-#![allow(clippy::undocumented_unsafe_blocks)]
 
 // legacy launch::attr module no longer used; relying on ffi::attr_list wrappers
 
@@ -146,12 +145,15 @@ impl JobObjectDropGuard {
             SetInformationJobObject,
         };
         use windows::core::PCWSTR;
+        // SAFETY: Create a new job object with no name; returns a live HANDLE on success.
         let hjob = unsafe {
             CreateJobObjectW(None, PCWSTR::null())
                 .map_err(|e| AcError::Win32(format!("CreateJobObjectW failed: {e}")))?
         };
+        // SAFETY: Zero-initialize the structure per Win32 API requirements.
         let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
         info.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        // SAFETY: Pass a valid reference to the initialized struct; size matches the type.
         unsafe {
             SetInformationJobObject(
                 hjob,
@@ -162,6 +164,7 @@ impl JobObjectDropGuard {
             .map_err(|_| AcError::Win32("SetInformationJobObject(kill_on_close) failed".into()))?;
         }
         Ok(Self {
+            // SAFETY: `hjob` is a live HANDLE returned from CreateJobObjectW; take ownership.
             handle: unsafe { FHandle::from_raw(hjob.0 as *mut _) }
                 .map_err(|_| AcError::Win32("invalid job handle".into()))?,
             kill_on_drop: true,
@@ -174,6 +177,7 @@ impl JobObjectDropGuard {
 
     pub fn assign_process_handle(&self, process: HANDLE) -> Result<()> {
         use windows::Win32::System::JobObjects::AssignProcessToJobObject;
+        // SAFETY: Attach the provided process to the job represented by this guard.
         unsafe {
             AssignProcessToJobObject(self.handle.as_win32(), process)
                 .map_err(|_| AcError::Win32("AssignProcessToJobObject failed".into()))
@@ -187,7 +191,9 @@ impl JobObjectDropGuard {
             JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
             SetInformationJobObject,
         };
+        // SAFETY: Clear the extended limits by setting a zeroed structure.
         let info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
+        // SAFETY: Pass a valid reference with correct size; clears kill-on-close.
         unsafe {
             SetInformationJobObject(
                 self.handle.as_win32(),
@@ -205,6 +211,7 @@ impl JobObjectDropGuard {
 pub fn launch_in_container(_sec: &SecurityCapabilities, _opts: &LaunchOptions) -> Result<Launched> {
     #[cfg(windows)]
     {
+        // SAFETY: `launch_impl` encapsulates all Win32 calls; returns a valid LaunchedIo.
         unsafe { launch_impl(_sec, _opts).map(|io| Launched { pid: io.pid }) }
     }
     #[cfg(not(windows))]
@@ -550,6 +557,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             child_stdin = r_in;
             child_stdout = w_out;
             child_stderr = w_err;
+            // SAFETY: Wrap inheritable pipe ends with RAII handles to ensure close-on-drop.
             parent_stdin = Some(
                 unsafe { FHandle::from_raw(w_in.0 as *mut _) }
                     .map_err(|_| AcError::Win32("invalid stdin handle".into()))?,
@@ -622,6 +630,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
         #[cfg(feature = "tracing")]
         {
             use windows::Win32::Foundation::GetLastError;
+            // SAFETY: Read last-error via Win32 API for diagnostics; thread-local.
             let gle = unsafe { GetLastError().0 };
             let (hr, msg) = match &cp_res {
                 Ok(_) => (0, String::new()),
@@ -637,6 +646,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
         // Optional debug log without requiring a tracing subscriber
         if std::env::var_os("RAPPCT_DEBUG_LAUNCH").is_some() {
             use windows::Win32::Foundation::GetLastError;
+            // SAFETY: Read last-error via Win32 API for diagnostics; thread-local.
             let gle = unsafe { GetLastError().0 };
             let (hr, msg) = match &cp_res {
                 Ok(_) => (0, String::new()),
@@ -738,6 +748,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
         })?;
         if limits.kill_on_job_close {
             job_guard = Some(JobGuard(
+                // SAFETY: `hjob` is a valid job HANDLE; wrap for lifetime management.
                 unsafe { FHandle::from_raw(hjob.0 as *mut _) }
                     .map_err(|_| AcError::Win32("invalid job handle".into()))?,
             ));
@@ -747,6 +758,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     }
 
     let _ = CloseHandle(pi.hThread);
+    // SAFETY: Process handle from CreateProcessW; wrap to close on drop.
     let proc_handle = unsafe { FHandle::from_raw(pi.hProcess.0 as *mut _) }
         .map_err(|_| AcError::Win32("invalid process handle".into()))?;
     Ok(LaunchedIo {
@@ -764,6 +776,7 @@ pub fn launch_in_container_with_io(
     sec: &SecurityCapabilities,
     opts: &LaunchOptions,
 ) -> Result<LaunchedIo> {
+    // SAFETY: `launch_impl` encapsulates the Win32 process launch steps safely.
     unsafe { launch_impl(sec, opts) }
 }
 
@@ -774,6 +787,7 @@ impl LaunchedIo {
         use windows::Win32::System::Threading::{
             GetExitCodeProcess, INFINITE, WaitForSingleObject,
         };
+        // SAFETY: Wait and query exit code for a live process handle; convert duration to ms.
         unsafe {
             let ms = timeout
                 .map(|d| d.as_millis().min(u128::from(u32::MAX)) as u32)

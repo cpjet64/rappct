@@ -13,23 +13,23 @@ use rappct::{
     launch_in_container,
 };
 
-#[cfg(feature = "net")]
+#[cfg(all(windows, feature = "net"))]
 use rappct::net::{LoopbackAdd, add_loopback_exemption, remove_loopback_exemption};
 
-#[cfg(feature = "net")]
+#[cfg(all(windows, feature = "net"))]
 struct FirewallGuard {
     sid: rappct::sid::AppContainerSid,
     success: &'static str,
 }
 
-#[cfg(feature = "net")]
+#[cfg(all(windows, feature = "net"))]
 impl FirewallGuard {
     fn new(sid: rappct::sid::AppContainerSid, success: &'static str) -> Self {
         Self { sid, success }
     }
 }
 
-#[cfg(feature = "net")]
+#[cfg(all(windows, feature = "net"))]
 impl Drop for FirewallGuard {
     fn drop(&mut self) {
         match remove_loopback_exemption(&self.sid) {
@@ -228,10 +228,10 @@ fn main() -> rappct::Result<()> {
         std::thread::sleep(std::time::Duration::from_secs(2));
     }
 
-    #[cfg(feature = "net")]
+    #[cfg(all(windows, feature = "net"))]
     let mut firewall_guard: Option<FirewallGuard> = None;
 
-    #[cfg(feature = "net")]
+    #[cfg(all(windows, feature = "net"))]
     {
         println!("\n→ Adding firewall exemption to allow loopback for this container...");
         if let Err(e) =
@@ -271,7 +271,7 @@ fn main() -> rappct::Result<()> {
         }
     }
 
-    #[cfg(not(feature = "net"))]
+    #[cfg(not(all(windows, feature = "net")))]
     {
         println!("\n  (Run with --features net to test loopback exemption)");
     }
@@ -317,7 +317,7 @@ fn main() -> rappct::Result<()> {
     println!("---------------");
     println!("Removing firewall exemptions and deleting the AppContainer profile.");
 
-    #[cfg(feature = "net")]
+    #[cfg(all(windows, feature = "net"))]
     {
         let _firewall_guard = firewall_guard; // auto-clean on drop
     }
