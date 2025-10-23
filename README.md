@@ -199,6 +199,8 @@ See also: docs/capabilities.md for common capability SIDs and starter sets.
 
 ## Development Workflow
 
+For the complete process (branching, CI matrix, and releases), see WORKFLOW.md.
+
 ```bash
 cargo fmt
 cargo clippy --all-targets --all-features
