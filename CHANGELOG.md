@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.13.3] - 2025-10-23
+
+### Features
+
+- FFI RAII: crate-private `ffi::*` wrappers for handles, LocalFree/CoTaskMem memory, SIDs, UTF-16 strings, SECURITY_CAPABILITIES, and PROC_THREAD_ATTRIBUTE_LIST; adoption across capability/profile/acl/launch/net.
+- Windows-only CI matrix: stable, MSRV (1.90.0), beta, nightly with feature matrix; hooks and local scripts for parity.
+
+### Refactor
+
+- launch: box `OwnedSecurityCapabilities` to stabilize SECURITY_CAPABILITIES pointer; remove legacy `launch::attr` in favor of `ffi::attr_list`.
+
+### Fixes / Ergonomics
+
+- Improve CreateProcessW diagnostics (GLE, HRESULT, message). Add local-only test toggles for diagnosing environment/cwd issues: `RAPPCT_TEST_FORCE_ENV`, `RAPPCT_TEST_NO_CWD`, `RAPPCT_DEBUG_LAUNCH`.
+
+### Docs
+
+- ADR-0001 updated (Phases 1–3 complete). README badges for CI (1.90.0, stable, beta, nightly) and Local Test Toggles section.
+
 ## [0.13.1] - 2025-10-22
 
 ### Miscellaneous Tasks
