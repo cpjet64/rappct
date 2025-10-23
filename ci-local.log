@@ -14,24 +14,23 @@ Diff in \\?\C:\Users\curtp\source\repos\rappct\src\token.rs:6:
 [ci-local] clippy component
 info: component 'clippy' for target 'x86_64-pc-windows-msvc' is up to date
 [ci-local] test (stable, no features)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.99s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running unittests src\lib.rs (target\debug\deps\rappct-d51d8b940d0da6ae.exe)
 
 running 13 tests
 test acl::tests::constants_are_consistent ... ok
-test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
-test error::tests::unknown_capability_preserves_hint ... ok
-test error::tests::access_denied_retains_context_and_source ... ok
-test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test ffi::handles::tests::handle_wraps_event_and_closes ... ok
-test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
-test ffi::sec_caps::tests::build_security_capabilities ... ok
-test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
-test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
 test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test error::tests::access_denied_retains_context_and_source ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test ffi::sec_caps::tests::build_security_capabilities ... ok
 test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
 
 test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -55,14 +54,14 @@ running 2 tests
 test grant_to_package_updates_file_dacl ... ok
 test grant_to_package_updates_registry_dacl ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running tests\windows_core.rs (target\debug\deps\windows_core-c1d9c8831d1eee61.exe)
 
 running 6 tests
 test derive_known_capability_sids ... ok
-test supports_lpac_override_ok ... ok
 test capability_derivation_repeated_calls_are_successful ... ok
+test supports_lpac_override_ok ... ok
 test supports_lpac_override_unsupported ... ok
 test token_query_works ... ok
 test derive_sid_from_name_works ... ok
@@ -85,19 +84,19 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_launch.rs (target\debug\deps\windows_launch-ea6e7ce736fc117d.exe)
 
 running 9 tests
-test launch_job_limits_reported_by_query ... ok
-test launch_job_guard_drop_terminates_process ... ok
-Access is denied.
-test launch_ac_cmd_exits ... ok
-test launch_ac_with_job_limits ... ok
-test launch_lpac_cmd_exits_if_supported ... ok
 test launch_with_pipes_and_echo ... ok
-test launch_waits_for_exit_code ... ok
 Access is denied.
-test launch_appcontainer_token_matches_profile ... ok
+Access is denied.
 test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_ac_with_job_limits ... ok
+test launch_ac_cmd_exits ... ok
+test launch_lpac_cmd_exits_if_supported ... ok
+test launch_job_guard_drop_terminates_process ... ok
+test launch_appcontainer_token_matches_profile ... ok
+test launch_job_limits_reported_by_query ... ok
+test launch_waits_for_exit_code ... ok
 
-test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
 
      Running tests\windows_net.rs (target\debug\deps\windows_net-1641654253eae13e.exe)
 
@@ -115,11 +114,11 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 4 tests
 test profile_named_object_path_invalid_sid_errors ... ok
-test profile_folder_path_fallback_after_delete ... ok
 test profile_ensure_and_delete_roundtrip ... ok
+test profile_folder_path_fallback_after_delete ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
      Running unittests examples\acrun.rs (target\debug\examples\acrun-e9b9d1d5151cef8b.exe)
 
@@ -228,24 +227,6 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
   --> src\token.rs:49:9
    |
 49 |         unsafe {
@@ -263,49 +244,30 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 14 previous errors
+error: could not compile `rappct` (lib) due to 10 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 14 previous errors
+error: could not compile `rappct` (lib test) due to 10 previous errors
 [ci-local] test (stable, features: introspection)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.92s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
      Running unittests src\lib.rs (target\debug\deps\rappct-06db879794848098.exe)
 
 running 16 tests
 test acl::tests::constants_are_consistent ... ok
 test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
 test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
-test capability::tests::suggests_known_capability_when_above_threshold ... ok
 test capability::tests::prefers_highest_similarity_match ... ok
-test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
-test ffi::sec_caps::tests::build_security_capabilities ... ok
-test error::tests::launch_failed_retains_stage_hint_and_source ... ok
 test error::tests::unknown_capability_preserves_hint ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test capability::tests::suggests_known_capability_when_above_threshold ... ok
 test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
 test ffi::handles::tests::handle_wraps_event_and_closes ... ok
-test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
-test capability::tests::suppresses_suggestion_below_threshold ... ok
 test error::tests::access_denied_retains_context_and_source ... ok
+test ffi::sec_caps::tests::build_security_capabilities ... ok
+test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
 test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
-test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test capability::tests::suppresses_suggestion_below_threshold ... ok
 
 test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -326,20 +288,20 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_acl.rs (target\debug\deps\windows_acl-8ccdad63a4601db9.exe)
 
 running 2 tests
-test grant_to_package_updates_registry_dacl ... ok
 test grant_to_package_updates_file_dacl ... ok
+test grant_to_package_updates_registry_dacl ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running tests\windows_core.rs (target\debug\deps\windows_core-0184143bf871f640.exe)
 
 running 7 tests
-test capability_typo_returns_suggestion ... ok
 test derive_known_capability_sids ... ok
-test supports_lpac_override_ok ... ok
 test capability_derivation_repeated_calls_are_successful ... ok
 test supports_lpac_override_unsupported ... ok
 test token_query_works ... ok
+test capability_typo_returns_suggestion ... ok
+test supports_lpac_override_ok ... ok
 test derive_sid_from_name_works ... ok
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -347,9 +309,9 @@ test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_diag.rs (target\debug\deps\windows_diag-b142d41b9675c8b8.exe)
 
 running 3 tests
-test diag_warns_when_network_caps_missing ... ok
-test diag_no_warnings_for_basic_appcontainer ... ok
 test diag_warns_when_lpac_missing_defaults ... ok
+test diag_no_warnings_for_basic_appcontainer ... ok
+test diag_warns_when_network_caps_missing ... ok
 
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
@@ -363,20 +325,20 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_launch.rs (target\debug\deps\windows_launch-7968ffe5757f5d8e.exe)
 
 running 10 tests
-test launch_ac_cmd_exits ... ok
-test launch_ac_with_job_limits ... ok
-test launch_job_limits_reported_by_query ... ok
-test diagnostics_reports_missing_caps ... ok
-test launch_job_guard_drop_terminates_process ... ok
-Access is denied.
-Access is denied.
-test launch_lpac_cmd_exits_if_supported ... ok
 test launch_waits_for_exit_code ... ok
-test launch_appcontainer_token_matches_profile ... ok
+Access is denied.
+Access is denied.
+test diagnostics_reports_missing_caps ... ok
+test launch_ac_with_job_limits ... ok
+test launch_ac_cmd_exits ... ok
+test launch_lpac_cmd_exits_if_supported ... ok
+test launch_job_limits_reported_by_query ... ok
+test launch_job_guard_drop_terminates_process ... ok
 test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_appcontainer_token_matches_profile ... ok
 test launch_with_pipes_and_echo ... ok
 
-test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
      Running tests\windows_net.rs (target\debug\deps\windows_net-e817fa60da57e5bc.exe)
 
@@ -394,8 +356,8 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 4 tests
 test profile_named_object_path_invalid_sid_errors ... ok
-test profile_folder_path_fallback_after_delete ... ok
 test profile_ensure_and_delete_roundtrip ... ok
+test profile_folder_path_fallback_after_delete ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
@@ -507,24 +469,6 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
   --> src\token.rs:49:9
    |
 49 |         unsafe {
@@ -542,30 +486,11 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 14 previous errors
+error: could not compile `rappct` (lib) due to 10 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 14 previous errors
+error: could not compile `rappct` (lib test) due to 10 previous errors
 [ci-local] test (stable, features: net)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.01s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
      Running unittests src\lib.rs (target\debug\deps\rappct-3f9755e428fcfc63.exe)
 
 running 13 tests
@@ -575,13 +500,13 @@ test capability::builder_tests::known_capabilities_are_mapped_to_expected_names 
 test error::tests::access_denied_retains_context_and_source ... ok
 test error::tests::launch_failed_retains_stage_hint_and_source ... ok
 test error::tests::unknown_capability_preserves_hint ... ok
-test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
-test ffi::handles::tests::handle_wraps_event_and_closes ... ok
-test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
 test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
 test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
 test ffi::sec_caps::tests::build_security_capabilities ... ok
+test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
 test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
 
 test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -602,18 +527,18 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_acl.rs (target\debug\deps\windows_acl-8b32fe62daf78f48.exe)
 
 running 2 tests
-test grant_to_package_updates_registry_dacl ... ok
 test grant_to_package_updates_file_dacl ... ok
+test grant_to_package_updates_registry_dacl ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running tests\windows_core.rs (target\debug\deps\windows_core-991e4a84b90a55bd.exe)
 
 running 6 tests
-test derive_known_capability_sids ... ok
 test capability_derivation_repeated_calls_are_successful ... ok
-test supports_lpac_override_ok ... ok
+test derive_known_capability_sids ... ok
 test supports_lpac_override_unsupported ... ok
+test supports_lpac_override_ok ... ok
 test token_query_works ... ok
 test derive_sid_from_name_works ... ok
 
@@ -635,17 +560,17 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_launch.rs (target\debug\deps\windows_launch-ec96728a3794bbf4.exe)
 
 running 9 tests
-test launch_with_pipes_and_echo ... ok
+test launch_ac_with_job_limits ... ok
 test launch_ac_cmd_exits ... ok
 Access is denied.
-Access is denied.
-test launch_ac_with_job_limits ... ok
 test launch_lpac_cmd_exits_if_supported ... ok
+Access is denied.
+test launch_with_pipes_and_echo ... ok
+test launch_appcontainer_token_matches_profile ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_job_guard_drop_terminates_process ... ok
 test launch_job_limits_reported_by_query ... ok
 test launch_waits_for_exit_code ... ok
-test launch_lpac_token_sets_flag_and_caps ... ok
-test launch_appcontainer_token_matches_profile ... ok
-test launch_job_guard_drop_terminates_process ... ok
 
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
@@ -656,7 +581,7 @@ test loopback_requires_confirm ... ok
 test list_appcontainers_cross_checks ... ok
 test loopback_add_remove_roundtrip ... ok
 
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running tests\windows_net_loopback_guard.rs (target\debug\deps\windows_net_loopback_guard-ae7a66c4f5aba30c.exe)
 
@@ -782,54 +707,36 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-  --> src\net.rs:49:5
+  --> src\net.rs:53:5
    |
-49 |     unsafe {
+53 |     unsafe {
    |     ^^^^^^^^
    |
    = help: consider adding a safety comment on the preceding line
    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:155:5
+   --> src\net.rs:161:5
     |
-155 |     unsafe {
+161 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:182:5
+   --> src\net.rs:188:5
     |
-182 |     unsafe {
+188 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:288:5
+   --> src\net.rs:294:5
     |
-288 |     unsafe {
+294 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
@@ -853,48 +760,29 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 18 previous errors
+error: could not compile `rappct` (lib) due to 14 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 18 previous errors
+error: could not compile `rappct` (lib test) due to 14 previous errors
 [ci-local] test (stable, features: introspection,net)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
      Running unittests src\lib.rs (target\debug\deps\rappct-10eda453f8b75b68.exe)
 
 running 16 tests
 test acl::tests::constants_are_consistent ... ok
-test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
-test error::tests::access_denied_retains_context_and_source ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test capability::tests::suggests_known_capability_when_above_threshold ... ok
-test capability::tests::suppresses_suggestion_below_threshold ... ok
-test error::tests::launch_failed_retains_stage_hint_and_source ... ok
 test capability::tests::prefers_highest_similarity_match ... ok
+test capability::tests::suppresses_suggestion_below_threshold ... ok
+test error::tests::access_denied_retains_context_and_source ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
 test error::tests::unknown_capability_preserves_hint ... ok
 test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
-test ffi::handles::tests::handle_wraps_event_and_closes ... ok
 test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
 test ffi::sec_caps::tests::build_security_capabilities ... ok
 test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
-test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
 test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
 
 test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -924,13 +812,13 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_core.rs (target\debug\deps\windows_core-289910cec03fd5ce.exe)
 
 running 7 tests
-test supports_lpac_override_ok ... ok
 test capability_derivation_repeated_calls_are_successful ... ok
-test derive_known_capability_sids ... ok
-test capability_typo_returns_suggestion ... ok
 test supports_lpac_override_unsupported ... ok
+test supports_lpac_override_ok ... ok
 test token_query_works ... ok
+test capability_typo_returns_suggestion ... ok
 test derive_sid_from_name_works ... ok
+test derive_known_capability_sids ... ok
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -953,17 +841,17 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_launch.rs (target\debug\deps\windows_launch-bbe93cd8e24893a4.exe)
 
 running 10 tests
-test launch_job_limits_reported_by_query ... ok
+Access is denied.
 test launch_ac_with_job_limits ... ok
 Access is denied.
-Access is denied.
-test launch_lpac_cmd_exits_if_supported ... ok
 test diagnostics_reports_missing_caps ... ok
-test launch_ac_cmd_exits ... ok
-test launch_job_guard_drop_terminates_process ... ok
-test launch_lpac_token_sets_flag_and_caps ... ok
 test launch_with_pipes_and_echo ... ok
+test launch_ac_cmd_exits ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_lpac_cmd_exits_if_supported ... ok
 test launch_waits_for_exit_code ... ok
+test launch_job_guard_drop_terminates_process ... ok
+test launch_job_limits_reported_by_query ... ok
 test launch_appcontainer_token_matches_profile ... ok
 
 test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
@@ -992,7 +880,7 @@ test profile_ensure_and_delete_roundtrip ... ok
 test profile_folder_path_fallback_after_delete ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running unittests examples\acrun.rs (target\debug\examples\acrun-dd0d0cc547be14d0.exe)
 
@@ -1101,54 +989,36 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-  --> src\net.rs:49:5
+  --> src\net.rs:53:5
    |
-49 |     unsafe {
+53 |     unsafe {
    |     ^^^^^^^^
    |
    = help: consider adding a safety comment on the preceding line
    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:155:5
+   --> src\net.rs:161:5
     |
-155 |     unsafe {
+161 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:182:5
+   --> src\net.rs:188:5
     |
-182 |     unsafe {
+188 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:288:5
+   --> src\net.rs:294:5
     |
-288 |     unsafe {
+294 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
@@ -1172,27 +1042,9 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 18 previous errors
+error: could not compile `rappct` (lib) due to 14 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 18 previous errors
+error: could not compile `rappct` (lib test) due to 14 previous errors
 [ci-local] MSRV toolchain
 info: syncing channel updates for '1.90.0-x86_64-pc-windows-msvc'
 info: checking for self-update
@@ -1204,17 +1056,17 @@ info: component 'clippy' for target 'x86_64-pc-windows-msvc' is up to date
 running 13 tests
 test acl::tests::constants_are_consistent ... ok
 test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
-test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
-test error::tests::launch_failed_retains_stage_hint_and_source ... ok
 test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
-test ffi::handles::tests::handle_wraps_event_and_closes ... ok
 test error::tests::access_denied_retains_context_and_source ... ok
-test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
 test ffi::sec_caps::tests::build_security_capabilities ... ok
 test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
-test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
 test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
-test error::tests::unknown_capability_preserves_hint ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
 
 test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -1235,19 +1087,19 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_acl.rs (target\debug\deps\windows_acl-40f7d8d76c7c4b5e.exe)
 
 running 2 tests
-test grant_to_package_updates_file_dacl ... ok
 test grant_to_package_updates_registry_dacl ... ok
+test grant_to_package_updates_file_dacl ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running tests\windows_core.rs (target\debug\deps\windows_core-c1d9c8831d1eee61.exe)
 
 running 6 tests
+test derive_known_capability_sids ... ok
 test capability_derivation_repeated_calls_are_successful ... ok
 test supports_lpac_override_ok ... ok
-test token_query_works ... ok
 test supports_lpac_override_unsupported ... ok
-test derive_known_capability_sids ... ok
+test token_query_works ... ok
 test derive_sid_from_name_works ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -1268,19 +1120,19 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_launch.rs (target\debug\deps\windows_launch-ea6e7ce736fc117d.exe)
 
 running 9 tests
+test launch_with_pipes_and_echo ... ok
 Access is denied.
 test launch_job_limits_reported_by_query ... ok
 Access is denied.
-test launch_ac_with_job_limits ... ok
 test launch_ac_cmd_exits ... ok
-test launch_appcontainer_token_matches_profile ... ok
-test launch_with_pipes_and_echo ... ok
+test launch_ac_with_job_limits ... ok
 test launch_lpac_cmd_exits_if_supported ... ok
 test launch_job_guard_drop_terminates_process ... ok
-test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_appcontainer_token_matches_profile ... ok
 test launch_waits_for_exit_code ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
 
-test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
      Running tests\windows_net.rs (target\debug\deps\windows_net-1641654253eae13e.exe)
 
@@ -1302,7 +1154,7 @@ test profile_folder_path_fallback_after_delete ... ok
 test profile_ensure_and_delete_roundtrip ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running unittests examples\acrun.rs (target\debug\examples\acrun-e9b9d1d5151cef8b.exe)
 
@@ -1411,24 +1263,6 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
   --> src\token.rs:49:9
    |
 49 |         unsafe {
@@ -1446,59 +1280,41 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 14 previous errors
+error: could not compile `rappct` (lib) due to 10 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 14 previous errors
+error: could not compile `rappct` (lib test) due to 10 previous errors
 [ci-local] test (msrv 1.90.0, features: introspection)
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running unittests src\lib.rs (target\debug\deps\rappct-06db879794848098.exe)
 
 running 16 tests
 test acl::tests::constants_are_consistent ... ok
-test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
-test error::tests::access_denied_retains_context_and_source ... ok
-test capability::tests::suggests_known_capability_when_above_threshold ... ok
-test capability::tests::suppresses_suggestion_below_threshold ... ok
 test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test capability::tests::prefers_highest_similarity_match ... ok
-test error::tests::unknown_capability_preserves_hint ... ok
-test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test capability::tests::suggests_known_capability_when_above_threshold ... ok
+test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
+test capability::tests::suppresses_suggestion_below_threshold ... ok
 test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
-test ffi::sec_caps::tests::build_security_capabilities ... ok
-test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
-test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
 test error::tests::launch_failed_retains_stage_hint_and_source ... ok
-test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
 test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test ffi::sec_caps::tests::build_security_capabilities ... ok
+test error::tests::access_denied_retains_context_and_source ... ok
 
 test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests\api_surface.rs (target\debug\deps\api_surface-4b79bcac388c2dd9.exe)
 
 running 1 test
-     Running tests\integration_launch.rs (target\debug\deps\integration_launch-985fc7725527aea2.exe)
 test api_reexports_are_accessible ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
+     Running tests\integration_launch.rs (target\debug\deps\integration_launch-985fc7725527aea2.exe)
 
 running 1 test
 test skeleton_compiles_and_exports ... ok
@@ -1508,19 +1324,19 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_acl.rs (target\debug\deps\windows_acl-8ccdad63a4601db9.exe)
 
 running 2 tests
-test grant_to_package_updates_registry_dacl ... ok
 test grant_to_package_updates_file_dacl ... ok
+test grant_to_package_updates_registry_dacl ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running tests\windows_core.rs (target\debug\deps\windows_core-0184143bf871f640.exe)
 
 running 7 tests
-test capability_derivation_repeated_calls_are_successful ... ok
-test derive_known_capability_sids ... ok
-test supports_lpac_override_ok ... ok
-test supports_lpac_override_unsupported ... ok
 test capability_typo_returns_suggestion ... ok
+test capability_derivation_repeated_calls_are_successful ... ok
+test supports_lpac_override_ok ... ok
+test derive_known_capability_sids ... ok
+test supports_lpac_override_unsupported ... ok
 test token_query_works ... ok
 test derive_sid_from_name_works ... ok
 
@@ -1529,11 +1345,11 @@ test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_diag.rs (target\debug\deps\windows_diag-b142d41b9675c8b8.exe)
 
 running 3 tests
-test diag_warns_when_network_caps_missing ... ok
 test diag_no_warnings_for_basic_appcontainer ... ok
 test diag_warns_when_lpac_missing_defaults ... ok
+test diag_warns_when_network_caps_missing ... ok
 
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running tests\windows_job_guard.rs (target\debug\deps\windows_job_guard-e94f6b7992d8a7d9.exe)
 
@@ -1545,20 +1361,20 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_launch.rs (target\debug\deps\windows_launch-7968ffe5757f5d8e.exe)
 
 running 10 tests
-test launch_waits_for_exit_code ... ok
+test launch_with_pipes_and_echo ... ok
 Access is denied.
-test launch_ac_cmd_exits ... ok
 Access is denied.
-test launch_ac_with_job_limits ... ok
 test diagnostics_reports_missing_caps ... ok
 test launch_job_limits_reported_by_query ... ok
-test launch_lpac_cmd_exits_if_supported ... ok
+test launch_ac_cmd_exits ... ok
 test launch_job_guard_drop_terminates_process ... ok
-test launch_lpac_token_sets_flag_and_caps ... ok
-test launch_with_pipes_and_echo ... ok
+test launch_waits_for_exit_code ... ok
+test launch_ac_with_job_limits ... ok
 test launch_appcontainer_token_matches_profile ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_lpac_cmd_exits_if_supported ... ok
 
-test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
 
      Running tests\windows_net.rs (target\debug\deps\windows_net-e817fa60da57e5bc.exe)
 
@@ -1576,11 +1392,11 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 4 tests
 test profile_named_object_path_invalid_sid_errors ... ok
-test profile_ensure_and_delete_roundtrip ... ok
 test profile_folder_path_fallback_after_delete ... ok
+test profile_ensure_and_delete_roundtrip ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running unittests examples\acrun.rs (target\debug\examples\acrun-a60fe8800da47b86.exe)
 
@@ -1689,24 +1505,6 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
   --> src\token.rs:49:9
    |
 49 |         unsafe {
@@ -1724,43 +1522,25 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 14 previous errors
+error: could not compile `rappct` (lib) due to 10 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 14 previous errors
+error: could not compile `rappct` (lib test) due to 10 previous errors
 [ci-local] test (msrv 1.90.0, features: net)
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running unittests src\lib.rs (target\debug\deps\rappct-3f9755e428fcfc63.exe)
 
 running 13 tests
 test acl::tests::constants_are_consistent ... ok
-test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test error::tests::access_denied_retains_context_and_source ... ok
-test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
 test error::tests::unknown_capability_preserves_hint ... ok
 test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
 test ffi::handles::tests::handle_wraps_event_and_closes ... ok
 test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
 test ffi::sec_caps::tests::build_security_capabilities ... ok
-test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
 test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
 test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
 
@@ -1783,19 +1563,19 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_acl.rs (target\debug\deps\windows_acl-8b32fe62daf78f48.exe)
 
 running 2 tests
-test grant_to_package_updates_file_dacl ... ok
 test grant_to_package_updates_registry_dacl ... ok
+test grant_to_package_updates_file_dacl ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running tests\windows_core.rs (target\debug\deps\windows_core-991e4a84b90a55bd.exe)
 
 running 6 tests
-test derive_known_capability_sids ... ok
 test capability_derivation_repeated_calls_are_successful ... ok
+test derive_known_capability_sids ... ok
+test token_query_works ... ok
 test supports_lpac_override_ok ... ok
 test supports_lpac_override_unsupported ... ok
-test token_query_works ... ok
 test derive_sid_from_name_works ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -1819,12 +1599,12 @@ running 9 tests
 Access is denied.
 test launch_appcontainer_token_matches_profile ... ok
 Access is denied.
-test launch_ac_cmd_exits ... ok
 test launch_job_limits_reported_by_query ... ok
+test launch_ac_cmd_exits ... ok
 test launch_lpac_cmd_exits_if_supported ... ok
+test launch_ac_with_job_limits ... ok
 test launch_job_guard_drop_terminates_process ... ok
 test launch_lpac_token_sets_flag_and_caps ... ok
-test launch_ac_with_job_limits ... ok
 test launch_waits_for_exit_code ... ok
 test launch_with_pipes_and_echo ... ok
 
@@ -1850,11 +1630,11 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
 
 running 4 tests
 test profile_named_object_path_invalid_sid_errors ... ok
-test profile_ensure_and_delete_roundtrip ... ok
 test profile_folder_path_fallback_after_delete ... ok
+test profile_ensure_and_delete_roundtrip ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running unittests examples\acrun.rs (target\debug\examples\acrun-55c5c81ae4245eb4.exe)
 
@@ -1963,54 +1743,36 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-  --> src\net.rs:49:5
+  --> src\net.rs:53:5
    |
-49 |     unsafe {
+53 |     unsafe {
    |     ^^^^^^^^
    |
    = help: consider adding a safety comment on the preceding line
    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:155:5
+   --> src\net.rs:161:5
     |
-155 |     unsafe {
+161 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:182:5
+   --> src\net.rs:188:5
     |
-182 |     unsafe {
+188 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:288:5
+   --> src\net.rs:294:5
     |
-288 |     unsafe {
+294 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
@@ -2034,48 +1796,30 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 18 previous errors
+error: could not compile `rappct` (lib) due to 14 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 18 previous errors
+error: could not compile `rappct` (lib test) due to 14 previous errors
 [ci-local] test (msrv 1.90.0, features: introspection,net)
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running unittests src\lib.rs (target\debug\deps\rappct-10eda453f8b75b68.exe)
 
 running 16 tests
 test acl::tests::constants_are_consistent ... ok
-test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
 test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
-test error::tests::unknown_capability_preserves_hint ... ok
-test capability::tests::prefers_highest_similarity_match ... ok
-test capability::tests::suppresses_suggestion_below_threshold ... ok
 test error::tests::access_denied_retains_context_and_source ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test capability::tests::suppresses_suggestion_below_threshold ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test capability::tests::prefers_highest_similarity_match ... ok
 test error::tests::launch_failed_retains_stage_hint_and_source ... ok
 test capability::tests::suggests_known_capability_when_above_threshold ... ok
-test ffi::handles::tests::handle_wraps_event_and_closes ... ok
-test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test ffi::sec_caps::tests::build_security_capabilities ... ok
 test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
-test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
 test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
-test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
 
 test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -2096,8 +1840,8 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_acl.rs (target\debug\deps\windows_acl-11e08d0a6e91f548.exe)
 
 running 2 tests
-test grant_to_package_updates_registry_dacl ... ok
 test grant_to_package_updates_file_dacl ... ok
+test grant_to_package_updates_registry_dacl ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
@@ -2105,8 +1849,8 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 7 tests
 test capability_typo_returns_suggestion ... ok
-test derive_known_capability_sids ... ok
 test capability_derivation_repeated_calls_are_successful ... ok
+test derive_known_capability_sids ... ok
 test supports_lpac_override_ok ... ok
 test token_query_works ... ok
 test supports_lpac_override_unsupported ... ok
@@ -2117,9 +1861,9 @@ test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_diag.rs (target\debug\deps\windows_diag-8834fb46709e7ebc.exe)
 
 running 3 tests
-test diag_no_warnings_for_basic_appcontainer ... ok
-test diag_warns_when_network_caps_missing ... ok
 test diag_warns_when_lpac_missing_defaults ... ok
+test diag_warns_when_network_caps_missing ... ok
+test diag_no_warnings_for_basic_appcontainer ... ok
 
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
@@ -2134,19 +1878,19 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
 
 running 10 tests
 Access is denied.
-test launch_waits_for_exit_code ... ok
+test launch_job_guard_drop_terminates_process ... ok
+Access is denied.
 test launch_lpac_token_sets_flag_and_caps ... ok
 test diagnostics_reports_missing_caps ... ok
-Access is denied.
+test launch_lpac_cmd_exits_if_supported ... ok
 test launch_ac_with_job_limits ... ok
 test launch_ac_cmd_exits ... ok
-test launch_lpac_cmd_exits_if_supported ... ok
-test launch_job_guard_drop_terminates_process ... ok
 test launch_job_limits_reported_by_query ... ok
+test launch_waits_for_exit_code ... ok
 test launch_appcontainer_token_matches_profile ... ok
 test launch_with_pipes_and_echo ... ok
 
-test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
      Running tests\windows_net.rs (target\debug\deps\windows_net-f8739fa76cbb42ad.exe)
 
@@ -2172,7 +1916,7 @@ test profile_folder_path_fallback_after_delete ... ok
 test profile_ensure_and_delete_roundtrip ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
      Running unittests examples\acrun.rs (target\debug\examples\acrun-dd0d0cc547be14d0.exe)
 
@@ -2281,54 +2025,36 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-  --> src\net.rs:49:5
+  --> src\net.rs:53:5
    |
-49 |     unsafe {
+53 |     unsafe {
    |     ^^^^^^^^
    |
    = help: consider adding a safety comment on the preceding line
    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:155:5
+   --> src\net.rs:161:5
     |
-155 |     unsafe {
+161 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:182:5
+   --> src\net.rs:188:5
     |
-182 |     unsafe {
+188 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:288:5
+   --> src\net.rs:294:5
     |
-288 |     unsafe {
+294 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
@@ -2352,50 +2078,31 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 18 previous errors
+error: could not compile `rappct` (lib) due to 14 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 18 previous errors
+error: could not compile `rappct` (lib test) due to 14 previous errors
 [ci-local] beta toolchain
 info: syncing channel updates for 'beta-x86_64-pc-windows-msvc'
 info: checking for self-update
 info: component 'clippy' for target 'x86_64-pc-windows-msvc' is up to date
 [ci-local] test (beta, no features)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running unittests src\lib.rs (target\debug\deps\rappct-cddfeb3e9348b9dc.exe)
 
 running 13 tests
 test acl::tests::constants_are_consistent ... ok
-test ffi::handles::tests::handle_wraps_event_and_closes ... ok
-test error::tests::launch_failed_retains_stage_hint_and_source ... ok
-test ffi::sec_caps::tests::build_security_capabilities ... ok
 test error::tests::access_denied_retains_context_and_source ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
 test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
 test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
-test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
-test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test ffi::sec_caps::tests::build_security_capabilities ... ok
 test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
 test error::tests::unknown_capability_preserves_hint ... ok
-test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
 
 test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -2416,8 +2123,8 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_acl.rs (target\debug\deps\windows_acl-03304f2f06ae34bd.exe)
 
 running 2 tests
-test grant_to_package_updates_file_dacl ... ok
 test grant_to_package_updates_registry_dacl ... ok
+test grant_to_package_updates_file_dacl ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
@@ -2425,10 +2132,10 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 6 tests
 test derive_known_capability_sids ... ok
-test capability_derivation_repeated_calls_are_successful ... ok
 test supports_lpac_override_ok ... ok
-test token_query_works ... ok
+test capability_derivation_repeated_calls_are_successful ... ok
 test supports_lpac_override_unsupported ... ok
+test token_query_works ... ok
 test derive_sid_from_name_works ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -2449,19 +2156,19 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_launch.rs (target\debug\deps\windows_launch-e39a866aefef0db1.exe)
 
 running 9 tests
-test launch_with_pipes_and_echo ... ok
 Access is denied.
+test launch_ac_cmd_exits ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_ac_with_job_limits ... ok
 Access is denied.
 test launch_lpac_cmd_exits_if_supported ... ok
-test launch_job_limits_reported_by_query ... ok
-test launch_ac_with_job_limits ... ok
-test launch_waits_for_exit_code ... ok
 test launch_job_guard_drop_terminates_process ... ok
-test launch_ac_cmd_exits ... ok
 test launch_appcontainer_token_matches_profile ... ok
-test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_job_limits_reported_by_query ... ok
+test launch_with_pipes_and_echo ... ok
+test launch_waits_for_exit_code ... ok
 
-test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
      Running tests\windows_net.rs (target\debug\deps\windows_net-a757691ae9379c52.exe)
 
@@ -2479,8 +2186,8 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 4 tests
 test profile_named_object_path_invalid_sid_errors ... ok
-test profile_ensure_and_delete_roundtrip ... ok
 test profile_folder_path_fallback_after_delete ... ok
+test profile_ensure_and_delete_roundtrip ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
@@ -2592,24 +2299,6 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
   --> src\token.rs:49:9
    |
 49 |         unsafe {
@@ -2627,50 +2316,31 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 14 previous errors
+error: could not compile `rappct` (lib) due to 10 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 14 previous errors
+error: could not compile `rappct` (lib test) due to 10 previous errors
 [33;1mWARNING: [ci-local] beta clippy failed (no features)[0m
 [ci-local] test (beta, features: introspection)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.97s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running unittests src\lib.rs (target\debug\deps\rappct-122705c5f0fb78a5.exe)
 
 running 16 tests
 test acl::tests::constants_are_consistent ... ok
 test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
-test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
-test error::tests::access_denied_retains_context_and_source ... ok
-test error::tests::unknown_capability_preserves_hint ... ok
 test capability::tests::suggests_known_capability_when_above_threshold ... ok
+test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
 test capability::tests::prefers_highest_similarity_match ... ok
-test error::tests::launch_failed_retains_stage_hint_and_source ... ok
 test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
 test capability::tests::suppresses_suggestion_below_threshold ... ok
+test error::tests::access_denied_retains_context_and_source ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
 test ffi::sec_caps::tests::build_security_capabilities ... ok
 test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
 test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
-test ffi::handles::tests::handle_wraps_event_and_closes ... ok
 test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
-test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
 
 test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -2699,12 +2369,12 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_core.rs (target\debug\deps\windows_core-8f0acbb0147acf13.exe)
 
 running 7 tests
+test capability_derivation_repeated_calls_are_successful ... ok
 test capability_typo_returns_suggestion ... ok
 test derive_known_capability_sids ... ok
-test capability_derivation_repeated_calls_are_successful ... ok
-test supports_lpac_override_ok ... ok
-test token_query_works ... ok
 test supports_lpac_override_unsupported ... ok
+test token_query_works ... ok
+test supports_lpac_override_ok ... ok
 test derive_sid_from_name_works ... ok
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -2713,8 +2383,8 @@ test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 3 tests
 test diag_no_warnings_for_basic_appcontainer ... ok
-test diag_warns_when_network_caps_missing ... ok
 test diag_warns_when_lpac_missing_defaults ... ok
+test diag_warns_when_network_caps_missing ... ok
 
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
@@ -2729,17 +2399,17 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
 
 running 10 tests
 Access is denied.
-test diagnostics_reports_missing_caps ... ok
-Access is denied.
-test launch_lpac_cmd_exits_if_supported ... ok
-test launch_job_limits_reported_by_query ... ok
-test launch_job_guard_drop_terminates_process ... ok
-test launch_ac_with_job_limits ... ok
 test launch_ac_cmd_exits ... ok
-test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_lpac_cmd_exits_if_supported ... ok
+Access is denied.
+test launch_ac_with_job_limits ... ok
+test launch_job_limits_reported_by_query ... ok
+test diagnostics_reports_missing_caps ... ok
 test launch_appcontainer_token_matches_profile ... ok
-test launch_with_pipes_and_echo ... ok
+test launch_job_guard_drop_terminates_process ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
 test launch_waits_for_exit_code ... ok
+test launch_with_pipes_and_echo ... ok
 
 test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
 
@@ -2872,24 +2542,6 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
   --> src\token.rs:49:9
    |
 49 |         unsafe {
@@ -2907,47 +2559,28 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 14 previous errors
+error: could not compile `rappct` (lib) due to 10 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 14 previous errors
+error: could not compile `rappct` (lib test) due to 10 previous errors
 [33;1mWARNING: [ci-local] beta clippy failed (features: introspection)[0m
 [ci-local] test (beta, features: net)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.10s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running unittests src\lib.rs (target\debug\deps\rappct-df41975c9691b72c.exe)
 
 running 13 tests
 test acl::tests::constants_are_consistent ... ok
-test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
 test error::tests::access_denied_retains_context_and_source ... ok
-test ffi::handles::tests::handle_wraps_event_and_closes ... ok
-test error::tests::launch_failed_retains_stage_hint_and_source ... ok
-test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
-test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
-test error::tests::unknown_capability_preserves_hint ... ok
 test ffi::sec_caps::tests::build_security_capabilities ... ok
-test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
-test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
 test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
 
 test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -2968,8 +2601,8 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_acl.rs (target\debug\deps\windows_acl-2d1dd71da52ca44f.exe)
 
 running 2 tests
-test grant_to_package_updates_registry_dacl ... ok
 test grant_to_package_updates_file_dacl ... ok
+test grant_to_package_updates_registry_dacl ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
@@ -2978,9 +2611,9 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 running 6 tests
 test derive_known_capability_sids ... ok
 test capability_derivation_repeated_calls_are_successful ... ok
-test supports_lpac_override_unsupported ... ok
 test supports_lpac_override_ok ... ok
 test token_query_works ... ok
+test supports_lpac_override_unsupported ... ok
 test derive_sid_from_name_works ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -3001,15 +2634,15 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_launch.rs (target\debug\deps\windows_launch-c7174c61171579f0.exe)
 
 running 9 tests
-Access is denied.
-Access is denied.
-test launch_with_pipes_and_echo ... ok
-test launch_appcontainer_token_matches_profile ... ok
-test launch_job_limits_reported_by_query ... ok
-test launch_job_guard_drop_terminates_process ... ok
 test launch_ac_cmd_exits ... ok
+test launch_with_pipes_and_echo ... ok
+Access is denied.
+Access is denied.
 test launch_ac_with_job_limits ... ok
 test launch_lpac_cmd_exits_if_supported ... ok
+test launch_job_guard_drop_terminates_process ... ok
+test launch_job_limits_reported_by_query ... ok
+test launch_appcontainer_token_matches_profile ... ok
 test launch_lpac_token_sets_flag_and_caps ... ok
 test launch_waits_for_exit_code ... ok
 
@@ -3035,11 +2668,11 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
 
 running 4 tests
 test profile_named_object_path_invalid_sid_errors ... ok
-test profile_ensure_and_delete_roundtrip ... ok
 test profile_folder_path_fallback_after_delete ... ok
+test profile_ensure_and_delete_roundtrip ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
      Running unittests examples\acrun.rs (target\debug\examples\acrun-dafe194a7c7dd7b3.exe)
 
@@ -3148,54 +2781,36 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-  --> src\net.rs:49:5
+  --> src\net.rs:53:5
    |
-49 |     unsafe {
+53 |     unsafe {
    |     ^^^^^^^^
    |
    = help: consider adding a safety comment on the preceding line
    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:155:5
+   --> src\net.rs:161:5
     |
-155 |     unsafe {
+161 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:182:5
+   --> src\net.rs:188:5
     |
-182 |     unsafe {
+188 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:288:5
+   --> src\net.rs:294:5
     |
-288 |     unsafe {
+294 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
@@ -3219,50 +2834,31 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 18 previous errors
+error: could not compile `rappct` (lib) due to 14 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 18 previous errors
+error: could not compile `rappct` (lib test) due to 14 previous errors
 [33;1mWARNING: [ci-local] beta clippy failed (features: net)[0m
 [ci-local] test (beta, features: introspection,net)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running unittests src\lib.rs (target\debug\deps\rappct-ef1081bd5368706a.exe)
 
 running 16 tests
 test acl::tests::constants_are_consistent ... ok
-test capability::tests::suggests_known_capability_when_above_threshold ... ok
-test error::tests::launch_failed_retains_stage_hint_and_source ... ok
-test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
-test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
-test error::tests::access_denied_retains_context_and_source ... ok
 test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
-test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
-test error::tests::unknown_capability_preserves_hint ... ok
-test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
 test capability::tests::prefers_highest_similarity_match ... ok
-test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
-test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
-test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
 test capability::tests::suppresses_suggestion_below_threshold ... ok
+test error::tests::access_denied_retains_context_and_source ... ok
+test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test capability::tests::suggests_known_capability_when_above_threshold ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
 test ffi::sec_caps::tests::build_security_capabilities ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
 
 test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -3283,20 +2879,20 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_acl.rs (target\debug\deps\windows_acl-e98367f7e4361865.exe)
 
 running 2 tests
-test grant_to_package_updates_registry_dacl ... ok
 test grant_to_package_updates_file_dacl ... ok
+test grant_to_package_updates_registry_dacl ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running tests\windows_core.rs (target\debug\deps\windows_core-d5b18e8e07c667eb.exe)
 
 running 7 tests
-test capability_typo_returns_suggestion ... ok
 test derive_known_capability_sids ... ok
 test capability_derivation_repeated_calls_are_successful ... ok
-test token_query_works ... ok
-test supports_lpac_override_unsupported ... ok
+test capability_typo_returns_suggestion ... ok
 test supports_lpac_override_ok ... ok
+test supports_lpac_override_unsupported ... ok
+test token_query_works ... ok
 test derive_sid_from_name_works ... ok
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -3304,9 +2900,9 @@ test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests\windows_diag.rs (target\debug\deps\windows_diag-0faa8244d272a40d.exe)
 
 running 3 tests
-test diag_no_warnings_for_basic_appcontainer ... ok
-test diag_warns_when_lpac_missing_defaults ... ok
 test diag_warns_when_network_caps_missing ... ok
+test diag_warns_when_lpac_missing_defaults ... ok
+test diag_no_warnings_for_basic_appcontainer ... ok
 
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
@@ -3321,16 +2917,16 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
 
 running 10 tests
 Access is denied.
-test launch_ac_cmd_exits ... ok
-test launch_job_limits_reported_by_query ... ok
 Access is denied.
-test launch_appcontainer_token_matches_profile ... ok
-test diagnostics_reports_missing_caps ... ok
 test launch_lpac_cmd_exits_if_supported ... ok
+test launch_job_limits_reported_by_query ... ok
+test launch_with_pipes_and_echo ... ok
+test diagnostics_reports_missing_caps ... ok
+test launch_ac_cmd_exits ... ok
 test launch_ac_with_job_limits ... ok
 test launch_job_guard_drop_terminates_process ... ok
+test launch_appcontainer_token_matches_profile ... ok
 test launch_lpac_token_sets_flag_and_caps ... ok
-test launch_with_pipes_and_echo ... ok
 test launch_waits_for_exit_code ... ok
 
 test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
@@ -3355,8 +2951,8 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
 
 running 4 tests
 test profile_named_object_path_invalid_sid_errors ... ok
-test profile_ensure_and_delete_roundtrip ... ok
 test profile_folder_path_fallback_after_delete ... ok
+test profile_ensure_and_delete_roundtrip ... ok
 test profile_ensure_existing_handles_metadata_mismatch ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
@@ -3468,54 +3064,36 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-  --> src\net.rs:49:5
+  --> src\net.rs:53:5
    |
-49 |     unsafe {
+53 |     unsafe {
    |     ^^^^^^^^
    |
    = help: consider adding a safety comment on the preceding line
    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:155:5
+   --> src\net.rs:161:5
     |
-155 |     unsafe {
+161 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:182:5
+   --> src\net.rs:188:5
     |
-182 |     unsafe {
+188 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:288:5
+   --> src\net.rs:294:5
     |
-288 |     unsafe {
+294 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
@@ -3539,96 +3117,153 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 18 previous errors
+error: could not compile `rappct` (lib) due to 14 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 18 previous errors
+error: could not compile `rappct` (lib test) due to 14 previous errors
 [33;1mWARNING: [ci-local] beta clippy failed (features: introspection,net)[0m
 [ci-local] nightly toolchain
 info: syncing channel updates for 'nightly-x86_64-pc-windows-msvc'
 info: checking for self-update
 info: component 'clippy' for target 'x86_64-pc-windows-msvc' is up to date
 [ci-local] test (nightly, no features)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-error: variable `si_ex` is assigned to, but never used
-   --> src\launch\mod.rs:330:13
-    |
-330 |         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-    |             ^^^^^^^^^
-    |
-    = note: consider using `_si_ex` instead
-    = note: `-D unused-variables` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_variables)]`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running unittests src\lib.rs (target\debug\deps\rappct-16f0b8c04dffecbe.exe)
 
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:331:9
-    |
-331 |         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-    = note: `-D unused-assignments` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_assignments)]`
+running 13 tests
+test acl::tests::constants_are_consistent ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
+test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
+test error::tests::access_denied_retains_context_and_source ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test ffi::sec_caps::tests::build_security_capabilities ... ok
+test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
+test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
 
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:332:9
-    |
-332 |         si_ex.lpAttributeList = attr_list.as_mut_ptr();
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-error: could not compile `rappct` (lib) due to 3 previous errors
-warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 3 previous errors
-[33;1mWARNING: [ci-local] nightly test failed (no features)[0m
+     Running tests\api_surface.rs (target\debug\deps\api_surface-652eab941344a967.exe)
+
+running 1 test
+test api_reexports_are_accessible ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\integration_launch.rs (target\debug\deps\integration_launch-fcb31150e39a45ee.exe)
+
+running 1 test
+test skeleton_compiles_and_exports ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_acl.rs (target\debug\deps\windows_acl-e8e223b5f8601895.exe)
+
+running 2 tests
+test grant_to_package_updates_file_dacl ... ok
+test grant_to_package_updates_registry_dacl ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\windows_core.rs (target\debug\deps\windows_core-2b4cf22c7260d5f3.exe)
+
+running 6 tests
+test derive_known_capability_sids ... ok
+test capability_derivation_repeated_calls_are_successful ... ok
+test supports_lpac_override_ok ... ok
+test token_query_works ... ok
+test supports_lpac_override_unsupported ... ok
+test derive_sid_from_name_works ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_diag.rs (target\debug\deps\windows_diag-ef54c33e436f3ecf.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_job_guard.rs (target\debug\deps\windows_job_guard-d4686092331531fe.exe)
+
+running 1 test
+test job_guard_kills_on_drop ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_launch.rs (target\debug\deps\windows_launch-91a34d67549cbc4b.exe)
+
+running 9 tests
+Access is denied.
+Access is denied.
+test launch_job_guard_drop_terminates_process ... ok
+test launch_job_limits_reported_by_query ... ok
+test launch_lpac_cmd_exits_if_supported ... ok
+test launch_with_pipes_and_echo ... ok
+test launch_ac_cmd_exits ... ok
+test launch_appcontainer_token_matches_profile ... ok
+test launch_ac_with_job_limits ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_waits_for_exit_code ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\windows_net.rs (target\debug\deps\windows_net-dfd2dde1ad72e0e0.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_net_loopback_guard.rs (target\debug\deps\windows_net_loopback_guard-91b33f0095e7eccd.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_profile.rs (target\debug\deps\windows_profile-84caa1165e52f697.exe)
+
+running 4 tests
+test profile_named_object_path_invalid_sid_errors ... ok
+test profile_ensure_and_delete_roundtrip ... ok
+test profile_folder_path_fallback_after_delete ... ok
+test profile_ensure_existing_handles_metadata_mismatch ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests examples\acrun.rs (target\debug\examples\acrun-567e50ef3ef674cf.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\advanced_features.rs (target\debug\examples\advanced_features-1215b66d337939ab.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\comprehensive_demo.rs (target\debug\examples\comprehensive_demo-0579c9ddaf8bfca0.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\network_demo.rs (target\debug\examples\network_demo-430743ee522a0fc4.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\rappct_demo.rs (target\debug\examples\rappct_demo-18ffb12393feb8ab.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
 [ci-local] clippy (nightly, no features)
     Checking rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-error: variable `si_ex` is assigned to, but never used
-   --> src\launch\mod.rs:330:13
-    |
-330 |         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-    |             ^^^^^^^^^
-    |
-    = note: consider using `_si_ex` instead
-    = note: `-D unused-variables` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_variables)]`
-
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:331:9
-    |
-331 |         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-    = note: `-D unused-assignments` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_assignments)]`
-
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:332:9
-    |
-332 |         si_ex.lpAttributeList = attr_list.as_mut_ptr();
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-
 error: unsafe block missing a safety comment
   --> src\acl.rs:51:5
    |
@@ -3704,24 +3339,6 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
   --> src\token.rs:49:9
    |
 49 |         unsafe {
@@ -3739,92 +3356,157 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 17 previous errors
+error: could not compile `rappct` (lib) due to 10 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 17 previous errors
+error: could not compile `rappct` (lib test) due to 10 previous errors
 [33;1mWARNING: [ci-local] nightly clippy failed (no features)[0m
 [ci-local] test (nightly, features: introspection)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-error: variable `si_ex` is assigned to, but never used
-   --> src\launch\mod.rs:330:13
-    |
-330 |         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-    |             ^^^^^^^^^
-    |
-    = note: consider using `_si_ex` instead
-    = note: `-D unused-variables` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_variables)]`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running unittests src\lib.rs (target\debug\deps\rappct-1eaf16b9cbaa318d.exe)
 
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:331:9
-    |
-331 |         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-    = note: `-D unused-assignments` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_assignments)]`
+running 16 tests
+test acl::tests::constants_are_consistent ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
+test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
+test error::tests::access_denied_retains_context_and_source ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
+test capability::tests::prefers_highest_similarity_match ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test capability::tests::suggests_known_capability_when_above_threshold ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test ffi::sec_caps::tests::build_security_capabilities ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test capability::tests::suppresses_suggestion_below_threshold ... ok
+test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
 
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:332:9
-    |
-332 |         si_ex.lpAttributeList = attr_list.as_mut_ptr();
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-error: could not compile `rappct` (lib) due to 3 previous errors
-warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 3 previous errors
-[33;1mWARNING: [ci-local] nightly test failed (features: introspection)[0m
+     Running tests\api_surface.rs (target\debug\deps\api_surface-1fb85acd3b648cab.exe)
+
+running 1 test
+test api_reexports_are_accessible ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\integration_launch.rs (target\debug\deps\integration_launch-ea35e43ccc382ff6.exe)
+
+running 1 test
+test skeleton_compiles_and_exports ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_acl.rs (target\debug\deps\windows_acl-9b2e7f61961def3c.exe)
+
+running 2 tests
+test grant_to_package_updates_file_dacl ... ok
+test grant_to_package_updates_registry_dacl ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\windows_core.rs (target\debug\deps\windows_core-b75f5f5969a3f811.exe)
+
+running 7 tests
+test supports_lpac_override_unsupported ... ok
+test capability_derivation_repeated_calls_are_successful ... ok
+test derive_known_capability_sids ... ok
+test supports_lpac_override_ok ... ok
+test capability_typo_returns_suggestion ... ok
+test token_query_works ... ok
+test derive_sid_from_name_works ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_diag.rs (target\debug\deps\windows_diag-eea1ea0492fe5dc9.exe)
+
+running 3 tests
+test diag_no_warnings_for_basic_appcontainer ... ok
+test diag_warns_when_network_caps_missing ... ok
+test diag_warns_when_lpac_missing_defaults ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\windows_job_guard.rs (target\debug\deps\windows_job_guard-97ca9c267171a52a.exe)
+
+running 1 test
+test job_guard_kills_on_drop ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_launch.rs (target\debug\deps\windows_launch-30cd5a82390129e7.exe)
+
+running 10 tests
+test launch_ac_with_job_limits ... ok
+test launch_waits_for_exit_code ... ok
+Access is denied.
+test diagnostics_reports_missing_caps ... ok
+Access is denied.
+test launch_lpac_cmd_exits_if_supported ... ok
+test launch_ac_cmd_exits ... ok
+test launch_job_guard_drop_terminates_process ... ok
+test launch_job_limits_reported_by_query ... ok
+test launch_appcontainer_token_matches_profile ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_with_pipes_and_echo ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\windows_net.rs (target\debug\deps\windows_net-067a45e7522b2f4c.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_net_loopback_guard.rs (target\debug\deps\windows_net_loopback_guard-af1cc8fffaa29884.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_profile.rs (target\debug\deps\windows_profile-315ac4058d488713.exe)
+
+running 4 tests
+test profile_named_object_path_invalid_sid_errors ... ok
+test profile_folder_path_fallback_after_delete ... ok
+test profile_ensure_and_delete_roundtrip ... ok
+test profile_ensure_existing_handles_metadata_mismatch ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests examples\acrun.rs (target\debug\examples\acrun-69ca4937af55cdeb.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\advanced_features.rs (target\debug\examples\advanced_features-e2d0a7340730ad17.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\comprehensive_demo.rs (target\debug\examples\comprehensive_demo-92dfccef2cfa82b7.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\network_demo.rs (target\debug\examples\network_demo-b8eb8118cd540941.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\rappct_demo.rs (target\debug\examples\rappct_demo-be7f22aabdb59fa1.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
 [ci-local] clippy (nightly, features: introspection)
     Checking rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-error: variable `si_ex` is assigned to, but never used
-   --> src\launch\mod.rs:330:13
-    |
-330 |         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-    |             ^^^^^^^^^
-    |
-    = note: consider using `_si_ex` instead
-    = note: `-D unused-variables` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_variables)]`
-
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:331:9
-    |
-331 |         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-    = note: `-D unused-assignments` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_assignments)]`
-
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:332:9
-    |
-332 |         si_ex.lpAttributeList = attr_list.as_mut_ptr();
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-
 error: unsafe block missing a safety comment
   --> src\acl.rs:51:5
    |
@@ -3900,24 +3582,6 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
   --> src\token.rs:49:9
    |
 49 |         unsafe {
@@ -3935,92 +3599,153 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 17 previous errors
+error: could not compile `rappct` (lib) due to 10 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 17 previous errors
+error: could not compile `rappct` (lib test) due to 10 previous errors
 [33;1mWARNING: [ci-local] nightly clippy failed (features: introspection)[0m
 [ci-local] test (nightly, features: net)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-error: variable `si_ex` is assigned to, but never used
-   --> src\launch\mod.rs:330:13
-    |
-330 |         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-    |             ^^^^^^^^^
-    |
-    = note: consider using `_si_ex` instead
-    = note: `-D unused-variables` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_variables)]`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running unittests src\lib.rs (target\debug\deps\rappct-d88e254fe8b81dfa.exe)
 
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:331:9
-    |
-331 |         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-    = note: `-D unused-assignments` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_assignments)]`
+running 13 tests
+test acl::tests::constants_are_consistent ... ok
+test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
+test error::tests::access_denied_retains_context_and_source ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test ffi::sec_caps::tests::build_security_capabilities ... ok
+test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
+test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
 
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:332:9
-    |
-332 |         si_ex.lpAttributeList = attr_list.as_mut_ptr();
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-error: could not compile `rappct` (lib) due to 3 previous errors
-warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 3 previous errors
-[33;1mWARNING: [ci-local] nightly test failed (features: net)[0m
+     Running tests\api_surface.rs (target\debug\deps\api_surface-50466eacb9182124.exe)
+
+running 1 test
+test api_reexports_are_accessible ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\integration_launch.rs (target\debug\deps\integration_launch-0434ef9f487679c7.exe)
+
+running 1 test
+test skeleton_compiles_and_exports ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_acl.rs (target\debug\deps\windows_acl-918f7edecafd1dad.exe)
+
+running 2 tests
+test grant_to_package_updates_registry_dacl ... ok
+test grant_to_package_updates_file_dacl ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\windows_core.rs (target\debug\deps\windows_core-1d7d3d0c6efe2752.exe)
+
+running 6 tests
+test derive_known_capability_sids ... ok
+test capability_derivation_repeated_calls_are_successful ... ok
+test token_query_works ... ok
+test supports_lpac_override_ok ... ok
+test supports_lpac_override_unsupported ... ok
+test derive_sid_from_name_works ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_diag.rs (target\debug\deps\windows_diag-6de38bde15b785fa.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_job_guard.rs (target\debug\deps\windows_job_guard-c309b05d362b8149.exe)
+
+running 1 test
+test job_guard_kills_on_drop ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_launch.rs (target\debug\deps\windows_launch-c637095fbb5937c5.exe)
+
+running 9 tests
+test launch_lpac_cmd_exits_if_supported ... ok
+Access is denied.
+Access is denied.
+test launch_job_limits_reported_by_query ... ok
+test launch_ac_with_job_limits ... ok
+test launch_appcontainer_token_matches_profile ... ok
+test launch_ac_cmd_exits ... ok
+test launch_job_guard_drop_terminates_process ... ok
+test launch_waits_for_exit_code ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_with_pipes_and_echo ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\windows_net.rs (target\debug\deps\windows_net-bd3c2391d7dadae6.exe)
+
+running 3 tests
+test loopback_requires_confirm ... ok
+test list_appcontainers_cross_checks ... ok
+test loopback_add_remove_roundtrip ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\windows_net_loopback_guard.rs (target\debug\deps\windows_net_loopback_guard-9ec56f69a62cf91f.exe)
+
+running 1 test
+test loopback_guard_roundtrip_opt_in ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_profile.rs (target\debug\deps\windows_profile-41c97481b7da994a.exe)
+
+running 4 tests
+test profile_named_object_path_invalid_sid_errors ... ok
+test profile_folder_path_fallback_after_delete ... ok
+test profile_ensure_and_delete_roundtrip ... ok
+test profile_ensure_existing_handles_metadata_mismatch ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests examples\acrun.rs (target\debug\examples\acrun-c6feebfd308a446f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\advanced_features.rs (target\debug\examples\advanced_features-1b4f9ddd697b2672.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\comprehensive_demo.rs (target\debug\examples\comprehensive_demo-58f808f532ffc415.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\network_demo.rs (target\debug\examples\network_demo-9717a8bf5747be55.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\rappct_demo.rs (target\debug\examples\rappct_demo-29e0ef978dfa08c9.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
 [ci-local] clippy (nightly, features: net)
     Checking rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-error: variable `si_ex` is assigned to, but never used
-   --> src\launch\mod.rs:330:13
-    |
-330 |         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-    |             ^^^^^^^^^
-    |
-    = note: consider using `_si_ex` instead
-    = note: `-D unused-variables` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_variables)]`
-
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:331:9
-    |
-331 |         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-    = note: `-D unused-assignments` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_assignments)]`
-
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:332:9
-    |
-332 |         si_ex.lpAttributeList = attr_list.as_mut_ptr();
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-
 error: unsafe block missing a safety comment
   --> src\acl.rs:51:5
    |
@@ -4096,54 +3821,36 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-  --> src\net.rs:49:5
+  --> src\net.rs:53:5
    |
-49 |     unsafe {
+53 |     unsafe {
    |     ^^^^^^^^
    |
    = help: consider adding a safety comment on the preceding line
    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:155:5
+   --> src\net.rs:161:5
     |
-155 |     unsafe {
+161 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:182:5
+   --> src\net.rs:188:5
     |
-182 |     unsafe {
+188 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:288:5
+   --> src\net.rs:294:5
     |
-288 |     unsafe {
+294 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
@@ -4167,92 +3874,161 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 21 previous errors
+error: could not compile `rappct` (lib) due to 14 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 21 previous errors
+error: could not compile `rappct` (lib test) due to 14 previous errors
 [33;1mWARNING: [ci-local] nightly clippy failed (features: net)[0m
 [ci-local] test (nightly, features: introspection,net)
-   Compiling rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-error: variable `si_ex` is assigned to, but never used
-   --> src\launch\mod.rs:330:13
-    |
-330 |         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-    |             ^^^^^^^^^
-    |
-    = note: consider using `_si_ex` instead
-    = note: `-D unused-variables` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_variables)]`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running unittests src\lib.rs (target\debug\deps\rappct-89aaa8b680e8a11e.exe)
 
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:331:9
-    |
-331 |         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-    = note: `-D unused-assignments` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_assignments)]`
+running 16 tests
+test acl::tests::constants_are_consistent ... ok
+test capability::builder_tests::lpac_defaults_enable_flag_and_append_registry_and_lpaccom ... ok
+test capability::builder_tests::known_capabilities_are_mapped_to_expected_names ... ok
+test capability::tests::prefers_highest_similarity_match ... ok
+test error::tests::unknown_capability_preserves_hint ... ok
+test error::tests::access_denied_retains_context_and_source ... ok
+test error::tests::launch_failed_retains_stage_hint_and_source ... ok
+test capability::tests::suggests_known_capability_when_above_threshold ... ok
+test capability::tests::suppresses_suggestion_below_threshold ... ok
+test ffi::handles::tests::handle_wraps_event_and_closes ... ok
+test ffi::attr_list::tests::attr_list_init_and_set_sc ... ok
+test ffi::mem::tests::localalloc_guard_round_trip_string_sid ... ok
+test ffi::sec_caps::tests::build_security_capabilities ... ok
+test ffi::sid::tests::owned_sid_localfree_constructs_and_drops ... ok
+test ffi::wstr::tests::wide_from_str_is_nul_terminated ... ok
+test launch::tests::merge_parent_env_includes_essentials_if_present ... ok
 
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:332:9
-    |
-332 |         si_ex.lpAttributeList = attr_list.as_mut_ptr();
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-error: could not compile `rappct` (lib) due to 3 previous errors
-warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 3 previous errors
-[33;1mWARNING: [ci-local] nightly test failed (features: introspection,net)[0m
+     Running tests\api_surface.rs (target\debug\deps\api_surface-ce001f70d8af3291.exe)
+
+running 1 test
+test api_reexports_are_accessible ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\integration_launch.rs (target\debug\deps\integration_launch-71a7caf06a6b1709.exe)
+
+running 1 test
+test skeleton_compiles_and_exports ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_acl.rs (target\debug\deps\windows_acl-b7d44eb2f455af39.exe)
+
+running 2 tests
+test grant_to_package_updates_file_dacl ... ok
+test grant_to_package_updates_registry_dacl ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\windows_core.rs (target\debug\deps\windows_core-1ead2f1614fe2e09.exe)
+
+running 7 tests
+test derive_known_capability_sids ... ok
+test capability_derivation_repeated_calls_are_successful ... ok
+test supports_lpac_override_ok ... ok
+test supports_lpac_override_unsupported ... ok
+test token_query_works ... ok
+test capability_typo_returns_suggestion ... ok
+test derive_sid_from_name_works ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_diag.rs (target\debug\deps\windows_diag-68fc3ddef49e33a9.exe)
+
+running 3 tests
+test diag_no_warnings_for_basic_appcontainer ... ok
+test diag_warns_when_network_caps_missing ... ok
+test diag_warns_when_lpac_missing_defaults ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\windows_job_guard.rs (target\debug\deps\windows_job_guard-abceb6893cb77d50.exe)
+
+running 1 test
+test job_guard_kills_on_drop ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_launch.rs (target\debug\deps\windows_launch-6e0bb6547fa1e467.exe)
+
+running 10 tests
+test diagnostics_reports_missing_caps ... ok
+test launch_lpac_cmd_exits_if_supported ... ok
+Access is denied.
+Access is denied.
+test launch_ac_with_job_limits ... ok
+test launch_ac_cmd_exits ... ok
+test launch_with_pipes_and_echo ... ok
+test launch_lpac_token_sets_flag_and_caps ... ok
+test launch_waits_for_exit_code ... ok
+test launch_job_limits_reported_by_query ... ok
+test launch_job_guard_drop_terminates_process ... ok
+test launch_appcontainer_token_matches_profile ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\windows_net.rs (target\debug\deps\windows_net-ebf7f8d6927e94d5.exe)
+
+running 3 tests
+test loopback_requires_confirm ... ok
+test list_appcontainers_cross_checks ... ok
+test loopback_add_remove_roundtrip ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\windows_net_loopback_guard.rs (target\debug\deps\windows_net_loopback_guard-afed649aa825bf64.exe)
+
+running 1 test
+test loopback_guard_roundtrip_opt_in ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\windows_profile.rs (target\debug\deps\windows_profile-42726d5fbbedd291.exe)
+
+running 4 tests
+test profile_named_object_path_invalid_sid_errors ... ok
+test profile_folder_path_fallback_after_delete ... ok
+test profile_ensure_and_delete_roundtrip ... ok
+test profile_ensure_existing_handles_metadata_mismatch ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests examples\acrun.rs (target\debug\examples\acrun-16eebae20047acb5.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\advanced_features.rs (target\debug\examples\advanced_features-7e728178ba9e0f3f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\comprehensive_demo.rs (target\debug\examples\comprehensive_demo-324bab1b540aafe4.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\network_demo.rs (target\debug\examples\network_demo-4d484e75f870b0d8.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\rappct_demo.rs (target\debug\examples\rappct_demo-b961bbdc14820897.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
 [ci-local] clippy (nightly, features: introspection,net)
     Checking rappct v0.13.4 (C:\Users\curtp\source\repos\rappct)
-error: variable `si_ex` is assigned to, but never used
-   --> src\launch\mod.rs:330:13
-    |
-330 |         let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-    |             ^^^^^^^^^
-    |
-    = note: consider using `_si_ex` instead
-    = note: `-D unused-variables` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_variables)]`
-
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:331:9
-    |
-331 |         si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-    = note: `-D unused-assignments` implied by `-D warnings`
-    = help: to override `-D warnings` add `#[allow(unused_assignments)]`
-
-error: value assigned to `si_ex` is never read
-   --> src\launch\mod.rs:332:9
-    |
-332 |         si_ex.lpAttributeList = attr_list.as_mut_ptr();
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: maybe it is overwritten before being read?
-
 error: unsafe block missing a safety comment
   --> src\acl.rs:51:5
    |
@@ -4328,54 +4104,36 @@ error: unsafe block missing a safety comment
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:566:17
-    |
-566 |                 unsafe { FHandle::from_raw(r_out.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\launch\mod.rs:570:17
-    |
-570 |                 unsafe { FHandle::from_raw(r_err.0 as *mut _) }
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-  --> src\net.rs:49:5
+  --> src\net.rs:53:5
    |
-49 |     unsafe {
+53 |     unsafe {
    |     ^^^^^^^^
    |
    = help: consider adding a safety comment on the preceding line
    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:155:5
+   --> src\net.rs:161:5
     |
-155 |     unsafe {
+161 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:182:5
+   --> src\net.rs:188:5
     |
-182 |     unsafe {
+188 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
 error: unsafe block missing a safety comment
-   --> src\net.rs:288:5
+   --> src\net.rs:294:5
     |
-288 |     unsafe {
+294 |     unsafe {
     |     ^^^^^^^^
     |
     = help: consider adding a safety comment on the preceding line
@@ -4399,26 +4157,8 @@ error: unsafe block missing a safety comment
     = help: consider adding a safety comment on the preceding line
     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
 
-error: unsafe block missing a safety comment
-   --> src\token.rs:195:17
-    |
-195 |     let count = unsafe { (*groups).GroupCount as usize };
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: unsafe block missing a safety comment
-   --> src\token.rs:206:23
-    |
-206 |         let sid_str = unsafe { sid_to_string(entry.Sid)? };
-    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = help: consider adding a safety comment on the preceding line
-    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
-
-error: could not compile `rappct` (lib) due to 21 previous errors
+error: could not compile `rappct` (lib) due to 14 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `rappct` (lib test) due to 21 previous errors
+error: could not compile `rappct` (lib test) due to 14 previous errors
 [33;1mWARNING: [ci-local] nightly clippy failed (features: introspection,net)[0m
 [ci-local] OK

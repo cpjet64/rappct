@@ -50,6 +50,7 @@ unsafe fn psid_to_string(psid: PSID) -> Result<String> {
 
 pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
     #[cfg(all(windows, feature = "net"))]
+    // SAFETY: Enumerates app containers and firewall config via Win32; out-pointers handled and freed.
     unsafe {
         use windows::Win32::NetworkManagement::WindowsFirewall::{
             INET_FIREWALL_APP_CONTAINER, NETISO_FLAG_FORCE_COMPUTE_BINARIES,
@@ -158,6 +159,7 @@ pub struct LoopbackAdd(pub AppContainerSid);
 pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
     let _ = &req;
     #[cfg(all(windows, feature = "net"))]
+    // SAFETY: Requires prior explicit confirmation; delegates to `set_loopback` with valid SID.
     unsafe {
         // Safety latch: require explicit confirm prior to call
         if !CONFIRM_NEXT.swap(false, std::sync::atomic::Ordering::SeqCst) {
@@ -185,6 +187,7 @@ pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
 pub fn remove_loopback_exemption(sid: &AppContainerSid) -> Result<()> {
     let _ = sid;
     #[cfg(all(windows, feature = "net"))]
+    // SAFETY: Delegates to `set_loopback` with a valid SID reference.
     unsafe {
         set_loopback(false, sid)
     }
@@ -291,6 +294,7 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
 
     let mut cur_count: u32 = 0;
     let mut cur_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
+    // SAFETY: Queries and updates firewall loopback configuration; LocalAlloc buffers are guarded.
     unsafe {
         let err = NetworkIsolationGetAppContainerConfig(&mut cur_count, &mut cur_arr);
         if err != 0 {

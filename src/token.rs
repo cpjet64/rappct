@@ -46,6 +46,7 @@ pub struct TokenInfo {
 pub fn query_current_process_token() -> Result<TokenInfo> {
     #[cfg(windows)]
     {
+        // SAFETY: Open process token for the current process with TOKEN_QUERY; wrap handle with RAII.
         unsafe {
             let mut raw = HANDLE::default();
             // SAFETY: We pass a valid process handle from GetCurrentProcess and request TOKEN_QUERY.
@@ -109,9 +110,8 @@ unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bo
 unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid>> {
     let mut needed: u32 = 0;
     // SAFETY: Size probe with null buffer; API fills `needed` with required size.
-    if let Err(err) =
-        unsafe { GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) }
-    {
+    let size_probe = unsafe { GetTokenInformation(token, TokenAppContainerSid, None, 0, &mut needed) };
+    if let Err(err) = size_probe {
         if is_win32_error(&err, ERROR_INVALID_PARAMETER.0) {
             return Ok(None);
         }
@@ -158,8 +158,8 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
 unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
     let mut needed: u32 = 0;
     // SAFETY: Size probe to retrieve required bytes for TOKEN_GROUPS.
-    if let Err(err) = unsafe { GetTokenInformation(token, TokenCapabilities, None, 0, &mut needed) }
-    {
+    let cap_probe = unsafe { GetTokenInformation(token, TokenCapabilities, None, 0, &mut needed) };
+    if let Err(err) = cap_probe {
         if is_win32_error(&err, ERROR_INVALID_PARAMETER.0) {
             return Ok(Vec::new());
         }
@@ -204,6 +204,7 @@ unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
         if entry.Sid.0.is_null() {
             continue;
         }
+        // SAFETY: Convert a valid SID to SDDL via helper; returns owned String.
         // SAFETY: Convert a valid SID to SDDL via helper; returns owned String.
         let sid_str = unsafe { sid_to_string(entry.Sid)? };
         out.push(sid_str);
