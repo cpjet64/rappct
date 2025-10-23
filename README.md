@@ -2,8 +2,8 @@
 
 **Stable (main branch)**
 
-[![CI stable](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20stable)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
 [![CI 1.90.0](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%201.90.0)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
+[![CI stable](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20stable)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
 [![CI (beta)](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20beta)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
 [![CI (nightly)](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20nightly)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
 [![Release](https://img.shields.io/github/v/release/cpjet64/rappct)](https://github.com/cpjet64/rappct/releases?q=exclude-prereleases%3Atrue)
@@ -207,6 +207,30 @@ cargo test --all-targets --all-features
 
 Run Windows-specific scenarios in an elevated PowerShell session when the tests require loopback exemptions or ACL
 adjustments.
+
+### Local Test Toggles
+
+These environment variables help diagnose local environment quirks during AppContainer launches. They are intended for local testing only and are not required on CI.
+
+- `RAPPCT_TEST_FORCE_ENV=1`
+  - Passes an explicit, Unicode environment block to `CreateProcessW` built from the current process environment (sorted case-insensitively).
+  - Use if you see Win32 error 203 (environment option not found) on your machine.
+
+- `RAPPCT_TEST_NO_CWD=1`
+  - Skips passing an explicit current directory to `CreateProcessW`.
+  - Use to rule out cwd issues on machines with unusual default directories.
+
+- `RAPPCT_DEBUG_LAUNCH=1`
+  - Prints verbose `CreateProcessW` diagnostics (flags, env bytes, HRESULT) to stderr during tests.
+
+Examples:
+
+```powershell
+$env:RAPPCT_TEST_FORCE_ENV='1'
+$env:RAPPCT_TEST_NO_CWD='1'
+$env:RAPPCT_DEBUG_LAUNCH='1'
+cargo test --test windows_launch -- --nocapture
+```
 
 ## Contributing
 
