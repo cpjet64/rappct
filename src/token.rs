@@ -7,7 +7,7 @@ use crate::{AcError, Result};
 
 #[cfg(windows)]
 use windows::Win32::Foundation::{
-    CloseHandle, ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, HANDLE,
+    ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, HANDLE,
 };
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::ConvertSidToStringSidW;

@@ -2,6 +2,7 @@
 
 #[cfg(windows)]
 pub mod win {
+    #![allow(deprecated)]
     use std::os::windows::ffi::OsStrExt;
 
     use windows::Win32::Foundation::{CloseHandle, HANDLE};
