@@ -22,7 +22,7 @@ jobs:
       RUST_BACKTRACE: 1
       RUSTFLAGS: -D warnings
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # Cache to speed up Windows builds
       - name: Cache cargo
