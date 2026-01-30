@@ -6,15 +6,35 @@ use crate::ffi::mem::LocalAllocGuard;
 use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
+/// ACE inheritance flags for directory ACL grants.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AceInheritance(pub u32);
+
+impl AceInheritance {
+    /// Inherited by child containers and objects (default for directories).
+    /// Equivalent to `CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE`.
+    pub const SUB_CONTAINERS_AND_OBJECTS: Self = Self(0x3);
+    /// Inherited by child containers only (`CONTAINER_INHERIT_ACE`).
+    pub const SUB_CONTAINERS_ONLY: Self = Self(0x2);
+    /// Inherited by child objects only (`OBJECT_INHERIT_ACE`).
+    pub const OBJECTS_ONLY: Self = Self(0x1);
+    /// No inheritance — ACE applies only to the directory itself.
+    pub const NONE: Self = Self(0x0);
+}
+
 /// Target resource for granting AppContainer or capability access.
 ///
 /// Notes:
 /// - `RegistryKey` supports only `HKCU` and `HKLM` roots (case-insensitive shorthands
 ///   `HKCU\\`/`HKLM\\` and full names `HKEY_CURRENT_USER\\`/`HKEY_LOCAL_MACHINE\\`).
+/// - `Directory` uses [`AceInheritance::SUB_CONTAINERS_AND_OBJECTS`] by default.
+///   Use `DirectoryCustom` to override the inheritance flags.
 #[derive(Clone, Debug)]
 pub enum ResourcePath {
     File(std::path::PathBuf),
     Directory(std::path::PathBuf),
+    /// Directory with custom ACE inheritance flags.
+    DirectoryCustom(std::path::PathBuf, AceInheritance),
     RegistryKey(String),
 }
 
@@ -166,8 +186,12 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             }
             Ok(())
         }
-        ResourcePath::Directory(path) => {
-            ea.grfInheritance = ACE_FLAGS(0x3u32); // SUB_CONTAINERS_AND_OBJECTS_INHERIT
+        ResourcePath::Directory(ref path) | ResourcePath::DirectoryCustom(ref path, _) => {
+            let inheritance = match target {
+                ResourcePath::DirectoryCustom(_, flags) => flags.0,
+                _ => AceInheritance::SUB_CONTAINERS_AND_OBJECTS.0,
+            };
+            ea.grfInheritance = ACE_FLAGS(inheritance);
             let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
@@ -318,7 +342,8 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
 
 #[cfg(test)]
 mod tests {
-    use super::AccessMask;
+    use super::{AccessMask, AceInheritance};
+
     #[test]
     fn constants_are_consistent() {
         assert_eq!(AccessMask::GENERIC_ALL.0, 0x001F_01FF);
@@ -328,5 +353,14 @@ mod tests {
             assert_eq!(AccessMask::FILE_GENERIC_READ.0, FILE_GENERIC_READ.0);
             assert_eq!(AccessMask::FILE_GENERIC_WRITE.0, FILE_GENERIC_WRITE.0);
         }
+    }
+
+    #[test]
+    fn ace_inheritance_constants_match_win32_values() {
+        // OBJECT_INHERIT_ACE = 0x1, CONTAINER_INHERIT_ACE = 0x2
+        assert_eq!(AceInheritance::NONE.0, 0x0);
+        assert_eq!(AceInheritance::OBJECTS_ONLY.0, 0x1);
+        assert_eq!(AceInheritance::SUB_CONTAINERS_ONLY.0, 0x2);
+        assert_eq!(AceInheritance::SUB_CONTAINERS_AND_OBJECTS.0, 0x3);
     }
 }
