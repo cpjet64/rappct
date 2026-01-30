@@ -12,7 +12,7 @@ Recommendations from deep dive code review.
 - [x] **No SDDL validation**: Add a validating `AppContainerSid::try_from_sddl()` that checks format
 - [x] **ACL inheritance inflexible**: Make directory inheritance flags configurable
 - [x] **Resource existence pre-check**: Validate file/dir/key exists before ACL grant; provide actionable error
-- [ ] **Negative test coverage**: Add tests for error paths (invalid inputs, permission denied, missing resources)
+- [x] **Negative test coverage**: Add tests for error paths (invalid inputs, permission denied, missing resources)
 
 ## Low Priority
 

@@ -82,6 +82,23 @@ fn supports_lpac_override_ok() {
 
 #[cfg(windows)]
 #[test]
+fn derive_arbitrary_capability_name_succeeds() {
+    // DeriveCapabilitySidsFromName hashes any string; it never rejects a name.
+    let caps =
+        capability::derive_named_capability_sids(&["arbitraryName"]).expect("derive custom name");
+    assert!(!caps.is_empty());
+    assert!(!caps[0].sid_sddl.is_empty());
+}
+
+#[cfg(windows)]
+#[test]
+fn derive_empty_list_returns_empty() {
+    let caps = capability::derive_named_capability_sids(&[]).expect("derive empty");
+    assert!(caps.is_empty());
+}
+
+#[cfg(windows)]
+#[test]
 fn supports_lpac_override_unsupported() {
     let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
     #[allow(unused_unsafe)]

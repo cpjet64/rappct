@@ -414,4 +414,59 @@ mod tests {
         assert!(msg.contains("Resource not found"), "got: {msg}");
         assert!(msg.contains("create the directory"), "got: {msg}");
     }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_unsupported_registry_root() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let err = grant_to_package(
+            ResourcePath::RegistryKey("HKCR\\Software".into()),
+            &sid,
+            AccessMask::GENERIC_ALL,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Unsupported registry root"),
+            "expected unsupported root error, got: {msg}"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_invalid_sddl() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        // from_sddl allows anything; the Win32 API rejects it
+        let sid = AppContainerSid::from_sddl("not-a-valid-sid");
+        let path = std::env::temp_dir();
+        let err = grant_to_package(ResourcePath::Directory(path), &sid, AccessMask::GENERIC_ALL)
+            .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ConvertStringSidToSidW"),
+            "expected SID conversion failure, got: {msg}"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_nonexistent_registry_key() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let err = grant_to_package(
+            ResourcePath::RegistryKey("HKCU\\Software\\__rappct_nonexistent_key_test__".into()),
+            &sid,
+            AccessMask::GENERIC_ALL,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("RegOpenKeyExW"),
+            "expected registry open failure, got: {msg}"
+        );
+    }
 }
