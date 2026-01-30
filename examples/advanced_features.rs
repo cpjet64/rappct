@@ -406,9 +406,9 @@ fn demo_advanced_launch() -> rappct::Result<()> {
 
     let profile = AppContainerProfile::ensure("rappct.advanced.launch", "Advanced Launch", None)?;
 
-    // Build custom environment with essential Windows variables
-    // NOTE: When passing env to CreateProcessW, it REPLACES the entire parent environment.
-    // Windows needs SystemRoot, ComSpec, etc. for cmd.exe and other tools to work.
+    // Build custom environment variables.
+    // LaunchOptions::inherit_parent_env defaults to true, so essential Windows
+    // variables (SystemRoot, ComSpec, PATH, etc.) are merged automatically.
     let custom_env = vec![
         (OsString::from("RAPPCT_DEMO"), OsString::from("advanced")),
         (
@@ -420,9 +420,6 @@ fn demo_advanced_launch() -> rappct::Result<()> {
             OsString::from("C:\\Windows\\System32"),
         ),
     ];
-
-    // Merge essential variables from parent (SystemRoot, ComSpec, etc.)
-    let custom_env = rappct::launch::merge_parent_env(custom_env);
 
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])

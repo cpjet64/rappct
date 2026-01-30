@@ -73,6 +73,12 @@ pub struct LaunchOptions {
     pub cmdline: Option<String>,
     pub cwd: Option<std::path::PathBuf>,
     pub env: Option<Vec<(std::ffi::OsString, std::ffi::OsString)>>,
+    /// When `true` (the default) and `env` is `Some(...)`, essential Windows
+    /// system variables (`SystemRoot`, `ComSpec`, `PATH`, etc.) are
+    /// automatically merged from the parent environment if they are not already
+    /// present in the custom list.  Set to `false` only when you need complete
+    /// control over the child environment block.
+    pub inherit_parent_env: bool,
     pub stdio: StdioConfig,
     pub suspended: bool,
     pub join_job: Option<JobLimits>,
@@ -90,6 +96,7 @@ impl Default for LaunchOptions {
             cmdline: None,
             cwd,
             env: None,
+            inherit_parent_env: true,
             stdio: StdioConfig::Inherit,
             suspended: false,
             join_job: None,
@@ -230,8 +237,14 @@ fn build_env_block(env: &[(std::ffi::OsString, std::ffi::OsString)]) -> Vec<u16>
 }
 
 /// Merge caller-supplied env vars with essential Windows variables.
+///
 /// When passing a custom environment to `CreateProcessW`, the parent env is
-/// fully replaced. Including these keys avoids common failures (e.g., error 203).
+/// fully replaced.  Including these keys avoids common failures (e.g., error 203).
+///
+/// Note: since `LaunchOptions::inherit_parent_env` defaults to `true`, this
+/// merge is now applied automatically during launch.  You only need to call
+/// this function directly when building an environment block outside of
+/// `launch_in_container`.
 pub fn merge_parent_env(mut custom: Vec<(OsString, OsString)>) -> Vec<(OsString, OsString)> {
     const KEYS: &[&str] = &[
         "SystemRoot",
@@ -406,7 +419,11 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     // Environment
     let force_env = std::env::var_os("RAPPCT_TEST_FORCE_ENV").is_some();
     let env_block = if let Some(e) = opts.env.as_ref() {
-        Some(build_env_block(e))
+        if opts.inherit_parent_env {
+            Some(build_env_block(&merge_parent_env(e.clone())))
+        } else {
+            Some(build_env_block(e))
+        }
     } else if force_env {
         // Test assist: build an explicit environment block from the full parent environment.
         // Sort case-insensitively to match Win32 expectations for Unicode blocks.
@@ -820,5 +837,19 @@ mod tests {
         if std::env::var_os("SystemRoot").is_some() {
             assert!(out.iter().any(|(k, _)| k == "SystemRoot"));
         }
+    }
+
+    #[test]
+    fn launch_options_inherit_parent_env_defaults_true() {
+        let opts = super::LaunchOptions::default();
+        assert!(opts.inherit_parent_env);
+    }
+
+    #[test]
+    fn merge_parent_env_does_not_overwrite_custom_value() {
+        let out = merge_parent_env(vec![(OsString::from("PATH"), OsString::from("custom"))]);
+        let paths: Vec<_> = out.iter().filter(|(k, _)| k == "PATH").collect();
+        assert_eq!(paths.len(), 1, "PATH should appear exactly once");
+        assert_eq!(paths[0].1, "custom");
     }
 }

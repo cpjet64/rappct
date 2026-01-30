@@ -149,7 +149,7 @@ The crate is organized into focused modules that compose together:
 - **Not waiting for child process**: `LaunchedIo` has a `wait()` method; dropping it without waiting may leave orphaned processes if `kill_on_job_close` is false
 - **ACL grant failures on non-existent paths**: Ensure target file/directory/registry key exists before calling `grant_to_package()`
 - **Mixing `&str` and `&OsStr` UTF-16 conversions**: Use `util::to_utf16()` for `&str`, `util::to_utf16_os()` for `&OsStr`
-- **Custom environment blocks (Error 203)**: When passing `LaunchOptions::env`, it **completely replaces** the parent environment. Windows processes require essential system variables (SystemRoot, ComSpec, PATHEXT, TEMP, TMP) to function. Always copy these from the parent environment before adding custom variables. See `advanced_features.rs` Demo 5 for the pattern.
+- **Custom environment blocks (Error 203)**: When passing `LaunchOptions::env`, it replaces the parent environment. `inherit_parent_env` (default `true`) automatically merges essential system variables (SystemRoot, ComSpec, PATHEXT, TEMP, TMP, PATH). Set `inherit_parent_env: false` only when you need full control over the environment block.
 - **PowerShell console buffer errors in AppContainer (Error 0x5)**: PowerShell tries to access the console output buffer for formatting, which AppContainers restrict. Redirect PowerShell output to temporary files using `Out-File -FilePath`, read back with `type`, and clean up with `del`. Must grant ACL access to temp directory for the AppContainer. See `network_demo.rs` and `comprehensive_demo.rs` Demo 4 for examples.
 
 ## Debug Flags

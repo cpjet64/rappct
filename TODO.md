@@ -4,7 +4,7 @@ Recommendations from deep dive code review.
 
 ## High Priority
 
-- [ ] **Env block footgun**: Make `merge_parent_env()` the default, or require explicit opt-out when providing custom env
+- [x] **Env block footgun**: Make `merge_parent_env()` the default, or require explicit opt-out when providing custom env
 - [ ] **No capability name discovery**: Expose a public list of valid capability names, or add validation at builder level
 
 ## Medium Priority
