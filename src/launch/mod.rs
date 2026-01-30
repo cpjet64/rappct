@@ -53,25 +53,39 @@ use windows::Win32::System::WindowsProgramming::PROCESS_CREATION_ALL_APPLICATION
 #[cfg(windows)]
 use windows::core::{PCWSTR, PWSTR};
 
+/// Standard I/O redirection mode for the launched child process.
 #[derive(Clone, Copy, Debug)]
 pub enum StdioConfig {
+    /// Child inherits the parent's console handles.
     Inherit,
+    /// Child reads/writes are sent to `NUL`.
     Null,
+    /// Create anonymous pipes; parent gets read/write ends via [`LaunchedIo`].
     Pipe,
 }
 
+/// Resource limits applied via a Win32 Job Object to the child process.
 #[derive(Clone, Debug, Default)]
 pub struct JobLimits {
+    /// Per-process memory limit in bytes (enforced by the job object).
     pub memory_bytes: Option<usize>,
+    /// CPU rate cap as a percentage (1–100).
     pub cpu_rate_percent: Option<u32>,
+    /// When `true`, all processes in the job are terminated when the job handle is closed.
     pub kill_on_job_close: bool,
 }
 
+/// Options controlling how a child process is launched inside an AppContainer.
 #[derive(Clone, Debug)]
 pub struct LaunchOptions {
+    /// Path to the executable to launch.
     pub exe: std::path::PathBuf,
+    /// Optional command-line arguments string (passed to `CreateProcessW`).
     pub cmdline: Option<String>,
+    /// Working directory for the child process.
     pub cwd: Option<std::path::PathBuf>,
+    /// Custom environment variables. When `Some`, replaces the parent environment
+    /// (subject to [`inherit_parent_env`](LaunchOptions::inherit_parent_env)).
     pub env: Option<Vec<(std::ffi::OsString, std::ffi::OsString)>>,
     /// When `true` (the default) and `env` is `Some(...)`, essential Windows
     /// system variables (`SystemRoot`, `ComSpec`, `PATH`, etc.) are
@@ -79,9 +93,13 @@ pub struct LaunchOptions {
     /// present in the custom list.  Set to `false` only when you need complete
     /// control over the child environment block.
     pub inherit_parent_env: bool,
+    /// Standard I/O redirection mode.
     pub stdio: StdioConfig,
+    /// When `true`, the child is created in a suspended state.
     pub suspended: bool,
+    /// Optional job object resource limits applied to the child.
     pub join_job: Option<JobLimits>,
+    /// Timeout for `WaitForSingleObject` when waiting for the child (used by [`LaunchedIo::wait`]).
     pub startup_timeout: Option<std::time::Duration>,
 }
 
@@ -105,18 +123,26 @@ impl Default for LaunchOptions {
     }
 }
 
+/// Minimal result from [`launch_in_container`] (no I/O handles).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Launched {
+    /// The process ID of the launched child.
     pub pid: u32,
 }
 
+/// Result from [`launch_in_container_with_io`], providing stdio handles and job guard.
 #[cfg(windows)]
 #[derive(Debug)]
 pub struct LaunchedIo {
+    /// The process ID of the launched child.
     pub pid: u32,
+    /// Parent's write end of the child's stdin pipe (if [`StdioConfig::Pipe`]).
     pub stdin: Option<std::fs::File>,
+    /// Parent's read end of the child's stdout pipe (if [`StdioConfig::Pipe`]).
     pub stdout: Option<std::fs::File>,
+    /// Parent's read end of the child's stderr pipe (if [`StdioConfig::Pipe`]).
     pub stderr: Option<std::fs::File>,
+    /// Job object guard; dropping it terminates the child when `kill_on_job_close` is set.
     pub job_guard: Option<JobGuard>,
     pub(crate) process: FHandle,
 }
@@ -146,6 +172,7 @@ pub struct JobObjectDropGuard {
 
 #[cfg(windows)]
 impl JobObjectDropGuard {
+    /// Creates a new job object with `KILL_ON_JOB_CLOSE` enabled.
     pub fn new() -> Result<Self> {
         use windows::Win32::System::JobObjects::{
             CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
@@ -175,10 +202,12 @@ impl JobObjectDropGuard {
         })
     }
 
+    /// Returns the underlying job object handle without taking ownership.
     pub fn as_handle(&self) -> HANDLE {
         self.handle.as_win32()
     }
 
+    /// Assigns a process to this job object so its limits apply.
     pub fn assign_process_handle(&self, process: HANDLE) -> Result<()> {
         use windows::Win32::System::JobObjects::AssignProcessToJobObject;
         unsafe {
@@ -209,6 +238,9 @@ impl JobObjectDropGuard {
     }
 }
 
+/// Launches a process inside the given AppContainer, returning only the PID.
+///
+/// For access to stdio pipes and job guards, use [`launch_in_container_with_io`].
 pub fn launch_in_container(_sec: &SecurityCapabilities, _opts: &LaunchOptions) -> Result<Launched> {
     #[cfg(windows)]
     {
@@ -776,6 +808,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     })
 }
 
+/// Launches a process inside the given AppContainer, returning stdio handles and job guard.
 #[cfg(windows)]
 pub fn launch_in_container_with_io(
     sec: &SecurityCapabilities,
@@ -786,6 +819,7 @@ pub fn launch_in_container_with_io(
 
 #[cfg(windows)]
 impl LaunchedIo {
+    /// Waits for the child process to exit and returns its exit code.
     pub fn wait(self, timeout: Option<std::time::Duration>) -> Result<u32> {
         use windows::Win32::Foundation::{STILL_ACTIVE, WAIT_FAILED, WAIT_TIMEOUT};
         use windows::Win32::System::Threading::{
@@ -817,6 +851,7 @@ impl LaunchedIo {
     }
 }
 
+/// Launches a process inside the given AppContainer, returning stdio handles and job guard.
 #[cfg(not(windows))]
 pub fn launch_in_container_with_io(
     _sec: &SecurityCapabilities,

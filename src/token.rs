@@ -46,14 +46,20 @@ impl Drop for HandleGuard {
     }
 }
 
+/// Information extracted from a process token about its AppContainer status.
 #[derive(Debug, Default)]
 pub struct TokenInfo {
+    /// Whether the token belongs to an AppContainer process.
     pub is_appcontainer: bool,
+    /// Whether the token belongs to a Less Privileged AppContainer (LPAC) process.
     pub is_lpac: bool,
+    /// The package SID if the process is running inside an AppContainer.
     pub package_sid: Option<AppContainerSid>,
+    /// SDDL strings of all capability SIDs granted to the token.
     pub capability_sids: Vec<String>,
 }
 
+/// Queries the current process token for AppContainer/LPAC status and capabilities.
 pub fn query_current_process_token() -> Result<TokenInfo> {
     #[cfg(windows)]
     {

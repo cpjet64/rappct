@@ -57,6 +57,7 @@ fn known_to_name(cap: KnownCapability) -> &'static str {
     }
 }
 
+/// Converts a slice of [`KnownCapability`] values to their Windows name strings.
 pub fn known_caps_to_named(caps: &[KnownCapability]) -> Vec<&'static str> {
     caps.iter().map(|c| known_to_name(*c)).collect()
 }
@@ -190,11 +191,15 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
     }
 }
 
+/// Resolved set of security capabilities for launching an AppContainer process.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SecurityCapabilities {
+    /// The AppContainer package SID.
     pub package: AppContainerSid,
+    /// Derived capability SIDs with their attribute flags.
     pub caps: Vec<SidAndAttributes>,
+    /// Whether LPAC (Less Privileged AppContainer) mode is enabled.
     pub lpac: bool,
 }
 
@@ -206,6 +211,7 @@ pub struct SecurityCapabilitiesBuilder {
 }
 
 impl SecurityCapabilitiesBuilder {
+    /// Creates a new builder for the given package SID.
     pub fn new(pkg: &AppContainerSid) -> Self {
         Self {
             package: pkg.clone(),
@@ -213,12 +219,14 @@ impl SecurityCapabilitiesBuilder {
             lpac: false,
         }
     }
+    /// Adds capabilities from [`KnownCapability`] enum variants.
     pub fn with_known(mut self, caps: &[KnownCapability]) -> Self {
         let names = known_caps_to_named(caps);
         self.caps_named
             .extend(names.into_iter().map(|s| s.to_string()));
         self
     }
+    /// Adds capabilities by their Windows name strings.
     pub fn with_named(mut self, names: &[&str]) -> Self {
         if names.is_empty() {
             return self;
@@ -233,10 +241,12 @@ impl SecurityCapabilitiesBuilder {
         self.caps_named.push("lpacCom".to_string());
         self
     }
+    /// Sets the LPAC (Less Privileged AppContainer) flag explicitly.
     pub fn lpac(mut self, enabled: bool) -> Self {
         self.lpac = enabled;
         self
     }
+    /// Derives capability SIDs and builds the final [`SecurityCapabilities`].
     pub fn build(self) -> Result<SecurityCapabilities> {
         let caps = derive_named_capability_sids(
             &self

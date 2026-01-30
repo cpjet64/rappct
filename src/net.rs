@@ -41,6 +41,7 @@ unsafe fn psid_to_string(psid: PSID) -> Result<String> {
     }
 }
 
+/// Lists all registered AppContainer profiles and their display names from the firewall config.
 pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
     #[cfg(all(windows, feature = "net"))]
     unsafe {

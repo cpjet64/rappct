@@ -48,6 +48,7 @@ impl AppContainerSid {
         Ok(Self { sddl })
     }
 
+    /// Returns the SDDL string representation of the SID.
     pub fn as_string(&self) -> &str {
         &self.sddl
     }
@@ -65,11 +66,13 @@ impl AsRef<str> for AppContainerSid {
     }
 }
 
-/// Placeholder for capability SID + attributes.
+/// A capability SID paired with its Win32 attribute flags.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SidAndAttributes {
+    /// SDDL string representation of the capability SID.
     pub sid_sddl: String,
+    /// Win32 `SID_AND_ATTRIBUTES.Attributes` flags (typically `SE_GROUP_ENABLED`).
     pub attributes: u32,
 }
 

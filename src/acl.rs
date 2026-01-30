@@ -62,6 +62,7 @@ impl AccessMask {
     pub const FILE_GENERIC_WRITE: Self = Self(0x0001_20116);
 }
 
+/// Grants the specified access to the AppContainer package SID on the target resource.
 #[cfg_attr(not(windows), allow(unused_variables))]
 pub fn grant_to_package(
     target: ResourcePath,
@@ -78,6 +79,7 @@ pub fn grant_to_package(
     }
 }
 
+/// Grants the specified access to a capability SID on the target resource.
 #[cfg_attr(not(windows), allow(unused_variables))]
 pub fn grant_to_capability(
     target: ResourcePath,
