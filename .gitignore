@@ -4,6 +4,7 @@
 .vscode/
 .idea/
 .vs/
+.claude/settings.local.json
 ci-run.txt
 rust-analyzer.txt
 claude-updatedocs.md
