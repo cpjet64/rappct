@@ -102,7 +102,7 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
             for &name in names {
                 #[cfg(feature = "tracing")]
                 tracing::trace!("derive_named_capability_sids: name={}", name);
-                let wide: Vec<u16> = crate::util::to_utf16(name);
+                let wide: Vec<u16> = crate::ffi::wstr::to_utf16(name);
                 let mut group_sids: *mut *mut std::ffi::c_void = std::ptr::null_mut();
                 let mut group_count: u32 = 0;
                 let mut cap_sids: *mut *mut std::ffi::c_void = std::ptr::null_mut();

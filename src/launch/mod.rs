@@ -327,7 +327,7 @@ impl AttributeContext {
             }
         }
 
-        let pkg_w: Vec<u16> = crate::util::to_utf16(sec.package.as_string());
+        let pkg_w: Vec<u16> = crate::ffi::wstr::to_utf16(sec.package.as_string());
         let mut pkg_psid_raw = PSID(std::ptr::null_mut());
         if ConvertStringSidToSidW(PCWSTR(pkg_w.as_ptr()), &mut pkg_psid_raw).is_err() {
             return Err(AcError::LaunchFailed {
@@ -339,7 +339,7 @@ impl AttributeContext {
         let pkg_owned = OwnedSid::from_localfree_psid(pkg_psid_raw.0);
         let mut caps_owned: Vec<OwnedSid> = Vec::with_capacity(sec.caps.len());
         for cap in &sec.caps {
-            let sddl_w: Vec<u16> = crate::util::to_utf16(&cap.sid_sddl);
+            let sddl_w: Vec<u16> = crate::ffi::wstr::to_utf16(&cap.sid_sddl);
             let mut psid_raw = PSID(std::ptr::null_mut());
             if ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw).is_err() {
                 return Err(AcError::LaunchFailed {
@@ -471,12 +471,12 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
     };
 
     // Command
-    let exe_w: Vec<u16> = crate::util::to_utf16_os(opts.exe.as_os_str());
+    let exe_w: Vec<u16> = crate::ffi::wstr::to_utf16_os(opts.exe.as_os_str());
     let mut args_w = make_cmd_args(&opts.cmdline);
     let mut cwd_w = opts
         .cwd
         .as_ref()
-        .map(|p| crate::util::to_utf16_os(p.as_os_str()));
+        .map(|p| crate::ffi::wstr::to_utf16_os(p.as_os_str()));
     // Test assist: allow disabling explicit cwd to isolate environment issues
     if std::env::var_os("RAPPCT_TEST_NO_CWD").is_some() {
         cwd_w = None;
@@ -500,7 +500,7 @@ unsafe fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Resul
             let mut sa: SECURITY_ATTRIBUTES = std::mem::zeroed();
             sa.nLength = std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32;
             sa.bInheritHandle = TRUE;
-            let nul: Vec<u16> = crate::util::to_utf16("NUL");
+            let nul: Vec<u16> = crate::ffi::wstr::to_utf16("NUL");
             let h_in = CreateFileW(
                 PCWSTR(nul.as_ptr()),
                 FILE_GENERIC_READ.0,

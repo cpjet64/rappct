@@ -104,7 +104,7 @@ The crate is organized into focused modules that compose together:
 
 9. **ffi** (`src/ffi/*`): crate-private FFI RAII helpers
    - `handles::Handle`, `mem::{LocalAllocGuard, CoTaskMem}`, `sid::OwnedSid`, `wstr::WideString`, `sec_caps::OwnedSecurityCapabilities`, `attr_list::AttrList`
-   - Prefer these over legacy `util` guards; `src/util.rs` remains for compatibility but should not be used in new code
+   - All internal callers now use `ffi::wstr::{to_utf16, to_utf16_os}` instead of the deprecated `util` module
 
 ### Key Architectural Patterns
 
@@ -148,7 +148,7 @@ The crate is organized into focused modules that compose together:
 - **Forgetting `with_lpac_defaults()`**: LPAC capabilities are opt-in; without them, the process won't have `registryRead` or `lpacCom`
 - **Not waiting for child process**: `LaunchedIo` has a `wait()` method; dropping it without waiting may leave orphaned processes if `kill_on_job_close` is false
 - **ACL grant failures on non-existent paths**: Ensure target file/directory/registry key exists before calling `grant_to_package()`
-- **Mixing `&str` and `&OsStr` UTF-16 conversions**: Use `util::to_utf16()` for `&str`, `util::to_utf16_os()` for `&OsStr`
+- **Mixing `&str` and `&OsStr` UTF-16 conversions**: Use `ffi::wstr::to_utf16()` for `&str`, `ffi::wstr::to_utf16_os()` for `&OsStr` (the `util` module is deprecated)
 - **Custom environment blocks (Error 203)**: When passing `LaunchOptions::env`, it replaces the parent environment. `inherit_parent_env` (default `true`) automatically merges essential system variables (SystemRoot, ComSpec, PATHEXT, TEMP, TMP, PATH). Set `inherit_parent_env: false` only when you need full control over the environment block.
 - **PowerShell console buffer errors in AppContainer (Error 0x5)**: PowerShell tries to access the console output buffer for formatting, which AppContainers restrict. Redirect PowerShell output to temporary files using `Out-File -FilePath`, read back with `type`, and clean up with `del`. Must grant ACL access to temp directory for the AppContainer. See `network_demo.rs` and `comprehensive_demo.rs` Demo 4 for examples.
 

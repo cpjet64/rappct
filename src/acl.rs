@@ -136,7 +136,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
     }
 
     // Convert SDDL to PSID
-    let wide: Vec<u16> = crate::util::to_utf16(sid_sddl);
+    let wide: Vec<u16> = crate::ffi::wstr::to_utf16(sid_sddl);
     let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
     if unsafe { ConvertStringSidToSidW(PCWSTR(wide.as_ptr()), &mut psid) }.is_err() {
         return Err(AcError::Win32("ConvertStringSidToSidW failed".into()));
@@ -158,7 +158,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
     match target {
         ResourcePath::File(path) => {
             ea.grfInheritance = ACE_FLAGS(AceInheritance::NONE.0);
-            let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
+            let path_w: Vec<u16> = crate::ffi::wstr::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
             let st = unsafe {
@@ -217,7 +217,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 _ => AceInheritance::SUB_CONTAINERS_AND_OBJECTS.0,
             };
             ea.grfInheritance = ACE_FLAGS(inheritance);
-            let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
+            let path_w: Vec<u16> = crate::ffi::wstr::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
             let st = unsafe {
@@ -285,7 +285,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 } else {
                     return None;
                 };
-                let w: Vec<u16> = crate::util::to_utf16(rest);
+                let w: Vec<u16> = crate::ffi::wstr::to_utf16(rest);
                 Some((root, w))
             }
             let Some((root, subkey_w)) = parse_root(&spec) else {

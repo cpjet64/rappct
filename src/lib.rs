@@ -59,6 +59,10 @@ pub mod net;
 pub mod profile;
 pub mod sid;
 pub mod token;
+#[deprecated(
+    since = "0.14.0",
+    note = "use ffi wrappers instead; see ffi::wstr, ffi::handles, ffi::mem, ffi::sid"
+)]
 pub mod util;
 // Internal FFI safety helpers (crate-private)
 pub(crate) mod ffi;

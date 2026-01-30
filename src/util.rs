@@ -1,5 +1,9 @@
-//! Shared utility helpers for platform interop.
+//! Legacy utility helpers for platform interop.
+//!
+//! **Deprecated**: use `ffi::wstr::to_utf16` / `ffi::wstr::to_utf16_os` and
+//! the RAII wrappers in `ffi::handles`, `ffi::mem`, and `ffi::sid` instead.
 #![allow(clippy::undocumented_unsafe_blocks)]
+#![allow(deprecated)]
 
 #[cfg(windows)]
 pub mod win {
@@ -15,6 +19,7 @@ pub mod win {
     }
 
     /// Converts a Rust string into a null-terminated UTF-16 buffer.
+    #[deprecated(note = "use crate::ffi::wstr::to_utf16 instead")]
     pub fn to_utf16(s: &str) -> Vec<u16> {
         std::ffi::OsStr::new(s)
             .encode_wide()
@@ -23,11 +28,13 @@ pub mod win {
     }
 
     /// Converts a platform string (OsStr) into a null-terminated UTF-16 buffer.
+    #[deprecated(note = "use crate::ffi::wstr::to_utf16_os instead")]
     pub fn to_utf16_os(s: &std::ffi::OsStr) -> Vec<u16> {
         s.encode_wide().chain(std::iter::once(0)).collect()
     }
 
     /// Owned Win32 `HANDLE` that closes on drop.
+    #[deprecated(note = "use crate::ffi::handles::Handle instead")]
     #[derive(Debug)]
     pub struct OwnedHandle(pub(crate) HANDLE);
 
@@ -65,6 +72,7 @@ pub mod win {
     }
 
     /// RAII guard that frees allocations with `LocalFree` when dropped.
+    #[deprecated(note = "use crate::ffi::mem::LocalAllocGuard instead")]
     #[derive(Debug)]
     pub struct LocalFreeGuard<T> {
         ptr: *mut T,
@@ -133,6 +141,7 @@ pub mod win {
     }
 
     /// RAII guard that releases a `PSID` via `FreeSid` on drop.
+    #[deprecated(note = "use crate::ffi::sid::OwnedSid instead")]
     #[derive(Debug)]
     pub struct FreeSidGuard {
         psid: PSID,
@@ -174,9 +183,11 @@ pub mod win {
 #[cfg(not(windows))]
 pub mod win {
     /// Non-Windows stub conversion; returns an empty buffer.
+    #[deprecated(note = "util module is deprecated; this stub is a no-op")]
     pub fn to_utf16(_s: &str) -> Vec<u16> {
         Vec::new()
     }
+    #[deprecated(note = "util module is deprecated; this stub is a no-op")]
     pub fn to_utf16_os(_s: &std::ffi::OsStr) -> Vec<u16> {
         Vec::new()
     }
