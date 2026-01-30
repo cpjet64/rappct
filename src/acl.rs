@@ -110,6 +110,29 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
     };
     use windows::core::{PCWSTR, PWSTR};
 
+    // Pre-check: verify the target resource exists before attempting the ACL grant.
+    match &target {
+        ResourcePath::File(path) => {
+            if !path.exists() {
+                return Err(AcError::ResourceNotFound {
+                    path: path.display().to_string(),
+                    hint: "create the file before calling grant_to_package()",
+                });
+            }
+        }
+        ResourcePath::Directory(path) | ResourcePath::DirectoryCustom(path, _) => {
+            if !path.is_dir() {
+                return Err(AcError::ResourceNotFound {
+                    path: path.display().to_string(),
+                    hint: "create the directory before calling grant_to_package()",
+                });
+            }
+        }
+        ResourcePath::RegistryKey(_) => {
+            // Registry key existence is validated by RegOpenKeyExW below.
+        }
+    }
+
     // Convert SDDL to PSID
     let wide: Vec<u16> = crate::util::to_utf16(sid_sddl);
     let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
@@ -362,5 +385,33 @@ mod tests {
         assert_eq!(AceInheritance::OBJECTS_ONLY.0, 0x1);
         assert_eq!(AceInheritance::SUB_CONTAINERS_ONLY.0, 0x2);
         assert_eq!(AceInheritance::SUB_CONTAINERS_AND_OBJECTS.0, 0x3);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_nonexistent_file() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let path = std::path::PathBuf::from("C:\\__rappct_nonexistent_file_test__");
+        let err =
+            grant_to_package(ResourcePath::File(path), &sid, AccessMask::GENERIC_ALL).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("Resource not found"), "got: {msg}");
+        assert!(msg.contains("create the file"), "got: {msg}");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_nonexistent_directory() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let path = std::path::PathBuf::from("C:\\__rappct_nonexistent_dir_test__");
+        let err = grant_to_package(ResourcePath::Directory(path), &sid, AccessMask::GENERIC_ALL)
+            .unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("Resource not found"), "got: {msg}");
+        assert!(msg.contains("create the directory"), "got: {msg}");
     }
 }
