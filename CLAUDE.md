@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 rappct is a Rust toolkit for working with Windows AppContainer (AC) and Low Privilege AppContainer (LPAC) security boundaries. It wraps Windows APIs to enable creating, managing, and launching AppContainer-aware workloads with minimal boilerplate.
 
 **Platform**: Windows-only (non-Windows hosts return `UnsupportedPlatform`)
-**MSRV**: Rust 1.90 (stable)
+**MSRV**: Rust 1.88
 **Edition**: 2024
 
 ## Build & Development Commands

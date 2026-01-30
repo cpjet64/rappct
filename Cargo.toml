@@ -2,7 +2,7 @@
 name = "rappct"
 version = "0.13.3"
 edition = "2024"
-rust-version = "1.90"
+rust-version = "1.88"
 license = "MIT"
 description = "Rust AppContainer / LPAC toolkit for Windows (profiles, capabilities, process launch, diagnostics)."
 repository = "https://github.com/cpjet64/rappct"

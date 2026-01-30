@@ -2,7 +2,7 @@
 
 **Stable (main branch)**
 
-[![CI 1.90.0](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%201.90.0)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
+[![CI 1.88.0](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%201.88.0)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
 [![CI stable](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20stable)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
 [![CI (beta)](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20beta)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
 [![CI (nightly)](https://img.shields.io/github/actions/workflow/status/cpjet64/rappct/ci.yml?branch=main&label=CI%20nightly)](https://github.com/cpjet64/rappct/actions/workflows/ci.yml?query=branch%3Amain)
@@ -18,7 +18,7 @@ AppContainer-aware workloads from Rust with minimal boilerplate. It is designed 
 that needs to compose profiles, capabilities, process launches, ACL helpers, and diagnostics in one place.
 
 - **Status**: Actively developed. Windows paths are implemented first; non-Windows hosts return `UnsupportedPlatform`.
-- **MSRV**: Rust 1.90 (stable).
+- **MSRV**: Rust 1.88.
 
 ## Highlights
 

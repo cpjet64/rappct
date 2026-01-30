@@ -17,7 +17,7 @@ This repository includes Git hooks and helper scripts to make this easy:
 
 - Enable hooks locally: `git config core.hooksPath .githooks`
 - Pre-commit runs fmt, clippy, and tests for the current toolchain.
-- Pre-push runs the full local CI script (stable + MSRV/1.90.0 across feature matrix):
+- Pre-push runs the full local CI script (stable + MSRV 1.88.0–1.93.0 across feature matrix):
   - Bash: `scripts/ci-local.sh`
   - PowerShell: `scripts/ci-local.ps1`
 
