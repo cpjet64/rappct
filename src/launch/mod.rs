@@ -365,20 +365,15 @@ impl AttributeContext {
         tracing::debug!("AttrList: count={}", attr_count);
         let mut attr_list = FAttrList::with_capacity(attr_count as u32)?;
 
-        let mut si_ex: STARTUPINFOEXW = std::mem::zeroed();
-        si_ex.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-        si_ex.lpAttributeList = attr_list.as_mut_ptr();
-
         // Attach security capabilities using wrapper
         attr_list.set_security_capabilities(&sc_owned)?;
         #[cfg(feature = "tracing")]
         tracing::trace!(
             "UpdateProcThreadAttribute(security): attr_list_ptr={:p}, value_ptr={:p}, value_size={}",
-            si_ex.lpAttributeList.0,
+            attr_list.as_mut_ptr().0,
             sc_owned.as_ptr(),
             std::mem::size_of::<SECURITY_CAPABILITIES>()
         );
-        // Wrapper returned Ok, proceed
 
         let mut lpac_policy: Option<Box<u32>> = None;
         if sec.lpac {
@@ -389,7 +384,7 @@ impl AttributeContext {
             #[cfg(feature = "tracing")]
             tracing::trace!(
                 "UpdateProcThreadAttribute(AAPolicy via wrapper): attr_list_ptr={:p}, policy_ptr={:p}, size={}",
-                si_ex.lpAttributeList.0,
+                attr_list.as_mut_ptr().0,
                 &**p as *const u32,
                 std::mem::size_of::<u32>()
             );
@@ -401,7 +396,7 @@ impl AttributeContext {
             {
                 tracing::trace!(
                     "UpdateProcThreadAttribute(handles via wrapper): attr_list_ptr={:p}, count={}, bytes={}",
-                    si_ex.lpAttributeList.0,
+                    attr_list.as_mut_ptr().0,
                     handles.len(),
                     std::mem::size_of::<HANDLE>() * handles.len()
                 );

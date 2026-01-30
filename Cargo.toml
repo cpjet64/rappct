@@ -11,6 +11,23 @@ documentation = "https://docs.rs/rappct"
 keywords = ["windows", "appcontainer", "lpac", "sandbox", "security"]
 categories = ["os::windows-apis", "security", "api-bindings"]
 readme = "README.md"
+exclude = [
+    ".claude/",
+    ".github/",
+    ".githooks/",
+    "scripts/",
+    "docs/",
+    "AGENTS.md",
+    "STUBS.md",
+    "RUN_EXAMPLES.md",
+    "TODO.md",
+    "WORKFLOW.md",
+    "EXAMPLES.md",
+    "cliff.toml",
+    "deny.toml",
+    "release-plz.toml",
+    "rust-toolchain.toml",
+]
 
 # docs.rs configuration for Windows-only crate
 [package.metadata.docs.rs]
