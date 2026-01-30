@@ -73,6 +73,11 @@ pub use launch::{LaunchedIo, launch_in_container_with_io};
 pub use profile::{AppContainerProfile, derive_sid_from_name};
 pub use sid::AppContainerSid;
 
+/// Minimum Windows major version for LPAC support (Windows 10).
+const MIN_LPAC_MAJOR_VERSION: u32 = 10;
+/// Minimum Windows build number for LPAC support (Windows 10 1703).
+const MIN_LPAC_BUILD: u32 = 15063;
+
 /// Returns Ok(()) if LPAC is supported on this OS (Windows 10 1703+).
 pub fn supports_lpac() -> Result<()> {
     #[cfg(windows)]
@@ -115,11 +120,10 @@ pub fn supports_lpac() -> Result<()> {
             if st != 0 {
                 return Err(AcError::UnsupportedLpac);
             }
-            // Windows 10 build 15063 (1703) or later required
-            if v.major < 10 {
+            if v.major < MIN_LPAC_MAJOR_VERSION {
                 return Err(AcError::UnsupportedLpac);
             }
-            if v.build < 15063 {
+            if v.build < MIN_LPAC_BUILD {
                 return Err(AcError::UnsupportedLpac);
             }
             Ok(())

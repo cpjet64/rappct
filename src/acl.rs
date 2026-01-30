@@ -155,7 +155,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
 
     match target {
         ResourcePath::File(path) => {
-            ea.grfInheritance = ACE_FLAGS(0);
+            ea.grfInheritance = ACE_FLAGS(AceInheritance::NONE.0);
             let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();

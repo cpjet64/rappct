@@ -6,10 +6,8 @@ use crate::ffi::mem::LocalAllocGuard;
 use crate::sid::{AppContainerSid, SidAndAttributes};
 use crate::{AcError, Result};
 
-// windows::Win32::Security::SE_GROUP_ENABLED is not consistently available across crate versions.
-// Use the documented value directly.
 #[cfg(windows)]
-const SE_GROUP_ENABLED_CONST: u32 = 0x0000_0004;
+use crate::ffi::SE_GROUP_ENABLED;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum KnownCapability {
@@ -170,7 +168,7 @@ pub fn derive_named_capability_sids(names: &[&str]) -> Result<Vec<SidAndAttribut
                             let s = sddl_guard.to_string_lossy();
                             out.push(SidAndAttributes {
                                 sid_sddl: s,
-                                attributes: SE_GROUP_ENABLED_CONST,
+                                attributes: SE_GROUP_ENABLED,
                             });
                         }
                     }

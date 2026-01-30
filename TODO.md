@@ -16,6 +16,6 @@ Recommendations from deep dive code review.
 
 ## Low Priority
 
-- [ ] **Magic number constants**: Replace `ACE_FLAGS(0x3u32)` and `0x0000_0004` with named constants
+- [x] **Magic number constants**: Replace `ACE_FLAGS(0x3u32)` and `0x0000_0004` with named constants
 - [ ] **Inline documentation**: Add `///` doc comments to public struct fields and methods
 - [ ] **Legacy `util.rs`**: Migrate remaining callers to `ffi/` wrappers and deprecate `util.rs`

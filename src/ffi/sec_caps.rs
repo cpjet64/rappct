@@ -3,8 +3,7 @@
 use crate::ffi::sid::OwnedSid;
 use windows::Win32::Security::{SECURITY_CAPABILITIES, SID_AND_ATTRIBUTES};
 
-// Not always available in windows crate: documented value for SE_GROUP_ENABLED
-const SE_GROUP_ENABLED_CONST: u32 = 0x0000_0004;
+use super::SE_GROUP_ENABLED;
 
 #[derive(Debug)]
 pub(crate) struct OwnedSecurityCapabilities {
@@ -22,7 +21,7 @@ impl OwnedSecurityCapabilities {
             .iter()
             .map(|sid| SID_AND_ATTRIBUTES {
                 Sid: sid.as_psid(),
-                Attributes: SE_GROUP_ENABLED_CONST,
+                Attributes: SE_GROUP_ENABLED,
             })
             .collect();
         let caps = caps_vec.into_boxed_slice();

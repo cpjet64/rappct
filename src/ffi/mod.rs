@@ -4,6 +4,11 @@
 //! resources so call sites can stay safe and lightweight. See ADR-0001.
 #![warn(clippy::undocumented_unsafe_blocks)]
 
+// Win32 SE_GROUP_ENABLED attribute flag (documented value).
+// Not always re-exported by every windows-rs version, so we define it once here.
+#[cfg(windows)]
+pub(crate) const SE_GROUP_ENABLED: u32 = 0x0000_0004;
+
 #[cfg(windows)]
 pub(crate) mod attr_list;
 #[cfg(windows)]
