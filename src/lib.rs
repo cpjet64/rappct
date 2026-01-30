@@ -64,7 +64,9 @@ pub mod util;
 pub(crate) mod ffi;
 
 // Re-exports
-pub use capability::{KnownCapability, SecurityCapabilities, SecurityCapabilitiesBuilder};
+pub use capability::{
+    KnownCapability, SecurityCapabilities, SecurityCapabilitiesBuilder, WELL_KNOWN_CAPABILITY_NAMES,
+};
 pub use launch::{JobLimits, LaunchOptions, Launched, StdioConfig, launch_in_container};
 #[cfg(windows)]
 pub use launch::{LaunchedIo, launch_in_container_with_io};

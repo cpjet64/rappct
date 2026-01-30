@@ -18,6 +18,39 @@ pub enum KnownCapability {
     PrivateNetworkClientServer,
 }
 
+impl KnownCapability {
+    /// All known capability variants.
+    pub const ALL: &[KnownCapability] = &[
+        KnownCapability::InternetClient,
+        KnownCapability::InternetClientServer,
+        KnownCapability::PrivateNetworkClientServer,
+    ];
+
+    /// Returns the Windows capability name string for this variant.
+    pub fn as_name(&self) -> &'static str {
+        known_to_name(*self)
+    }
+
+    /// Look up a variant by its Windows capability name string.
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.iter().find(|c| c.as_name() == name).copied()
+    }
+}
+
+/// Well-known capability name strings accepted by
+/// [`SecurityCapabilitiesBuilder::with_named`].
+///
+/// This includes the three networking capabilities from [`KnownCapability`]
+/// plus the LPAC defaults added by
+/// [`SecurityCapabilitiesBuilder::with_lpac_defaults`].
+pub const WELL_KNOWN_CAPABILITY_NAMES: &[&str] = &[
+    "internetClient",
+    "internetClientServer",
+    "privateNetworkClientServer",
+    "registryRead",
+    "lpacCom",
+];
+
 fn known_to_name(cap: KnownCapability) -> &'static str {
     match cap {
         KnownCapability::InternetClient => "internetClient",
@@ -30,24 +63,12 @@ pub fn known_caps_to_named(caps: &[KnownCapability]) -> Vec<&'static str> {
     caps.iter().map(|c| known_to_name(*c)).collect()
 }
 
-// Static list of known/supported capability names for suggestions.
-#[cfg(feature = "introspection")]
-#[allow(dead_code)]
-static KNOWN_CAP_NAMES: &[&str] = &[
-    "internetClient",
-    "internetClientServer",
-    "privateNetworkClientServer",
-    // LPAC common
-    "registryRead",
-    "lpacCom",
-];
-
 #[cfg(feature = "introspection")]
 #[allow(dead_code)]
 fn suggest_capability_name(name: &str) -> Option<&'static str> {
     let mut best = 0.0f64;
     let mut suggestion = None;
-    for &candidate in KNOWN_CAP_NAMES {
+    for &candidate in WELL_KNOWN_CAPABILITY_NAMES {
         let score = strsim::jaro_winkler(name, candidate);
         if score > best {
             best = score;
@@ -272,6 +293,46 @@ mod tests {
     fn prefers_highest_similarity_match() {
         let suggestion = suggest_capability_name("privateNetworkClientserve");
         assert_eq!(suggestion, Some("privateNetworkClientServer"));
+    }
+}
+
+#[cfg(test)]
+mod known_cap_tests {
+    use super::{KnownCapability, WELL_KNOWN_CAPABILITY_NAMES};
+
+    #[test]
+    fn all_returns_every_variant() {
+        assert_eq!(KnownCapability::ALL.len(), 3);
+    }
+
+    #[test]
+    fn as_name_round_trips_via_from_name() {
+        for &cap in KnownCapability::ALL {
+            let name = cap.as_name();
+            assert_eq!(KnownCapability::from_name(name), Some(cap));
+        }
+    }
+
+    #[test]
+    fn from_name_returns_none_for_unknown() {
+        assert_eq!(KnownCapability::from_name("nonExistent"), None);
+    }
+
+    #[test]
+    fn well_known_names_contains_all_enum_names() {
+        for &cap in KnownCapability::ALL {
+            assert!(
+                WELL_KNOWN_CAPABILITY_NAMES.contains(&cap.as_name()),
+                "missing {}",
+                cap.as_name()
+            );
+        }
+    }
+
+    #[test]
+    fn well_known_names_includes_lpac_defaults() {
+        assert!(WELL_KNOWN_CAPABILITY_NAMES.contains(&"registryRead"));
+        assert!(WELL_KNOWN_CAPABILITY_NAMES.contains(&"lpacCom"));
     }
 }
 
