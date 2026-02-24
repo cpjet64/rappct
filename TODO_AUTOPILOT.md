@@ -23,6 +23,7 @@ Last updated: 2026-02-24
 - Updated worklog to reflect current state.
 - Captured a commit blocker: `pre-commit` hook currently failed under PowerShell because the hook filename lacked `.ps1` extension and was executed with `-File`.
 - Fixed hook execution reliability by converting `.githooks/pre-commit` and `.githooks/pre-push` to `/bin/sh` shims and moving hook logic to `.ps1` scripts.
+- Replaced Bash implementations of `scripts/ci.sh`, `scripts/ci-local.sh`, and `scripts/hygiene.sh` with PowerShell wrapper shims.
 - Verified by committing with full `pre-commit` gate execution: `ci-fast` passed (68 tests passed, 1 skipped).
 - Converted remaining command examples in `README.md` from `bash` code fences to `powershell`.
 - Removed temporary hook-test directories (`tmp_hook_test*`) created during hook compatibility checks.
