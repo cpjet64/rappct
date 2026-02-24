@@ -50,7 +50,7 @@ rappct is a Rust toolkit for working with Windows AppContainer (AC) and Low Priv
 
 ## Build & Development Commands
 
-```bash
+```powershell
 # Build the library
 cargo build
 

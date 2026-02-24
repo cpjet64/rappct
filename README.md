@@ -51,7 +51,7 @@ that needs to compose profiles, capabilities, process launches, ACL helpers, and
 
 ## Getting Started
 
-```bash
+```powershell
 # Clone the repository
 git clone https://github.com/cpjet64/rappct.git
 cd rappct
@@ -65,7 +65,7 @@ cargo run --example acrun -- --help
 
 The crate is structured as a binary-agnostic library. Add it to your project:
 
-```bash
+```powershell
 # Stable release from crates.io (recommended)
 cargo add rappct
 
@@ -109,7 +109,7 @@ Simple demonstration of essential features:
 - Granting specific capabilities
 - Automatic network configuration (with `net` feature)
 
-```bash
+```powershell
 cargo run --example rappct_demo --all-features
 ```
 
@@ -122,7 +122,7 @@ Comprehensive demonstrations with isolated examples for each capability:
 - Combined multi-capability example
 - Best for understanding each feature in isolation
 
-```bash
+```powershell
 cargo run --example comprehensive_demo --all-features
 ```
 
@@ -137,7 +137,7 @@ Advanced and less common features:
 - Network enumeration
 - Direct SID derivation
 
-```bash
+```powershell
 cargo run --example advanced_features --all-features
 ```
 
@@ -149,7 +149,7 @@ Network capability demonstration with automatic firewall configuration:
 - PowerShell network testing in AppContainers
 - Automatic cleanup patterns
 
-```bash
+```powershell
 cargo run --example network_demo --features net
 ```
 
@@ -157,7 +157,7 @@ cargo run --example network_demo --features net
 
 Developer CLI tool for managing AppContainer profiles and launching sandboxed processes:
 
-```bash
+```powershell
 # Create a profile
 cargo run --example acrun -- ensure demo.app
 
@@ -201,7 +201,7 @@ See also: docs/capabilities.md for common capability SIDs and starter sets.
 
 For the complete process (branching, CI matrix, and releases), see WORKFLOW.md.
 
-```bash
+```powershell
 cargo fmt
 cargo clippy --all-targets --all-features
 cargo test --all-targets --all-features
