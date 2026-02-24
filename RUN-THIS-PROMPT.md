@@ -56,7 +56,7 @@ corrected it, or FAIL if it needs manual attention. Do not skip items.
 
 ### 8. Repo Hygiene
 - [ ] `scripts/hygiene.ps1` exists
-- [ ] No files > 10MB in tracked files (excluding vendor/)
+- [ ] No files > 10MB in tracked files
 - [ ] `.gitignore` includes: target/, node_modules/, dist/, build/, __pycache__/, .venv/
 - [ ] No merge conflict markers in any tracked file
 

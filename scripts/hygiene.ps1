@@ -8,7 +8,7 @@ $trackedFiles = git ls-files
 Write-Host -NoNewline "Large files (>10MB): "
 $largeFiles = @()
 foreach ($file in $trackedFiles) {
-    if (-not (Test-Path $file) -or $file -like 'vendor/*') {
+    if (-not (Test-Path $file)) {
         continue
     }
 

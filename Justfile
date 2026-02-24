@@ -40,11 +40,6 @@ security:
 docs:
     $env:RUSTFLAGS='-D warnings'; cargo doc --no-deps --all-features
 
-# === Optional ===
-vendor:
-    cargo vendor
-    @echo 'Add [source.crates-io] replace-with = "vendored" to .cargo/config.toml'
-
 bench:
     cargo bench --locked
 
