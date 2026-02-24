@@ -6,6 +6,8 @@
 .vs/
 .claude/settings.local.json
 ci-run.txt
+ci-local.log
+lcov.info
 rust-analyzer.txt
 claude-updatedocs.md
 codex-updatedocs.md
