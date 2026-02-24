@@ -6,7 +6,7 @@ Last updated: 2026-02-24
 - Repo appears in finished/mostly-complete state: core checks pass, docs command blocks are PowerShell, and hook execution is stable on Windows with PowerShell-only check scripts.
 
 ## Next
-- Verify no additional local temporary artifacts remain from experimentation (`.cargo`, `.cursor`, `pyproject.toml`, `uv.lock`, etc.).
+- Review remaining pre-existing local modifications in tracked files (`.githooks/README.md`, `.gitignore`, `Cargo.lock`, `Justfile`, `rust-toolchain.toml`, tooling shims, and core Rust modules) to determine whether any are intentional.
 - Keep workspace checks aligned with `RUN-THIS-PROMPT.md` and mark any remaining drift.
 - Pause for user confirmation only if scope changes beyond tooling/docs conversion are required.
 
@@ -26,6 +26,7 @@ Last updated: 2026-02-24
 - Verified by committing with full `pre-commit` gate execution: `ci-fast` passed (68 tests passed, 1 skipped).
 - Converted remaining command examples in `README.md` from `bash` code fences to `powershell`.
 - Removed temporary hook-test directories (`tmp_hook_test*`) created during hook compatibility checks.
+- Cleared local temporary artifacts created during migration verification (`.cargo`, `.cursor`, `pyproject.toml`, `uv.lock`) from the workspace.
 
 ## Decisions Needed
 - None identified.
