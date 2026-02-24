@@ -10,3 +10,9 @@ rust-analyzer.txt
 claude-updatedocs.md
 codex-updatedocs.md
 release-plz-dev.toml
+target/
+node_modules/
+dist/
+build/
+__pycache__/
+.venv/

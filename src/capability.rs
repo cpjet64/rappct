@@ -103,7 +103,7 @@ impl CapabilityName {
 }
 
 /// Back-compat constant retained for existing callers and tests.
-pub const WELL_KNOWN_CAPABILITY_NAMES: &[&'static str] = &[
+pub const WELL_KNOWN_CAPABILITY_NAMES: &[&str] = &[
     "internetClient",
     "internetClientServer",
     "privateNetworkClientServer",

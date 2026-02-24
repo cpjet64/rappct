@@ -1,7 +1,5 @@
 //! RAII wrapper for Win32 `HANDLE` using the standard library's `OwnedHandle`.
 
-#![allow(clippy::undocumented_unsafe_blocks)]
-
 use crate::{AcError, Result};
 use std::os::windows::io::{
     AsHandle, AsRawHandle, BorrowedHandle, FromRawHandle, IntoRawHandle, OwnedHandle, RawHandle,
@@ -43,6 +41,7 @@ impl Handle {
         if h as isize == -1 {
             return Err(AcError::Win32("invalid handle value".into()));
         }
+        // SAFETY: Caller guarantees a valid, uniquely owned handle.
         let owned = unsafe { OwnedHandle::from_raw_handle(h) };
         Ok(Self(owned))
     }
@@ -61,13 +60,11 @@ impl Handle {
     }
 
     pub(crate) fn into_file(self) -> std::fs::File {
-        // SAFETY: We take ownership of the raw handle and transfer to File
+        // SAFETY: We take ownership of the raw handle and transfer to File.
+        // `self` owns the handle, so conversion is a one-time transfer.
         let raw = self.0.into_raw_handle();
+        // SAFETY: `self` owns the handle and no longer uses it after this conversion.
         unsafe { std::fs::File::from_raw_handle(raw) }
-    }
-
-    pub(crate) fn as_raw(&self) -> RawHandle {
-        self.as_win32().0 as _
     }
 }
 
@@ -90,6 +87,8 @@ pub(crate) fn duplicate_handle(handle: BorrowedHandle<'_>, inherit: bool) -> Res
         return Err(AcError::Win32("DuplicateHandle failed".into()));
     }
     // SAFETY: DuplicateHandle returns a uniquely owned handle on success.
+    // SAFETY: The returned handle is uniquely owned and can be wrapped by
+    // `Handle::from_raw`.
     unsafe { Handle::from_raw(duplicated.0 as *mut _) }
 }
 
@@ -112,8 +111,8 @@ mod tests {
 
     #[test]
     fn handle_wraps_event_and_closes() {
+        // SAFETY: CreateEventW returns a live handle on success and we own it for conversion.
         unsafe {
-            // SAFETY: CreateEventW returns a live handle on success.
             let raw = CreateEventW(None, true, false, None)
                 .expect("create event")
                 .0 as *mut _;

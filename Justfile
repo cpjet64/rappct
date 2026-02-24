@@ -10,14 +10,14 @@ ci-deep: ci-fast test-full coverage security mutants docs
 
 # === Repo Hygiene ===
 hygiene:
-    bash scripts/hygiene.sh
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& ./scripts/hygiene.ps1"
 
 # === Rust Recipes ===
 fmt:
     cargo fmt --check
 
 lint:
-    cargo clippy --all-targets --all-features -D warnings
+    cargo clippy --all-targets --all-features -- -D warnings
     cargo machete
 
 build:
