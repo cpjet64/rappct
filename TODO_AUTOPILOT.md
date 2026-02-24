@@ -3,12 +3,12 @@
 Last updated: 2026-02-24
 
 ## Now
-- Repo appears in-finished state: core checks pass, no remaining stub/TODO markers found, and no failing local gate evidence after latest updates.
+- Repo appears in finished/mostly-complete state: core checks pass, docs command blocks are PowerShell, and hook execution is stable on Windows with PowerShell-only check scripts.
 
 ## Next
-- Remove obvious temporary hook test artifacts created during script conversion (`tmp_hook_test*`).
-- Re-scan docs for remaining bash-only snippets and compatibility references.
-- Verify hook/docs updates are committed and workspace remains clean of avoidable temporary files.
+- Verify no additional local temporary artifacts remain from experimentation (`.cargo`, `.cursor`, `pyproject.toml`, `uv.lock`, etc.).
+- Keep workspace checks aligned with `RUN-THIS-PROMPT.md` and mark any remaining drift.
+- Pause for user confirmation only if scope changes beyond tooling/docs conversion are required.
 
 ## Later
 - Capture any remaining non-PowerShell references found in docs after the next scan.
@@ -25,6 +25,7 @@ Last updated: 2026-02-24
 - Fixed hook execution reliability by converting `.githooks/pre-commit` and `.githooks/pre-push` to `/bin/sh` shims and moving hook logic to `.ps1` scripts.
 - Verified by committing with full `pre-commit` gate execution: `ci-fast` passed (68 tests passed, 1 skipped).
 - Converted remaining command examples in `README.md` from `bash` code fences to `powershell`.
+- Removed temporary hook-test directories (`tmp_hook_test*`) created during hook compatibility checks.
 
 ## Decisions Needed
 - None identified.
@@ -32,6 +33,7 @@ Last updated: 2026-02-24
 ## Evidence
 - `just ci-fast` previously completed successfully with all test and lint steps passing (68 tests passed, 1 skipped).
 - `rg -n` over `*.rs` and `*.md` did not find TODO/FIXME-style unfinished markers.
+- `rg -n '```bash'` across `README.md`, `AGENTS.md`, `CLAUDE.md`, `RUN-THIS-PROMPT.md` returned no matches after migration.
 
 ## Assumptions
 - Keep `.sh` shim files (`ci.sh`, `ci-local.sh`, `hygiene.sh`) in place as compatibility entry points while documenting their PowerShell nature.
