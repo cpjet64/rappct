@@ -7,7 +7,7 @@ if [[ "${OS:-}" != "Windows_NT" ]]; then
   exit 1
 fi
 
-# Mirror CI matrix: rust = [stable, 1.90.0], features = ["", introspection, net, introspection,net]
+# Mirror CI matrix: rust = [stable, 1.88.0-1.93.0, beta, nightly], features = ["", introspection, net, introspection,net]
 features_list=("" "introspection" "net" "introspection,net")
 
 export RUST_BACKTRACE=1
@@ -32,18 +32,22 @@ for FEATS in "${features_list[@]}"; do
   fi
 done
 
-echo "[ci-local] MSRV toolchain"
-rustup toolchain install 1.90.0 -q >/dev/null || true
-rustup component add clippy --toolchain 1.90.0 >/dev/null || true
+msrv_list=("1.88.0" "1.89.0" "1.90.0" "1.91.0" "1.92.0" "1.93.0")
 
-for FEATS in "${features_list[@]}"; do
-  if [[ -z "$FEATS" ]]; then
-    echo "[ci-local] test (msrv 1.90.0, no features)"; cargo +1.90.0 test --all-targets
-    echo "[ci-local] clippy (msrv 1.90.0, no features)"; cargo +1.90.0 clippy --all-targets -- -D warnings
-  else
-    echo "[ci-local] test (msrv 1.90.0, features: $FEATS)"; cargo +1.90.0 test --all-targets --features "$FEATS"
-    echo "[ci-local] clippy (msrv 1.90.0, features: $FEATS)"; cargo +1.90.0 clippy --all-targets --features "$FEATS" -- -D warnings
-  fi
+for MSRV in "${msrv_list[@]}"; do
+  echo "[ci-local] toolchain $MSRV"
+  rustup toolchain install "$MSRV" >/dev/null 2>&1 || true
+  rustup component add clippy --toolchain "$MSRV" >/dev/null 2>&1 || true
+
+  for FEATS in "${features_list[@]}"; do
+    if [[ -z "$FEATS" ]]; then
+      echo "[ci-local] test ($MSRV, no features)"; cargo +"$MSRV" test --all-targets
+      echo "[ci-local] clippy ($MSRV, no features)"; cargo +"$MSRV" clippy --all-targets -- -D warnings
+    else
+      echo "[ci-local] test ($MSRV, features: $FEATS)"; cargo +"$MSRV" test --all-targets --features "$FEATS"
+      echo "[ci-local] clippy ($MSRV, features: $FEATS)"; cargo +"$MSRV" clippy --all-targets --features "$FEATS" -- -D warnings
+    fi
+  done
 done
 
 echo "[ci-local] beta toolchain"

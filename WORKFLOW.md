@@ -31,7 +31,7 @@ Helpful local test toggles (for AppContainer launch quirks): see README “Local
 
 1. Push your branch and open a PR to `main`.
 2. CI runs on Windows:
-   - Toolchains: `stable`, `1.90.0` (MSRV), `beta`, `nightly`.
+   - Toolchains: `stable`, `1.88.0` (MSRV) through `1.93.0`, `beta`, `nightly`.
    - Feature matrix: `""`, `introspection`, `net`, `introspection,net`.
    - Beta/nightly are continue‑on‑error; stable/MSRV are hard gates.
 3. CodeQL Advanced runs on Windows for actions + Rust.

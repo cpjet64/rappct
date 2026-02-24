@@ -48,6 +48,7 @@ unsafe fn psid_to_string(psid: PSID) -> Result<String> {
     }
 }
 
+/// Lists all registered AppContainer profiles and their display names from the firewall config.
 pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
     #[cfg(all(windows, feature = "net"))]
     // SAFETY: Enumerates app containers and firewall config via Win32; out-pointers handled and freed.
@@ -317,7 +318,7 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
             Vec::new()
         };
 
-        let sddl_w: Vec<u16> = crate::util::to_utf16(sid.as_string());
+        let sddl_w: Vec<u16> = crate::ffi::wstr::to_utf16(sid.as_string());
         let mut psid_raw = PSID::default();
         // SAFETY: Convert SDDL to a LocalAlloc-managed PSID; wrap with guard.
         ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)

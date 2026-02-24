@@ -5,15 +5,35 @@ use crate::ffi::mem::LocalAllocGuard;
 use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
+/// ACE inheritance flags for directory ACL grants.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AceInheritance(pub u32);
+
+impl AceInheritance {
+    /// Inherited by child containers and objects (default for directories).
+    /// Equivalent to `CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE`.
+    pub const SUB_CONTAINERS_AND_OBJECTS: Self = Self(0x3);
+    /// Inherited by child containers only (`CONTAINER_INHERIT_ACE`).
+    pub const SUB_CONTAINERS_ONLY: Self = Self(0x2);
+    /// Inherited by child objects only (`OBJECT_INHERIT_ACE`).
+    pub const OBJECTS_ONLY: Self = Self(0x1);
+    /// No inheritance — ACE applies only to the directory itself.
+    pub const NONE: Self = Self(0x0);
+}
+
 /// Target resource for granting AppContainer or capability access.
 ///
 /// Notes:
 /// - `RegistryKey` supports only `HKCU` and `HKLM` roots (case-insensitive shorthands
 ///   `HKCU\\`/`HKLM\\` and full names `HKEY_CURRENT_USER\\`/`HKEY_LOCAL_MACHINE\\`).
+/// - `Directory` uses [`AceInheritance::SUB_CONTAINERS_AND_OBJECTS`] by default.
+///   Use `DirectoryCustom` to override the inheritance flags.
 #[derive(Clone, Debug)]
 pub enum ResourcePath {
     File(std::path::PathBuf),
     Directory(std::path::PathBuf),
+    /// Directory with custom ACE inheritance flags.
+    DirectoryCustom(std::path::PathBuf, AceInheritance),
     RegistryKey(String),
 }
 
@@ -41,6 +61,7 @@ impl AccessMask {
     pub const FILE_GENERIC_WRITE: Self = Self(0x0001_20116);
 }
 
+/// Grants the specified access to the AppContainer package SID on the target resource.
 #[cfg_attr(not(windows), allow(unused_variables))]
 pub fn grant_to_package(
     target: ResourcePath,
@@ -58,6 +79,7 @@ pub fn grant_to_package(
     }
 }
 
+/// Grants the specified access to a capability SID on the target resource.
 #[cfg_attr(not(windows), allow(unused_variables))]
 pub fn grant_to_capability(
     target: ResourcePath,
@@ -91,8 +113,31 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
     };
     use windows::core::{PCWSTR, PWSTR};
 
+    // Pre-check: verify the target resource exists before attempting the ACL grant.
+    match &target {
+        ResourcePath::File(path) => {
+            if !path.exists() {
+                return Err(AcError::ResourceNotFound {
+                    path: path.display().to_string(),
+                    hint: "create the file before calling grant_to_package()",
+                });
+            }
+        }
+        ResourcePath::Directory(path) | ResourcePath::DirectoryCustom(path, _) => {
+            if !path.is_dir() {
+                return Err(AcError::ResourceNotFound {
+                    path: path.display().to_string(),
+                    hint: "create the directory before calling grant_to_package()",
+                });
+            }
+        }
+        ResourcePath::RegistryKey(_) => {
+            // Registry key existence is validated by RegOpenKeyExW below.
+        }
+    }
+
     // Convert SDDL to PSID
-    let wide: Vec<u16> = crate::util::to_utf16(sid_sddl);
+    let wide: Vec<u16> = crate::ffi::wstr::to_utf16(sid_sddl);
     let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
     // SAFETY: `wide` is a valid, NUL-terminated UTF-16 string; `psid` receives a LocalAlloc SID.
     if unsafe { ConvertStringSidToSidW(PCWSTR(wide.as_ptr()), &mut psid) }.is_err() {
@@ -115,8 +160,8 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
 
     match target {
         ResourcePath::File(path) => {
-            ea.grfInheritance = ACE_FLAGS(0);
-            let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
+            ea.grfInheritance = ACE_FLAGS(AceInheritance::NONE.0);
+            let path_w: Vec<u16> = crate::ffi::wstr::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
             // SAFETY: Query file security info; the OS returns DACL/SD pointers we consume immediately.
@@ -174,9 +219,13 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             }
             Ok(())
         }
-        ResourcePath::Directory(path) => {
-            ea.grfInheritance = ACE_FLAGS(0x3u32); // SUB_CONTAINERS_AND_OBJECTS_INHERIT
-            let path_w: Vec<u16> = crate::util::to_utf16_os(path.as_os_str());
+        ResourcePath::Directory(ref path) | ResourcePath::DirectoryCustom(ref path, _) => {
+            let inheritance = match target {
+                ResourcePath::DirectoryCustom(_, flags) => flags.0,
+                _ => AceInheritance::SUB_CONTAINERS_AND_OBJECTS.0,
+            };
+            ea.grfInheritance = ACE_FLAGS(inheritance);
+            let path_w: Vec<u16> = crate::ffi::wstr::to_utf16_os(path.as_os_str());
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
             let mut p_dacl: *mut ACL = std::ptr::null_mut();
             // SAFETY: Query directory security info; Win32 returns DACL/SD pointers used immediately.
@@ -249,7 +298,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 } else {
                     return None;
                 };
-                let w: Vec<u16> = crate::util::to_utf16(rest);
+                let w: Vec<u16> = crate::ffi::wstr::to_utf16(rest);
                 Some((root, w))
             }
             let Some((root, subkey_w)) = parse_root(&spec) else {
@@ -338,7 +387,8 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
 
 #[cfg(test)]
 mod tests {
-    use super::AccessMask;
+    use super::{AccessMask, AceInheritance};
+
     #[test]
     fn constants_are_consistent() {
         assert_eq!(AccessMask::GENERIC_ALL.0, 0x001F_01FF);
@@ -348,5 +398,97 @@ mod tests {
             assert_eq!(AccessMask::FILE_GENERIC_READ.0, FILE_GENERIC_READ.0);
             assert_eq!(AccessMask::FILE_GENERIC_WRITE.0, FILE_GENERIC_WRITE.0);
         }
+    }
+
+    #[test]
+    fn ace_inheritance_constants_match_win32_values() {
+        // OBJECT_INHERIT_ACE = 0x1, CONTAINER_INHERIT_ACE = 0x2
+        assert_eq!(AceInheritance::NONE.0, 0x0);
+        assert_eq!(AceInheritance::OBJECTS_ONLY.0, 0x1);
+        assert_eq!(AceInheritance::SUB_CONTAINERS_ONLY.0, 0x2);
+        assert_eq!(AceInheritance::SUB_CONTAINERS_AND_OBJECTS.0, 0x3);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_nonexistent_file() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let path = std::path::PathBuf::from("C:\\__rappct_nonexistent_file_test__");
+        let err =
+            grant_to_package(ResourcePath::File(path), &sid, AccessMask::GENERIC_ALL).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("Resource not found"), "got: {msg}");
+        assert!(msg.contains("create the file"), "got: {msg}");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_nonexistent_directory() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let path = std::path::PathBuf::from("C:\\__rappct_nonexistent_dir_test__");
+        let err = grant_to_package(ResourcePath::Directory(path), &sid, AccessMask::GENERIC_ALL)
+            .unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("Resource not found"), "got: {msg}");
+        assert!(msg.contains("create the directory"), "got: {msg}");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_unsupported_registry_root() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let err = grant_to_package(
+            ResourcePath::RegistryKey("HKCR\\Software".into()),
+            &sid,
+            AccessMask::GENERIC_ALL,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Unsupported registry root"),
+            "expected unsupported root error, got: {msg}"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_invalid_sddl() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        // from_sddl allows anything; the Win32 API rejects it
+        let sid = AppContainerSid::from_sddl("not-a-valid-sid");
+        let path = std::env::temp_dir();
+        let err = grant_to_package(ResourcePath::Directory(path), &sid, AccessMask::GENERIC_ALL)
+            .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ConvertStringSidToSidW"),
+            "expected SID conversion failure, got: {msg}"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_nonexistent_registry_key() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let err = grant_to_package(
+            ResourcePath::RegistryKey("HKCU\\Software\\__rappct_nonexistent_key_test__".into()),
+            &sid,
+            AccessMask::GENERIC_ALL,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("RegOpenKeyExW"),
+            "expected registry open failure, got: {msg}"
+        );
     }
 }

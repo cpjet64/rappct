@@ -31,6 +31,12 @@ pub enum AcError {
         source: Box<dyn std::error::Error + Send + Sync>,
     },
 
+    #[error("Invalid SID format: {0}")]
+    InvalidSid(String),
+
+    #[error("Resource not found: {path} ({hint})")]
+    ResourceNotFound { path: String, hint: &'static str },
+
     #[error("Win32 error: {0}")]
     Win32(String),
 

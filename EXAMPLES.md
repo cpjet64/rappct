@@ -97,25 +97,18 @@ cargo run --example advanced_features --features "net,introspection"
 
 ### ❌ "The system could not find the environment option that was entered" (Error 203)
 **Cause**: When passing custom environment via `LaunchOptions::env`, it **completely replaces** the parent environment. Windows processes require essential system variables (SystemRoot, ComSpec, PATHEXT, TEMP, TMP) to function.
-**Solution**: When using custom environments, always include essential Windows variables:
+**Solution**: Since `LaunchOptions::inherit_parent_env` defaults to `true`, essential
+Windows variables are merged automatically. Just provide your custom variables:
 ```rust
-let mut custom_env = vec![];
-
-// Copy essential Windows variables from parent
-for var in &["SystemRoot", "windir", "ComSpec", "PATHEXT", "TEMP", "TMP"] {
-    if let Ok(val) = env::var(var) {
-        custom_env.push((OsString::from(*var), OsString::from(val)));
-    }
-}
-
-// Then add your custom variables
-custom_env.push((OsString::from("MY_VAR"), OsString::from("value")));
-
 let opts = LaunchOptions {
-    env: Some(custom_env),
+    env: Some(vec![
+        (OsString::from("MY_VAR"), OsString::from("value")),
+    ]),
     ..Default::default()
 };
 ```
+If you need complete control over the environment block (no automatic merging), set
+`inherit_parent_env: false` and manage system variables yourself.
 **See**: `advanced_features.rs` Demo 5 for a complete example
 
 ### ❌ "Access is denied" reading console output buffer (Error 0x5)

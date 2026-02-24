@@ -35,6 +35,51 @@ fn cmd_exe() -> std::path::PathBuf {
 
 #[cfg(windows)]
 #[test]
+fn launch_nonexistent_exe_fails() {
+    let name = format!("rappct.test.launch.noexe.{}", std::process::id());
+    let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
+    let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
+        .with_known(&[KnownCapability::InternetClient])
+        .build()
+        .expect("build caps");
+    let opts = LaunchOptions {
+        exe: std::path::PathBuf::from("C:\\__rappct_nonexistent_exe__.exe"),
+        cmdline: Some(" /C exit 0".to_string()),
+        ..Default::default()
+    };
+    let err = launch_in_container(&caps, &opts).unwrap_err();
+    assert!(
+        matches!(err, AcError::LaunchFailed { .. }),
+        "expected LaunchFailed, got: {err:?}"
+    );
+    prof.delete().ok();
+}
+
+#[cfg(windows)]
+#[test]
+fn launch_invalid_cwd_fails() {
+    let name = format!("rappct.test.launch.badcwd.{}", std::process::id());
+    let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
+    let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
+        .with_known(&[KnownCapability::InternetClient])
+        .build()
+        .expect("build caps");
+    let opts = LaunchOptions {
+        exe: cmd_exe(),
+        cmdline: Some(" /C exit 0".to_string()),
+        cwd: Some(std::path::PathBuf::from("C:\\__rappct_nonexistent_cwd__")),
+        ..Default::default()
+    };
+    let err = launch_in_container(&caps, &opts).unwrap_err();
+    assert!(
+        matches!(err, AcError::LaunchFailed { .. }),
+        "expected LaunchFailed, got: {err:?}"
+    );
+    prof.delete().ok();
+}
+
+#[cfg(windows)]
+#[test]
 fn launch_ac_cmd_exits() {
     let name = format!("rappct.test.launch.{}", std::process::id());
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");

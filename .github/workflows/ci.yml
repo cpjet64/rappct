@@ -16,13 +16,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust: [ stable, "1.90.0", beta, nightly ]
+        rust: [ stable, "1.88.0", "1.89.0", "1.90.0", "1.91.0", "1.92.0", "1.93.0", beta, nightly ]
         features: ["", "introspection", "net", "introspection,net"]
     env:
       RUST_BACKTRACE: 1
       RUSTFLAGS: -D warnings
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # Cache to speed up Windows builds
       - name: Cache cargo
@@ -37,10 +37,11 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Install Rust (MSRV)
-        if: ${{ matrix.rust == '1.90.0' }}
-        uses: dtolnay/rust-toolchain@1.90.0
+      - name: Install Rust (${{ matrix.rust }})
+        if: ${{ matrix.rust != 'stable' && matrix.rust != 'beta' && matrix.rust != 'nightly' }}
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: ${{ matrix.rust }}
           components: clippy
 
       - name: Install Rust (beta)

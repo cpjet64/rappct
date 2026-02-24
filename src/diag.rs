@@ -3,12 +3,16 @@
 use crate::capability::{SecurityCapabilities, derive_named_capability_sids};
 use crate::launch::LaunchOptions;
 
+/// A diagnostic warning about potentially misconfigured security capabilities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConfigWarning {
+    /// LPAC mode is enabled but common LPAC defaults (`registryRead`, `lpacCom`) are missing.
     LpacWithoutCommonCaps,
+    /// No networking capabilities (`internetClient`, etc.) are present.
     NoNetworkCaps,
 }
 
+/// Validates [`SecurityCapabilities`] and [`LaunchOptions`] for common misconfigurations.
 pub fn validate_configuration(
     sec: &SecurityCapabilities,
     opts: &LaunchOptions,

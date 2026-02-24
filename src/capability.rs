@@ -56,6 +56,13 @@ pub enum CapabilityName {
 pub type KnownCapability = CapabilityName;
 
 impl CapabilityName {
+    /// Back-compat list used by previous public API and tests.
+    pub const ALL: &'static [Self] = &[
+        Self::InternetClient,
+        Self::InternetClientServer,
+        Self::PrivateNetworkClientServer,
+    ];
+
     pub const fn as_str(self) -> &'static str {
         match self {
             CapabilityName::InternetClient => "internetClient",
@@ -83,7 +90,24 @@ impl CapabilityName {
             CapabilityName::LpacCom => "lpacCom",
         }
     }
+
+    /// Back-compat alias retained for existing callers.
+    pub const fn as_name(self) -> &'static str {
+        self.as_str()
+    }
+
+    /// Back-compat alias retained for existing callers.
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.iter().copied().find(|cap| cap.as_str() == name)
+    }
 }
+
+/// Back-compat constant retained for existing callers and tests.
+pub const WELL_KNOWN_CAPABILITY_NAMES: &[&'static str] = &[
+    "internetClient",
+    "internetClientServer",
+    "privateNetworkClientServer",
+];
 
 impl core::fmt::Display for CapabilityName {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {

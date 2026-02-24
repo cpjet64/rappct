@@ -2,7 +2,7 @@
 name = "rappct"
 version = "0.13.4"
 edition = "2024"
-rust-version = "1.90"
+rust-version = "1.88"
 license = "MIT"
 description = "Rust AppContainer / LPAC toolkit for Windows (profiles, capabilities, process launch, diagnostics)."
 repository = "https://github.com/cpjet64/rappct"
@@ -11,6 +11,23 @@ documentation = "https://docs.rs/rappct"
 keywords = ["windows", "appcontainer", "lpac", "sandbox", "security"]
 categories = ["os::windows-apis", "security", "api-bindings"]
 readme = "README.md"
+exclude = [
+    ".claude/",
+    ".github/",
+    ".githooks/",
+    "scripts/",
+    "docs/",
+    "AGENTS.md",
+    "STUBS.md",
+    "RUN_EXAMPLES.md",
+    "TODO.md",
+    "WORKFLOW.md",
+    "EXAMPLES.md",
+    "cliff.toml",
+    "deny.toml",
+    "release-plz.toml",
+    "rust-toolchain.toml",
+]
 
 # docs.rs configuration for Windows-only crate
 [package.metadata.docs.rs]

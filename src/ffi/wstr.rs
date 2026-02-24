@@ -1,6 +1,20 @@
 //! Owned wide (UTF-16) string helpers for FFI.
 
+use std::os::windows::ffi::OsStrExt;
 use windows::core::{PCWSTR, PWSTR};
+
+/// Converts a `&str` into a NUL-terminated UTF-16 buffer.
+pub(crate) fn to_utf16(s: &str) -> Vec<u16> {
+    std::ffi::OsStr::new(s)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect()
+}
+
+/// Converts an `&OsStr` into a NUL-terminated UTF-16 buffer.
+pub(crate) fn to_utf16_os(s: &std::ffi::OsStr) -> Vec<u16> {
+    s.encode_wide().chain(std::iter::once(0)).collect()
+}
 
 /// NUL-terminated UTF-16 buffer for stable FFI pointers.
 #[derive(Debug, Clone)]
@@ -10,14 +24,12 @@ pub(crate) struct WideString {
 impl WideString {
     #[allow(dead_code)]
     pub(crate) fn from_os_str(s: &std::ffi::OsStr) -> Self {
-        use std::os::windows::ffi::OsStrExt;
         let mut v: Vec<u16> = s.encode_wide().collect();
         v.push(0);
         Self { buf: v }
     }
 
     pub(crate) fn from_str(s: &str) -> Self {
-        use std::os::windows::ffi::OsStrExt;
         let mut v: Vec<u16> = std::ffi::OsStr::new(s).encode_wide().collect();
         v.push(0);
         Self { buf: v }

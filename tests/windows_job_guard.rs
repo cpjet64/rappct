@@ -28,7 +28,7 @@ fn job_guard_kills_on_drop() {
         exe: PathBuf::from("C:/Windows/System32/cmd.exe"),
         cmdline: Some("/C ping -n 60 127.0.0.1 >NUL".into()),
         stdio: StdioConfig::Inherit,
-        env: Some(rappct::launch::merge_parent_env(Vec::new())),
+        env: Some(Vec::new()),
         join_job: Some(JobLimits {
             memory_bytes: None,
             cpu_rate_percent: None,

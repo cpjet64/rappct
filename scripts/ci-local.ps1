@@ -27,17 +27,21 @@ foreach ($f in $features) {
   }
 }
 
-Write-Host "[ci-local] MSRV toolchain"
-rustup toolchain install 1.90.0 | Out-Null
-rustup component add clippy --toolchain 1.90.0 | Out-Null
+$msrvList = @("1.88.0", "1.89.0", "1.90.0", "1.91.0", "1.92.0", "1.93.0")
 
-foreach ($f in $features) {
-  if ($f -eq "") {
-    Write-Host "[ci-local] test (msrv 1.90.0, no features)"; cargo +1.90.0 test --all-targets
-    Write-Host "[ci-local] clippy (msrv 1.90.0, no features)"; cargo +1.90.0 clippy --all-targets -- -D warnings
-  } else {
-    Write-Host "[ci-local] test (msrv 1.90.0, features: $f)"; cargo +1.90.0 test --all-targets --features "$f"
-    Write-Host "[ci-local] clippy (msrv 1.90.0, features: $f)"; cargo +1.90.0 clippy --all-targets --features "$f" -- -D warnings
+foreach ($msrv in $msrvList) {
+  Write-Host "[ci-local] toolchain $msrv"
+  rustup toolchain install $msrv 2>&1 | Out-Null
+  rustup component add clippy --toolchain $msrv 2>&1 | Out-Null
+
+  foreach ($f in $features) {
+    if ($f -eq "") {
+      Write-Host "[ci-local] test ($msrv, no features)"; cargo +$msrv test --all-targets
+      Write-Host "[ci-local] clippy ($msrv, no features)"; cargo +$msrv clippy --all-targets -- -D warnings
+    } else {
+      Write-Host "[ci-local] test ($msrv, features: $f)"; cargo +$msrv test --all-targets --features "$f"
+      Write-Host "[ci-local] clippy ($msrv, features: $f)"; cargo +$msrv clippy --all-targets --features "$f" -- -D warnings
+    }
   }
 }
 

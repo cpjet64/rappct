@@ -5,8 +5,8 @@ use std::mem::size_of;
 use rappct::sid::AppContainerSid;
 use rappct::{
     AppContainerProfile, JobLimits, KnownCapability, LaunchOptions, Launched, LaunchedIo, Result,
-    SecurityCapabilities, SecurityCapabilitiesBuilder, StdioConfig, launch_in_container,
-    launch_in_container_with_io,
+    SecurityCapabilities, SecurityCapabilitiesBuilder, StdioConfig, WELL_KNOWN_CAPABILITY_NAMES,
+    launch_in_container, launch_in_container_with_io,
 };
 
 #[test]
@@ -17,6 +17,10 @@ fn api_reexports_are_accessible() {
     let _ = size_of::<SecurityCapabilities>();
     let _ = StdioConfig::Inherit;
     let _ = KnownCapability::InternetClient;
+    let _ = KnownCapability::ALL;
+    let _ = KnownCapability::InternetClient.as_name();
+    let _ = KnownCapability::from_name("internetClient");
+    assert!(!WELL_KNOWN_CAPABILITY_NAMES.is_empty());
     let _ = launch_in_container as fn(&SecurityCapabilities, &LaunchOptions) -> Result<Launched>;
     let _ = launch_in_container_with_io
         as fn(&SecurityCapabilities, &LaunchOptions) -> Result<LaunchedIo>;

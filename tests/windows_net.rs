@@ -89,8 +89,13 @@ fn loopback_requires_confirm() {
 
 #[cfg(all(windows, feature = "net"))]
 #[test]
+#[ignore]
 /// This test mutates the system loopback exemption list but restores the original entries.
+/// Requires elevation and opt-in via RAPPCT_ALLOW_NET_TESTS=1.
 fn loopback_add_remove_roundtrip() {
+    if std::env::var_os("RAPPCT_ALLOW_NET_TESTS").is_none() {
+        return;
+    }
     use std::collections::HashSet;
 
     let name = format!("rappct.test.net.loopback.{}", std::process::id());

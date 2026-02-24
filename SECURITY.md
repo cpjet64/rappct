@@ -67,7 +67,7 @@ We support good‑faith research and coordinated disclosure. While testing:
 
 ## MSRV & Reproducibility
 
-- MSRV is 1.90 (documented in Cargo.toml and README). Repro reports that build
+- MSRV is 1.88 (documented in Cargo.toml and README). Repro reports that build
   on MSRV or stable are preferred.
 - Tests that require privileged changes (e.g., firewall exemptions) should be
   clearly labeled and minimized in PoCs.

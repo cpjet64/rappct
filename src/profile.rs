@@ -7,9 +7,12 @@ use crate::ffi::{mem::LocalAllocGuard, sid::OwnedSid, wstr::WideString};
 use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
+/// An AppContainer profile with its name and derived package SID.
 #[derive(Clone, Debug)]
 pub struct AppContainerProfile {
+    /// The profile name passed to `CreateAppContainerProfile`.
     pub name: String,
+    /// The package SID derived from the profile name.
     pub sid: AppContainerSid,
 }
 
@@ -103,6 +106,7 @@ impl AppContainerProfile {
             Err(AcError::UnsupportedPlatform)
         }
     }
+    /// Deletes the AppContainer profile from the system.
     pub fn delete(self) -> Result<()> {
         #[cfg(windows)]
         {
@@ -131,6 +135,7 @@ impl AppContainerProfile {
             Err(AcError::UnsupportedPlatform)
         }
     }
+    /// Returns the per-user folder path for this AppContainer profile.
     pub fn folder_path(&self) -> Result<std::path::PathBuf> {
         #[cfg(windows)]
         {
@@ -200,6 +205,7 @@ impl AppContainerProfile {
             Err(AcError::UnsupportedPlatform)
         }
     }
+    /// Returns the named-object namespace path for this AppContainer profile.
     pub fn named_object_path(&self) -> Result<String> {
         #[cfg(windows)]
         {
@@ -266,6 +272,7 @@ impl AppContainerProfile {
     }
 }
 
+/// Derives an AppContainer package SID from a profile name without creating the profile.
 pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
     let _ = name;
     #[cfg(windows)]
