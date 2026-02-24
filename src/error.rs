@@ -98,4 +98,31 @@ mod tests {
             _ => panic!("expected unknown capability variant"),
         }
     }
+
+    #[test]
+    fn unsupported_platform_display() {
+        let err = AcError::UnsupportedPlatform;
+        assert_eq!(err.to_string(), "Unsupported platform (Windows required)");
+    }
+
+    #[test]
+    fn unsupported_lpac_display() {
+        let err = AcError::UnsupportedLpac;
+        assert_eq!(
+            err.to_string(),
+            "Unsupported: LPAC requires Windows 10 (1703+)"
+        );
+    }
+
+    #[test]
+    fn win32_display() {
+        let err = AcError::Win32("OpenProcessToken failed".into());
+        assert_eq!(err.to_string(), "Win32 error: OpenProcessToken failed");
+    }
+
+    #[test]
+    fn unimplemented_display() {
+        let err = AcError::Unimplemented("feature X");
+        assert_eq!(err.to_string(), "Unimplemented: feature X");
+    }
 }

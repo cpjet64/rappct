@@ -55,7 +55,7 @@ corrected it, or FAIL if it needs manual attention. Do not skip items.
 - [ ] `scripts/enforce_advisory_policy.py` exists (for Rust projects)
 
 ### 8. Repo Hygiene
-- [ ] `scripts/hygiene.sh` exists
+- [ ] `scripts/hygiene.ps1` exists
 - [ ] No files > 10MB in tracked files (excluding vendor/)
 - [ ] `.gitignore` includes: target/, node_modules/, dist/, build/, __pycache__/, .venv/
 - [ ] No merge conflict markers in any tracked file

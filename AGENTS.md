@@ -18,7 +18,6 @@ This repository includes Git hooks and helper scripts to make this easy:
 - Enable hooks locally: `git config core.hooksPath .githooks`
 - Pre-commit runs fmt, clippy, and tests for the current toolchain.
 - Pre-push runs the full local CI script (stable + MSRV 1.88.0–1.93.0 across feature matrix):
-  - Bash: `scripts/ci-local.sh`
   - PowerShell: `scripts/ci-local.ps1`
 
 Bypassing hooks (`--no-verify`) is discouraged and should only be used for emergencies.
@@ -90,7 +89,7 @@ Repository-provided hooks and scripts:
 - Enable hooks once: `git config core.hooksPath .githooks`
 - `.githooks/pre-commit` runs fmt, clippy, and tests.
 - `.githooks/pre-push` runs the full local CI matrix via:
-  - `scripts/ci-local.sh` (Bash) or `scripts/ci-local.ps1` (PowerShell)
+  - `scripts/ci-local.ps1` (PowerShell)
 
 Do not bypass hooks except in emergencies (`git push --no-verify`). Keeping local gates green will keep CI green.
 
@@ -225,7 +224,7 @@ All package manager caches are consolidated under `C:\Dev\cache\`:
 If you need a temporary working directory, use `C:\Dev\agent-temp`. Do NOT use system temp or create temp dirs inside the project.
 
 ### Project Location
-This project lives at `C:\Dev\repos\inactive\rappct`.
+This project lives at `C:\Dev\repos\active\rappct`.
 
 ## Workflow Orchestration
 

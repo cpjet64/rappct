@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this file will be managed automatically by release-please.
 
+## [0.13.4] - 2025-10-24
+
+### Features
+
+- Capability catalog + `OwnedSecurityCapabilities::from_catalog` (Windows). Additive API; no breaking changes.
+- Version bump: crate now published as 0.13.4 (additive API release).
 ## [0.13.3] - 2025-10-23
 
 ### Features

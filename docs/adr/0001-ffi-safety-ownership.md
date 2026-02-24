@@ -1,6 +1,7 @@
 # ADR 0001: FFI Safety & Ownership Boundaries
 
 Status: Accepted
+Outcome: Capability catalog parity verified; OwnedSecurityCapabilities::from_catalog now binds catalog entries into smoke-tested AppContainer launches.
 
 Date: 2025-10-22
 

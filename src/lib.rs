@@ -134,3 +134,16 @@ pub fn supports_lpac() -> Result<()> {
         Err(AcError::UnsupportedPlatform)
     }
 }
+
+#[cfg(test)]
+#[cfg(not(windows))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn supports_lpac_returns_unsupported_platform_on_non_windows() {
+        let r = supports_lpac();
+        assert!(r.is_err());
+        assert!(matches!(r.unwrap_err(), AcError::UnsupportedPlatform));
+    }
+}

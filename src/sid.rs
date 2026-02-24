@@ -78,7 +78,7 @@ pub struct SidAndAttributes {
 
 #[cfg(test)]
 mod tests {
-    use super::AppContainerSid;
+    use super::*;
 
     #[test]
     fn try_from_sddl_accepts_valid_sid() {
@@ -122,5 +122,34 @@ mod tests {
         // Unchecked constructor remains for backwards compatibility
         let sid = AppContainerSid::from_sddl("anything");
         assert_eq!(sid.as_string(), "anything");
+    }
+
+    #[test]
+    fn app_container_sid_from_sddl_and_as_string() {
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1-2-3-4-5-6");
+        assert_eq!(sid.as_string(), "S-1-15-2-1-2-3-4-5-6");
+    }
+
+    #[test]
+    fn app_container_sid_display() {
+        let sid = AppContainerSid::from_sddl("S-1-15-2-0");
+        assert_eq!(sid.to_string(), "S-1-15-2-0");
+    }
+
+    #[test]
+    fn app_container_sid_as_ref() {
+        let sid = AppContainerSid::from_sddl("S-1-15-2-0");
+        let s: &str = sid.as_ref();
+        assert_eq!(s, "S-1-15-2-0");
+    }
+
+    #[test]
+    fn sid_and_attributes_struct() {
+        let sa = SidAndAttributes {
+            sid_sddl: "S-1-15-2-0".to_string(),
+            attributes: 0,
+        };
+        assert_eq!(sa.sid_sddl, "S-1-15-2-0");
+        assert_eq!(sa.attributes, 0);
     }
 }

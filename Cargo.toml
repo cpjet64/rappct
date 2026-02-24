@@ -45,15 +45,15 @@ tracing = ["dep:tracing"]
 serde = ["dep:serde"]
 
 [dependencies]
-thiserror = "2.0"
+thiserror = "*"
 # Suggestion helper for capability names (optional; not used yet in skeleton)
-strsim = { version = "0.11", optional = true }
-tracing = { version = "0.1", optional = true }
-serde = { version = "1.0", features = ["derive"], optional = true }
+strsim = { version = "*", optional = true }
+tracing = { version = "*", optional = true }
+serde = { version = "*", features = ["derive"], optional = true }
 
 # Windows APIs are only needed/built on Windows hosts.
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62", features = [
+windows = { version = "*", features = [
     "Win32_Foundation",
     "Win32_Security",
     "Win32_Security_Authorization",
@@ -69,9 +69,9 @@ windows = { version = "0.62", features = [
 ] }
 
 [dev-dependencies]
-clap = { version = "4.5", features = ["derive"] }
-serde_json = "1.0"
-tempfile = "3"
+clap = { version = "*", features = ["derive"] }
+serde_json = "*"
+tempfile = "*"
 
 [lib]
 name = "rappct"
