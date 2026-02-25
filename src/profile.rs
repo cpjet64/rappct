@@ -74,15 +74,15 @@ impl AppContainerProfile {
                         DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut sid2);
                     if !hr2.is_ok() {
                         return Err(AcError::Win32(format!(
-                            "DeriveAppContainerSidFromAppContainerName failed: 0x{:08X}",
-                            hr2.0
+                            "DeriveAppContainerSidFromAppContainerName failed: 0x{hr2_code:08X}",
+                            hr2_code = hr2.0
                         )));
                     }
                     OwnedSid::from_freesid_psid(sid2)
                 } else {
                     return Err(AcError::Win32(format!(
-                        "CreateAppContainerProfile failed: 0x{:08X}",
-                        hr.0
+                        "CreateAppContainerProfile failed: 0x{hr_code:08X}",
+                        hr_code = hr.0
                     )));
                 };
 
@@ -90,7 +90,7 @@ impl AppContainerProfile {
                 let mut sddl_ptr = PWSTR::null();
                 // SAFETY: Convert a valid PSID to a LocalAlloc-managed SDDL string.
                 ConvertSidToStringSidW(sid_owned.as_psid(), &mut sddl_ptr)
-                    .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {}", e)))?;
+                    .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
                 // SAFETY: Wrap LocalAlloc PWSTR for proper free.
                 let sddl_guard = LocalAllocGuard::<u16>::from_raw(sddl_ptr.0);
                 let sddl = sddl_guard.to_string_lossy();
@@ -134,8 +134,8 @@ impl AppContainerProfile {
                 let hr = DeleteAppContainerProfile(name_w.as_pcwstr());
                 if !hr.is_ok() {
                     return Err(AcError::Win32(format!(
-                        "DeleteAppContainerProfile failed: 0x{:08X}",
-                        hr.0
+                        "DeleteAppContainerProfile failed: 0x{hr_code:08X}",
+                        hr_code = hr.0
                     )));
                 }
             }
@@ -175,8 +175,8 @@ impl AppContainerProfile {
                     DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut psid);
                 if !hr_sid.is_ok() {
                     return Err(AcError::Win32(format!(
-                        "DeriveAppContainerSidFromAppContainerName failed: 0x{:08X}",
-                        hr_sid.0
+                        "DeriveAppContainerSidFromAppContainerName failed: 0x{hr_sid_code:08X}",
+                        hr_sid_code = hr_sid.0
                     )));
                 }
                 let psid_owned = OwnedSid::from_freesid_psid(psid.0);
@@ -204,8 +204,8 @@ impl AppContainerProfile {
                     match std::env::var_os("LOCALAPPDATA") {
                         Some(base) => Ok(PathBuf::from(base).join("Packages").join(sid_s)),
                         None => Err(AcError::Win32(format!(
-                            "GetAppContainerFolderPath failed: 0x{:08X}",
-                            hr.0
+                            "GetAppContainerFolderPath failed: 0x{hr_code:08X}",
+                            hr_code = hr.0
                         ))),
                     }
                 }
@@ -304,8 +304,8 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
             let hr = DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut sid_ptr);
             if !hr.is_ok() {
                 return Err(AcError::Win32(format!(
-                    "DeriveAppContainerSidFromAppContainerName failed: 0x{:08X}",
-                    hr.0
+                    "DeriveAppContainerSidFromAppContainerName failed: 0x{hr_code:08X}",
+                    hr_code = hr.0
                 )));
             }
             let sid_owned = OwnedSid::from_freesid_psid(sid_ptr);

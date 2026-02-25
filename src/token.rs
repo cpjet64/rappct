@@ -100,9 +100,9 @@ unsafe fn query_bool(token: HANDLE, class: TOKEN_INFORMATION_CLASS) -> Result<bo
             if is_win32_error(&err, ERROR_INVALID_PARAMETER.0) {
                 Ok(false)
             } else {
+                let class_code = class.0;
                 Err(AcError::Win32(format!(
-                    "GetTokenInformation(class={:?}) failed: {}",
-                    class.0, err
+                    "GetTokenInformation(class={class_code:?}) failed: {err}"
                 )))
             }
         }
@@ -122,8 +122,7 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
         }
         if !is_win32_error(&err, ERROR_INSUFFICIENT_BUFFER.0) {
             return Err(AcError::Win32(format!(
-                "GetTokenInformation(TokenAppContainerSid size) failed: {}",
-                err
+                "GetTokenInformation(TokenAppContainerSid size) failed: {err}"
             )));
         }
     }
@@ -143,8 +142,7 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
     }
     .map_err(|e| {
         AcError::Win32(format!(
-            "GetTokenInformation(TokenAppContainerSid) failed: {}",
-            e
+            "GetTokenInformation(TokenAppContainerSid) failed: {e}"
         ))
     })?;
 
@@ -170,8 +168,7 @@ unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
         }
         if !is_win32_error(&err, ERROR_INSUFFICIENT_BUFFER.0) {
             return Err(AcError::Win32(format!(
-                "GetTokenInformation(TokenCapabilities size) failed: {}",
-                err
+                "GetTokenInformation(TokenCapabilities size) failed: {err}"
             )));
         }
     }
@@ -191,8 +188,7 @@ unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
     }
     .map_err(|e| {
         AcError::Win32(format!(
-            "GetTokenInformation(TokenCapabilities) failed: {}",
-            e
+            "GetTokenInformation(TokenCapabilities) failed: {e}"
         ))
     })?;
 
@@ -228,7 +224,7 @@ unsafe fn sid_to_string(psid: windows::Win32::Security::PSID) -> Result<String> 
     let mut out = windows::core::PWSTR::null();
     // SAFETY: `psid` is a valid SID from the token. API returns a LocalAlloc-managed PWSTR.
     unsafe { ConvertSidToStringSidW(psid, &mut out) }
-        .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {}", e)))?;
+        .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
     // SAFETY: `out` now points to a LocalAlloc buffer; wrap to free exactly once.
     let guard = unsafe { LocalAllocGuard::<u16>::from_raw(out.0) };
     // SAFETY: Guarded pointer references a NUL-terminated UTF-16 string.

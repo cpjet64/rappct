@@ -290,7 +290,7 @@ fn launch_lpac_token_sets_flag_and_caps() {
             {
                 // Windows builds before TokenIsLessPrivilegedAppContainer support return E_INVALIDARG.
             }
-            Err(err) => panic!("TokenIsLessPrivilegedAppContainer query failed: {:?}", err),
+            Err(err) => panic!("TokenIsLessPrivilegedAppContainer query failed: {err:?}"),
         }
 
         let mut needed: u32 = 0;
@@ -525,8 +525,7 @@ fn launch_with_pipes_and_echo() {
         let warnings = validate_configuration(&caps, &opts);
         assert!(
             warnings.is_empty(),
-            "unexpected diagnostics for pipe launch: {:?}",
-            warnings
+            "unexpected diagnostics for pipe launch: {warnings:?}"
         );
     }
     let child = launch_in_container_with_io(&caps, &opts).expect("launch with io");

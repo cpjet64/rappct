@@ -72,7 +72,7 @@ fn main() -> rappct::Result<()> {
                 Some(g)
             }
             Err(e) => {
-                println!("? Firewall exemption failed: {}", e);
+                println!("? Firewall exemption failed: {e}");
                 println!("  Network tests may have limited functionality");
                 None
             }
@@ -86,7 +86,7 @@ fn main() -> rappct::Result<()> {
         // Cleanup profile
         let profile_name = profile.name.clone();
         profile.delete()?;
-        println!("✓ Cleaned up profile: {}", profile_name);
+        println!("✓ Cleaned up profile: {profile_name}");
 
         println!("\n🎉 Network Demo Complete!");
         println!("========================");
@@ -119,7 +119,7 @@ fn run_network_tests(profile: &AppContainerProfile) -> rappct::Result<()> {
                 println!("⚠ DNS: FAILED (may be network/policy issue)");
             }
         }
-        Err(e) => println!("⚠ DNS test error: {}", e),
+        Err(e) => println!("⚠ DNS test error: {e}"),
     }
 
     println!("\n→ Testing HTTP connectivity (normal process):");
@@ -133,10 +133,10 @@ fn run_network_tests(profile: &AppContainerProfile) -> rappct::Result<()> {
             if result.contains("200") {
                 println!("✓ HTTP: SUCCESS (normal process can access internet)");
             } else {
-                println!("⚠ HTTP: {} (may be network/policy issue)", result);
+                println!("⚠ HTTP: {result} (may be network/policy issue)");
             }
         }
-        Err(e) => println!("⚠ HTTP test error: {}", e),
+        Err(e) => println!("⚠ HTTP test error: {e}"),
     }
 
     println!("\n{}", "=".repeat(60));
@@ -284,7 +284,7 @@ impl NetworkTest {
         if let Some(stdout) = child.stdout.take() {
             let reader = BufReader::new(stdout);
             for line in reader.lines().map_while(Result::ok) {
-                println!("  {}", line);
+                println!("  {line}");
             }
         }
 

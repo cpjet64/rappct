@@ -64,7 +64,7 @@ fn security_sddl_for_path(path: &std::path::Path) -> String {
             None,
             &mut sd,
         );
-        assert_eq!(status.0, 0, "GetNamedSecurityInfoW failed: {:?}", status);
+        assert_eq!(status.0, 0, "GetNamedSecurityInfoW failed: {status:?}");
         let mut sddl_ptr = windows::core::PWSTR::null();
         ConvertSecurityDescriptorToStringSecurityDescriptorW(
             sd,
@@ -118,7 +118,7 @@ fn security_sddl_for_registry(spec: &str) -> String {
             KEY_READ | KEY_WRITE,
             &mut hkey,
         );
-        assert_eq!(status.0, 0, "RegOpenKeyExW failed: {:?}", status);
+        assert_eq!(status.0, 0, "RegOpenKeyExW failed: {status:?}");
         let mut sd = PSECURITY_DESCRIPTOR::default();
         let mut dacl: *mut ACL = std::ptr::null_mut();
         let status2 = GetSecurityInfo(
@@ -131,7 +131,7 @@ fn security_sddl_for_registry(spec: &str) -> String {
             None,
             Some(&mut sd),
         );
-        assert_eq!(status2.0, 0, "GetSecurityInfo(reg) failed: {:?}", status2);
+        assert_eq!(status2.0, 0, "GetSecurityInfo(reg) failed: {status2:?}");
         let mut sddl_ptr = windows::core::PWSTR::null();
         ConvertSecurityDescriptorToStringSecurityDescriptorW(
             sd,
@@ -218,12 +218,12 @@ fn grant_to_package_updates_registry_dacl() {
             &mut hkey,
             Some(&mut disposition),
         );
-        assert_eq!(status.0, 0, "RegCreateKeyExW failed: {:?}", status);
+        assert_eq!(status.0, 0, "RegCreateKeyExW failed: {status:?}");
         assert_eq!(disposition, REG_CREATED_NEW_KEY);
         let _ = RegCloseKey(hkey);
     }
 
-    let full_spec = format!("HKCU\\{}", subkey);
+    let full_spec = format!("HKCU\\{subkey}");
     let before = security_sddl_for_registry(&full_spec);
     assert!(
         !before.contains(&sid_str),

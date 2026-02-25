@@ -407,7 +407,7 @@ fn derive_single_capability_sids(name: &str) -> Result<Vec<SidAndAttributes>> {
             #[cfg(not(feature = "introspection"))]
             let suggestion: Option<&'static str> = None;
             let name_with_hint = match suggestion {
-                Some(s) => format!("{} (did you mean '{s}'?)", name),
+                Some(s) => format!("{name} (did you mean '{s}'?)"),
                 None => name.to_string(),
             };
             return Err(AcError::UnknownCapability {

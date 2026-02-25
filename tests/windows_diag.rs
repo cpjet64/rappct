@@ -17,7 +17,7 @@ fn diag_no_warnings_for_basic_appcontainer() {
         .expect("build caps");
     let opts = rappct::launch::LaunchOptions::default();
     let warnings = validate_configuration(&caps, &opts);
-    assert!(warnings.is_empty(), "unexpected warnings: {:?}", warnings);
+    assert!(warnings.is_empty(), "unexpected warnings: {warnings:?}");
     profile.delete().ok();
 }
 

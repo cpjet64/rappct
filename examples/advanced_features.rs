@@ -71,7 +71,7 @@ impl Drop for ProfileCleanupGuard {
                     println!("✓ Profile cleaned up");
                     println!();
                 }
-                Err(e) => println!("⚠ Failed to delete profile {}: {}", name, e),
+                Err(e) => println!("⚠ Failed to delete profile {name}: {e}"),
             }
         }
     }
@@ -114,7 +114,7 @@ fn resolve_cmd_exe() -> PathBuf {
         }
     }
     if let Ok(root) = env::var("SystemRoot") {
-        let p = PathBuf::from(format!(r"{}\System32\cmd.exe", root));
+        let p = PathBuf::from(format!(r"{root}\System32\cmd.exe"));
         if p.exists() {
             return p;
         }
@@ -152,11 +152,11 @@ fn main() -> rappct::Result<()> {
     ];
     for (name, f) in demos {
         match f() {
-            Ok(_) => println!("\n✓ {} completed", name),
+            Ok(_) => println!("\n✓ {name} completed"),
             Err(e) => {
-                println!("\n⚠ {} failed: {}", name, e);
+                println!("\n⚠ {name} failed: {e}");
                 if let Some(src) = std::error::Error::source(&e) {
-                    println!("   OS error: {}", src);
+                    println!("   OS error: {src}");
                 }
                 println!("   Continuing with next demo...\n");
             }
@@ -196,7 +196,7 @@ fn demo_profile_paths() -> rappct::Result<()> {
             println!("  This is where the AppContainer can store persistent data");
         }
         Err(e) => {
-            println!("⚠ Could not get folder path: {}", e);
+            println!("⚠ Could not get folder path: {e}");
             println!("  This may be normal if the profile hasn't been used yet");
         }
     }
@@ -204,11 +204,11 @@ fn demo_profile_paths() -> rappct::Result<()> {
     // Get the named object path
     match profile.named_object_path() {
         Ok(named_path) => {
-            println!("✓ Named object path: {}", named_path);
+            println!("✓ Named object path: {named_path}");
             println!("  This prefix is used for named kernel objects (mutexes, events, etc.)");
         }
         Err(e) => {
-            println!("⚠ Could not get named object path: {}", e);
+            println!("⚠ Could not get named object path: {e}");
         }
     }
 
@@ -225,7 +225,7 @@ fn demo_sid_derivation() -> rappct::Result<()> {
 
     let profile_name = "rappct.sid.demo";
 
-    println!("→ Deriving SID for profile name: '{}'", profile_name);
+    println!("→ Deriving SID for profile name: '{profile_name}'");
     let derived_sid = derive_sid_from_name(profile_name)?;
     println!("✓ Derived SID: {}", derived_sid.as_string());
 
@@ -286,7 +286,7 @@ fn demo_custom_capabilities() -> rappct::Result<()> {
             }
         }
         Err(e) => {
-            println!("⚠ Custom capabilities failed: {}", e);
+            println!("⚠ Custom capabilities failed: {e}");
             println!("  Some capability names may not be recognized on this system");
         }
     }
@@ -371,7 +371,7 @@ fn demo_diagnostics_old() -> rappct::Result<()> {
         if warnings.is_empty() {
             println!("✓ No warnings - configuration looks good");
         } else {
-            println!("⚠ Warnings found: {:?}", warnings);
+            println!("⚠ Warnings found: {warnings:?}");
         }
 
         drop(profile_guard);
@@ -399,7 +399,7 @@ fn demo_advanced_launch() -> rappct::Result<()> {
                 println!("  • Environment variable: SUCCESS");
             }
         }
-        Err(e) => println!("⚠ Normal process test error: {}", e),
+        Err(e) => println!("⚠ Normal process test error: {e}"),
     }
 
     println!("\n→ Now comparing with AppContainer restrictions:");
@@ -452,7 +452,7 @@ fn demo_advanced_launch() -> rappct::Result<()> {
             thread::sleep(Duration::from_secs(3));
         }
         Err(e) => {
-            println!("⚠ Advanced launch failed: {}", e);
+            println!("⚠ Advanced launch failed: {e}");
             println!("  This is normal in restricted AppContainer environments");
             println!("  The advanced APIs still work for profile/SID management");
         }
@@ -489,8 +489,8 @@ fn demo_enhanced_io() -> rappct::Result<()> {
         let reader = BufReader::new(stdout);
         for line in reader.lines() {
             match line {
-                Ok(content) => println!("  STDOUT: {}", content),
-                Err(e) => println!("  STDOUT read error: {}", e),
+                Ok(content) => println!("  STDOUT: {content}"),
+                Err(e) => println!("  STDOUT read error: {e}"),
             }
         }
     }
@@ -500,8 +500,8 @@ fn demo_enhanced_io() -> rappct::Result<()> {
         let reader = BufReader::new(stderr);
         for line in reader.lines() {
             match line {
-                Ok(content) => println!("  STDERR: {}", content),
-                Err(e) => println!("  STDERR read error: {}", e),
+                Ok(content) => println!("  STDERR: {content}"),
+                Err(e) => println!("  STDERR read error: {e}"),
             }
         }
     }
@@ -571,7 +571,7 @@ fn demo_network_enumeration_impl() -> rappct::Result<()> {
                 }
             }
             Err(e) => {
-                println!("⚠ Enumeration failed: {}", e);
+                println!("⚠ Enumeration failed: {e}");
                 println!("  This may require Administrator privileges");
             }
         }
@@ -604,7 +604,7 @@ fn demo_capability_acls() -> rappct::Result<()> {
 
     if !caps.caps.is_empty() {
         let cap_sid = &caps.caps[0].sid_sddl;
-        println!("→ Granting access to capability: {}", cap_sid);
+        println!("→ Granting access to capability: {cap_sid}");
 
         match grant_to_capability(
             ResourcePath::File(test_file.clone()),
@@ -612,7 +612,7 @@ fn demo_capability_acls() -> rappct::Result<()> {
             AccessMask::FILE_GENERIC_READ, // FILE_GENERIC_READ
         ) {
             Ok(_) => println!("✓ Capability-based ACL applied successfully"),
-            Err(e) => println!("⚠ Capability ACL failed: {}", e),
+            Err(e) => println!("⚠ Capability ACL failed: {e}"),
         }
     } else {
         println!("⚠ No capabilities available for ACL demo");

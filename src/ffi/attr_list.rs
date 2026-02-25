@@ -27,7 +27,7 @@ impl AttrList {
         // SAFETY: Initialize with computed size.
         unsafe {
             InitializeProcThreadAttributeList(Some(ptr), count, Some(0), &mut bytes as *mut usize)
-                .map_err(|e| AcError::Win32(format!("InitializeProcThreadAttributeList: {}", e)))?;
+                .map_err(|e| AcError::Win32(format!("InitializeProcThreadAttributeList: {e}")))?;
         }
         Ok(Self { _buf: buf, ptr })
     }
@@ -52,7 +52,7 @@ impl AttrList {
                 None,
                 None,
             )
-            .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute: {}", e)))
+            .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute: {e}")))
         }
     }
 
@@ -72,7 +72,7 @@ impl AttrList {
                 None,
                 None,
             )
-            .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute(AAPolicy): {}", e)))
+            .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute(AAPolicy): {e}")))
         }
     }
 
@@ -92,7 +92,7 @@ impl AttrList {
                 None,
                 None,
             )
-            .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute(HandleList): {}", e)))
+            .map_err(|e| AcError::Win32(format!("UpdateProcThreadAttribute(HandleList): {e}")))
         }
     }
 }

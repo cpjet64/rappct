@@ -62,7 +62,7 @@ fn main() -> rappct::Result<()> {
                 sid: derived_sid,
             };
             p.delete()?;
-            println!("Deleted profile: {}", name);
+            println!("Deleted profile: {name}");
         }
         Cmd::Whoami { json } => match token::query_current_process_token() {
             Ok(info) => {
@@ -74,10 +74,8 @@ fn main() -> rappct::Result<()> {
                         "package_sid": package_sid,
                         "capabilities": info.capability_sids,
                     }))
-                    .map_err(|e| {
-                        AcError::Win32(format!("Failed to serialize token info: {}", e))
-                    })?;
-                    println!("{}", serialized);
+                    .map_err(|e| AcError::Win32(format!("Failed to serialize token info: {e}")))?;
+                    println!("{serialized}");
                 } else {
                     println!("is_appcontainer={}", info.is_appcontainer);
                     println!("is_lpac={}", info.is_lpac);
@@ -90,7 +88,7 @@ fn main() -> rappct::Result<()> {
                     } else {
                         println!("capabilities:");
                         for sid in &info.capability_sids {
-                            println!("  {}", sid);
+                            println!("  {sid}");
                         }
                     }
                 }

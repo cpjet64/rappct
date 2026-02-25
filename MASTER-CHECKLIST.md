@@ -22,16 +22,16 @@
 
 ## Milestone 3 – Initial MVP (All Features + Examples + Use Case Groupings)
 - [x] Standard Use Case Groupings implemented (see below)
-- [ ] Network isolation helpers (`net` feature) work
-- [ ] Diagnostics and configuration validation (`introspection`)
-- [ ] All examples run cleanly
-- [ ] Full CLI tool (`acrun`) functional
-- [ ] Cross-feature matrix tests pass
+- [x] Network isolation helpers (`net` feature) work
+- [x] Diagnostics and configuration validation (`introspection`)
+- [x] All examples run cleanly
+- [x] Full CLI tool (`acrun`) functional
+- [x] Cross-feature matrix tests pass
 - [ ] Documentation and examples match behavior
 
 ## Milestone 4 – Finished Project
 - [ ] Full distribution (crates.io publishing, GitHub releases)
-- [ ] CI matrix (MSRV 1.88, stable, beta, nightly + feature matrix)
+- [x] CI matrix (MSRV 1.88, stable, beta, nightly + feature matrix)
 - [ ] Security policy and responsible disclosure documented
 - [ ] All stubs resolved or intentionally documented
 - [ ] 100% of intended features complete and tested

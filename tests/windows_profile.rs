@@ -79,6 +79,6 @@ fn profile_named_object_path_invalid_sid_errors() {
         .expect_err("should fail for invalid SID");
     match err {
         AcError::Win32(msg) => assert!(msg.contains("ConvertStringSidToSidW")),
-        other => panic!("unexpected error: {:?}", other),
+        other => panic!("unexpected error: {other:?}"),
     }
 }

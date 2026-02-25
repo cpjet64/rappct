@@ -39,7 +39,7 @@ type DemoEntry = (&'static str, fn() -> rappct::Result<()>);
 
 /// Helper function to pause and wait for user input
 fn pause_for_demo(msg: &str) {
-    println!("\n{}", msg);
+    println!("\n{msg}");
     print!("Press Enter to continue...");
     let _ = io::stdout().flush();
     let mut input = String::new();
@@ -57,7 +57,7 @@ fn demo_profile_management() -> rappct::Result<()> {
     let profile_name = "rappct.demo.profile";
 
     // Create or ensure profile exists
-    println!("\n→ Creating AppContainer profile: '{}'", profile_name);
+    println!("\n→ Creating AppContainer profile: '{profile_name}'");
     let profile = AppContainerProfile::ensure(
         profile_name,
         "Demo Profile",
@@ -112,7 +112,7 @@ fn demo_token_introspection() -> rappct::Result<()> {
     if !token_info.capability_sids.is_empty() {
         println!("  • Capabilities ({}):", token_info.capability_sids.len());
         for cap in &token_info.capability_sids {
-            println!("    - {}", cap);
+            println!("    - {cap}");
         }
     } else {
         println!("  • Capabilities: None");
@@ -348,7 +348,7 @@ fn demo_file_acls() -> rappct::Result<()> {
                 println!("⚠ Normal process: Unexpected file access behavior");
             }
         }
-        Err(e) => println!("⚠ Normal process file test error: {}", e),
+        Err(e) => println!("⚠ Normal process file test error: {e}"),
     }
     println!("\n→ Now comparing with AppContainer restrictions:");
 
@@ -528,7 +528,7 @@ fn demo_io_redirection() -> rappct::Result<()> {
         let reader = BufReader::new(stdout);
         println!("  STDOUT:");
         for line in reader.lines().map_while(Result::ok) {
-            println!("    > {}", line);
+            println!("    > {line}");
         }
     }
 
@@ -536,7 +536,7 @@ fn demo_io_redirection() -> rappct::Result<()> {
         let reader = BufReader::new(stderr);
         println!("  STDERR:");
         for line in reader.lines().map_while(Result::ok) {
-            println!("    > {}", line);
+            println!("    > {line}");
         }
     }
 
@@ -731,9 +731,9 @@ fn main() -> rappct::Result<()> {
 
     for (name, demo_fn) in demos {
         match demo_fn() {
-            Ok(_) => println!("\n✓ {} completed successfully", name),
+            Ok(_) => println!("\n✓ {name} completed successfully"),
             Err(e) => {
-                println!("\n✗ {} failed: {}", name, e);
+                println!("\n✗ {name} failed: {e}");
                 println!("  Continuing with next demo...");
             }
         }

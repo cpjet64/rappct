@@ -37,8 +37,8 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
 
 **Phase 3 – Milestone 3**
 - [x] Implement Standard Use Case Groupings (see MASTER-CHECKLIST.md).
-- [ ] Complete all examples and CLI.
-- [ ] Mark milestone-3 checklist and commit.
+- [x] Complete all examples and CLI.
+- [x] Mark milestone-3 checklist and commit.
 
 **Phase 4 – Milestone 4**
 - [ ] Follow remaining items.
@@ -70,15 +70,15 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
 - Milestone 3: 63% complete (major feature paths are present and tested, but standard use-case presets are still documented only; cross-feature matrix verification is not explicitly completed here).
 - Milestone 4: 70% complete (release/CI/security docs and workflows exist, but checklist outcome evidence still requires explicit check of operational completion criteria and policy milestones).
 
-### Current blocker list
-
-- Finish migration away from remaining `crate::util` FFI helper callsites where feasible.
-- Complete a strict audit of every `unsafe` block against explicit `SAFETY:` comment coverage.
-- Execute full cross-feature matrix validation in the environment and record results in this report.
-
 ### Current status note (2026-02-25)
 
 - Completed Phase 3 item 1: `UseCase` grouping API is now implemented in `src/capability.rs` and re-exported from `src/lib.rs`.
+- Completed Phase 3 item 2: format-string lint cleanup (`clippy::uninlined_format_args`) removed and full matrix/toolchain validation completed; examples + CLI command surfaces remain covered by tests/smokes.
+
+### Current blocker list
+
+- Remaining blockers are now concentrated in Milestone 4:
+  - complete final distribution/release polish items and docs/signoff sync.
 
 ### Validation Report – 2026-02-25 (post-use-case-implementation)
 

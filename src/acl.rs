@@ -179,8 +179,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             };
             if st.0 != 0 {
                 return Err(AcError::Win32(format!(
-                    "GetNamedSecurityInfoW failed: {:?}",
-                    st
+                    "GetNamedSecurityInfoW failed: {st:?}"
                 )));
             }
             // SAFETY: Wrap the LocalAlloc security descriptor so it is released exactly once.
@@ -192,10 +191,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
             };
             if st2.0 != 0 {
-                return Err(AcError::Win32(format!(
-                    "SetEntriesInAclW failed: {:?}",
-                    st2
-                )));
+                return Err(AcError::Win32(format!("SetEntriesInAclW failed: {st2:?}")));
             }
             // SAFETY: `new_dacl` is LocalAlloc-managed; pass a valid pointer/type to SetNamedSecurityInfoW.
             let new_dacl_guard = unsafe { LocalAllocGuard::from_raw(new_dacl) };
@@ -213,8 +209,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             };
             if st3.0 != 0 {
                 return Err(AcError::Win32(format!(
-                    "SetNamedSecurityInfoW failed: {:?}",
-                    st3
+                    "SetNamedSecurityInfoW failed: {st3:?}"
                 )));
             }
             Ok(())
@@ -243,8 +238,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             };
             if st.0 != 0 {
                 return Err(AcError::Win32(format!(
-                    "GetNamedSecurityInfoW failed: {:?}",
-                    st
+                    "GetNamedSecurityInfoW failed: {st:?}"
                 )));
             }
             // SAFETY: Wrap the LocalAlloc security descriptor so it is freed exactly once.
@@ -256,10 +250,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
             };
             if st2.0 != 0 {
-                return Err(AcError::Win32(format!(
-                    "SetEntriesInAclW failed: {:?}",
-                    st2
-                )));
+                return Err(AcError::Win32(format!("SetEntriesInAclW failed: {st2:?}")));
             }
             // SAFETY: Guard new DACL; apply to directory.
             let new_dacl_guard = unsafe { LocalAllocGuard::from_raw(new_dacl) };
@@ -277,8 +268,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             };
             if st3.0 != 0 {
                 return Err(AcError::Win32(format!(
-                    "SetNamedSecurityInfoW failed: {:?}",
-                    st3
+                    "SetNamedSecurityInfoW failed: {st3:?}"
                 )));
             }
             Ok(())
@@ -318,7 +308,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 )
             };
             if st.0 != 0 {
-                return Err(AcError::Win32(format!("RegOpenKeyExW failed: {:?}", st)));
+                return Err(AcError::Win32(format!("RegOpenKeyExW failed: {st:?}")));
             }
 
             let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
@@ -339,8 +329,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             if st2.0 != 0 {
                 let _ = RegCloseKey(hkey);
                 return Err(AcError::Win32(format!(
-                    "GetSecurityInfo(reg) failed: {:?}",
-                    st2
+                    "GetSecurityInfo(reg) failed: {st2:?}"
                 )));
             }
             // SAFETY: Guard the security descriptor allocation to ensure it is freed.
@@ -354,8 +343,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             if st3.0 != 0 {
                 let _ = RegCloseKey(hkey);
                 return Err(AcError::Win32(format!(
-                    "SetEntriesInAclW(reg) failed: {:?}",
-                    st3
+                    "SetEntriesInAclW(reg) failed: {st3:?}"
                 )));
             }
             // SAFETY: Apply the new DACL to the registry key; pass valid pointers.
@@ -376,8 +364,7 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
             let _ = unsafe { RegCloseKey(hkey) };
             if st4.0 != 0 {
                 return Err(AcError::Win32(format!(
-                    "SetSecurityInfo(reg) failed: {:?}",
-                    st4
+                    "SetSecurityInfo(reg) failed: {st4:?}"
                 )));
             }
             Ok(())

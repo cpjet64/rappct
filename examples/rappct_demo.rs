@@ -34,7 +34,7 @@ impl Drop for FirewallGuard {
     fn drop(&mut self) {
         match remove_loopback_exemption(&self.sid) {
             Ok(_) => println!("{}", self.success),
-            Err(e) => println!("? Firewall exemption cleanup failed: {}", e),
+            Err(e) => println!("? Firewall exemption cleanup failed: {e}"),
         }
     }
 }
@@ -105,15 +105,9 @@ fn main() -> rappct::Result<()> {
         }
         let code = child.wait(Some(std::time::Duration::from_secs(6)))?;
         if code == 0 {
-            println!(
-                "✗ Unexpected! HTTP succeeded without network capability. Output:\n{}",
-                out
-            );
+            println!("✗ Unexpected! HTTP succeeded without network capability. Output:\n{out}");
         } else {
-            println!(
-                "✓ Blocked as expected (exit {}). Network isolation is working.",
-                code
-            );
+            println!("✓ Blocked as expected (exit {code}). Network isolation is working.");
         }
     }
     #[cfg(not(windows))]
@@ -155,7 +149,7 @@ fn main() -> rappct::Result<()> {
                 );
             }
         }
-        Err(e) => println!("✗ Network test error: {}", e),
+        Err(e) => println!("✗ Network test error: {e}"),
     }
 
     println!("\nSTEP 4B: Sandboxed Localhost Access");
@@ -193,15 +187,12 @@ fn main() -> rappct::Result<()> {
     // Attempt localhost without loopback exemption – expect failure.
     let curl_no_loopback = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
-        cmdline: Some(format!(" -s -I -m 3 http://127.0.0.1:{}", port)),
+        cmdline: Some(format!(" -s -I -m 3 http://127.0.0.1:{port}")),
         cwd: Some(PathBuf::from("C:\\Windows\\System32")),
         stdio: rappct::launch::StdioConfig::Pipe,
         ..Default::default()
     };
-    println!(
-        "→ Testing http://127.0.0.1:{} WITHOUT loopback exemption...",
-        port
-    );
+    println!("→ Testing http://127.0.0.1:{port} WITHOUT loopback exemption...");
     #[cfg(windows)]
     {
         let mut child = launch_in_container_with_io(&network_caps, &curl_no_loopback)?;
@@ -211,14 +202,10 @@ fn main() -> rappct::Result<()> {
         }
         let code = child.wait(Some(std::time::Duration::from_secs(4)))?;
         if code == 0 {
-            println!(
-                "✗ Unexpected! Localhost succeeded without exemption. Output:\n{}",
-                out
-            );
+            println!("✗ Unexpected! Localhost succeeded without exemption. Output:\n{out}");
         } else {
             println!(
-                "✓ Blocked as expected (exit {}). AppContainers deny loopback by default.",
-                code
+                "✓ Blocked as expected (exit {code}). AppContainers deny loopback by default."
             );
         }
     }
@@ -237,7 +224,7 @@ fn main() -> rappct::Result<()> {
         if let Err(e) =
             add_loopback_exemption(LoopbackAdd(profile.sid.clone()).confirm_debug_only())
         {
-            println!("✗ Exemption failed: {} (continuing anyway)", e);
+            println!("✗ Exemption failed: {e} (continuing anyway)");
         } else {
             firewall_guard = Some(FirewallGuard::new(
                 profile.sid.clone(),
@@ -248,15 +235,12 @@ fn main() -> rappct::Result<()> {
             // Try localhost again – expect success (HTTP headers).
             let curl_with_loopback = LaunchOptions {
                 exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
-                cmdline: Some(format!(" -s -I -m 5 http://127.0.0.1:{}", port)),
+                cmdline: Some(format!(" -s -I -m 5 http://127.0.0.1:{port}")),
                 cwd: Some(PathBuf::from("C:\\Windows\\System32")),
                 stdio: rappct::launch::StdioConfig::Pipe,
                 ..Default::default()
             };
-            println!(
-                "→ Testing http://127.0.0.1:{} WITH loopback exemption...",
-                port
-            );
+            println!("→ Testing http://127.0.0.1:{port} WITH loopback exemption...");
             let mut child = launch_in_container_with_io(&network_caps, &curl_with_loopback)?;
             let mut out = String::new();
             if let Some(mut s) = child.stdout.take() {
@@ -264,9 +248,9 @@ fn main() -> rappct::Result<()> {
             }
             let code = child.wait(Some(std::time::Duration::from_secs(5)))?;
             if code == 0 {
-                println!("✓ Success! (exit 0). Headers:\n{}", out);
+                println!("✓ Success! (exit 0). Headers:\n{out}");
             } else {
-                println!("✗ Still failed (exit {}). Output:\n{}", code, out);
+                println!("✗ Still failed (exit {code}). Output:\n{out}");
             }
         }
     }
@@ -295,15 +279,9 @@ fn main() -> rappct::Result<()> {
         }
         let code = child.wait(Some(std::time::Duration::from_secs(6)))?;
         if code == 0 {
-            println!(
-                "✓ Outbound HTTP succeeded from sandbox (exit 0). Headers:\n{}",
-                out
-            );
+            println!("✓ Outbound HTTP succeeded from sandbox (exit 0). Headers:\n{out}");
         } else {
-            println!(
-                "✗ Outbound request failed (exit {}). Output:\n{}",
-                code, out
-            );
+            println!("✗ Outbound request failed (exit {code}). Output:\n{out}");
         }
     }
     #[cfg(not(windows))]
@@ -324,7 +302,7 @@ fn main() -> rappct::Result<()> {
 
     let profile_name = profile.name.clone();
     profile.delete()?;
-    println!("✓ Profile '{}' deleted successfully", profile_name);
+    println!("✓ Profile '{profile_name}' deleted successfully");
 
     println!("\n════════════════════════════════════");
     println!("Demo Complete!");

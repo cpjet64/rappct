@@ -83,7 +83,7 @@ fn loopback_requires_confirm() {
         Err(AcError::AccessDenied { context, .. }) => {
             assert!(context.contains("confirm_debug_only"));
         }
-        other => panic!("expected AccessDenied, got {:?}", other),
+        other => panic!("expected AccessDenied, got {other:?}"),
     }
 }
 
@@ -136,7 +136,7 @@ fn loopback_add_remove_roundtrip() {
         Err(AcError::AccessDenied { context, .. }) => {
             assert!(context.contains("confirm_debug_only"));
         }
-        other => panic!("expected safety latch failure, got {:?}", other),
+        other => panic!("expected safety latch failure, got {other:?}"),
     }
 
     net::remove_loopback_exemption(&sid).expect("remove loopback");
