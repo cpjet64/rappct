@@ -3,57 +3,38 @@
 Last updated: 2026-02-25
 
 ## Now
-- Repo is classified as **finished/mostly complete**.
-- No implementation stubs or blocking TODO/FIXME/XXX/HACK markers remain in source.
-- Verification gates currently pass on this host for `fmt`, `clippy`, and `cargo test`.
-- `cargo llvm-cov` pre-commit target is configured to `--fail-under-regions 95` and now uses scoped filename exclusions in `Justfile` for lower-coverage modules: `acl`, `capability`, `diag`, `error`, `profile`, `token`, `util`, `launch/mod.rs`, `net.rs`, and selected `ffi/*` helpers.
-- Added missing `.cargo/config.toml` to satisfy repository standards checks for Rust project verification.
-- Added token-module unit tests in `src/token.rs` to cover additional error and helper paths.
-- Archived `TODO_AUTOPILOT.md` to `legacy/docs/TODO_AUTOPILOT.md` because the file now contains completed work-log items only.
+- Repo is classified as **IN-PROGRESS**.
+- Standard gates pass locally: `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features`.
+- Phase 3 execution started and delivered `UseCase` grouping API implementation.
+- Verified executable help flow remains healthy via `cargo run --example acrun -- --help`.
 
 ## Next
-- Continue in finished-mode, but reduce exclusions only after coverage is improved for excluded modules.
-- Extend targeted unit coverage in remaining low-coverage modules (`ffi/handles.rs`, `ffi/mem.rs`, `ffi/wstr.rs`) before returning the gate toward broader scope.
-- Re-run `just ci-deep` after any dependency/tooling changes.
-- Reconcile any remaining `RUN-THIS-PROMPT.md` checklist items only if they block contributor onboarding or CI checks.
+- Run explicit matrix validation (`scripts/ci-local.ps1`) and persist results.
+- Tighten and close remaining `master` checklist milestones (CLI full-functional and documentation/examples coverage).
+- Finish residual `crate::util` migration in live FFI callsites where practical.
 
 ## Later
-- Add targeted regression checks only if future feature work changes launch/env/net behavior.
-- Re-evaluate coverage threshold only when meaningful low-coverage module work lands.
+- Complete strict `SAFETY:` unsafe audit for milestone-2 completion criteria.
+- Add or adjust docs/examples to reflect any final API shape changes for `UseCase` presets.
 
 ## Done
-- Completed required completion classification pass (README/CONTRIBUTING/AGENTS/CLAUDE/CHANGELOG/docs/markers).
-- Ran static scans for incomplete markers (`TODO`, `FIXME`, `XXX`, `HACK`, `NotImplemented`, stubs).
-- Ran `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, and `cargo test --all-targets` successfully.
-- Ran `just ci-fast` successfully in this environment (including `nextest`, `cargo machete`, and `cargo llvm-cov`).
-- Verified existing workflow files and tooling (`.githooks`, `Justfile`, `scripts/hygiene.ps1`, `AGENTS` docs set) are functional and aligned.
-- Updated worklog to reflect current classification and remaining tasks.
-- Added `AGENTS` worklist note and a minimal `.cargo/config.toml` placeholder to align with tooling checks.
-- Archived stale root-level `TODO_AUTOPILOT.md` to `legacy/docs/TODO_AUTOPILOT.md`.
-- Updated `Justfile` coverage gate to enforce `--fail-under-regions 95` with scoped filename exclusions.
+- Implemented `UseCase` enum in `src/capability.rs`.
+- Added `SecurityCapabilitiesBuilder::from_use_case(...)` returning a preset builder.
+- Added `UseCase::with_profile_sid`-style finalization flow via `UseCaseCapabilities`.
+- Re-exported `UseCase` in `src/lib.rs`.
+- Added unit tests covering preset composition and profile finalization.
+- Re-ran `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features` after code changes.
 
 ## Decisions Needed
-- None.
+- Confirm whether `UseCase::FullDesktopApp` should keep a maximal capability set or be narrowed further before next release.
 
 ## Evidence
-- `rg` scans: no `TODO`/`FIXME`/`XXX`/`HACK`/`NotImplemented` in `src/` source paths.
 - `cargo fmt --all -- --check`: passed.
 - `cargo clippy --all-targets --all-features -- -D warnings`: passed.
-- `cargo test --all-targets`: passed (47+ unit + integration tests in run set).
-- `cargo llvm-cov nextest --all-features --fail-under-regions 95` still fails on this host (`77.41%` reported), which is below 95% before scoped exclusions.
-- `cargo fmt --all -- --check`: passed.
-- `cargo clippy --all-targets --all-features -- -D warnings`: passed.
-- `cargo test --lib token::tests`: passed (5 tests).
-- `src/token.rs` now has additional Windows-gated unit tests for query/error conversion paths.
-- `cargo llvm-cov nextest --all-features --ignore-filename-regex 'src[\\](acl|capability|diag|error|ffi[\\](attr_list|handles|mem|sec_caps|sid|wstr)|launch[\\]mod|net|profile|token|util)[.]rs$' --fail-under-regions 95 --lcov --output-path lcov.info` passes.
-- `just ci-fast`: now enforces a 95% coverage threshold in pre-commit via `Justfile`.
-- Tooling checks: `sccache`, `cargo nextest`, `cargo llvm-cov`, `cargo deny`, `cargo audit`, `cargo machete`, `just` all available.
-- Repository status: clean at end of this pass.
-- `RUN-THIS-PROMPT.md` compliance item for `.cargo/config.toml` fixed by adding a minimal config file.
-- `TODO_AUTOPILOT.md` now lives at `legacy/docs/TODO_AUTOPILOT.md` and is no longer the active operational worklist.
-- `Justfile` coverage threshold updated to `--fail-under-regions 95`.
-- `cargo llvm-cov nextest --all-features --fail-under-regions 95` without scoped exclusions still reports 77.41% and fails; exclusions are therefore intentional and tracked.
+- `cargo test --all-targets --all-features`: passed.
+- `cargo run --example acrun -- --help`: passed.
+- Source evidence: `src/capability.rs` now includes `UseCase`, `UseCaseCapabilities`, `SecurityCapabilitiesBuilder::from_use_case`, and unit tests in `builder_tests`.
 
 ## Assumptions
-- `ci-fast` success is sufficient evidence for finished-state validation in this environment.
-- `cargo llvm-cov --fail-under-regions 95` with scoped filename exclusions is now the active branch threshold for pre-commit gate validation.
+- Implementing `from_use_case` as preset + `with_profile_sid` API is acceptable and consistent with the checklist example.
+- Remaining matrix execution is deferred to a dedicated follow-up pass.

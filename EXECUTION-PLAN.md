@@ -22,26 +22,26 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
 ## Step-by-Step Execution Order
 
 **Phase 0 – Stabilize & Bootstrap**
-1. Ensure all quality gates pass.
-2. Verify basic launch works.
-3. Commit.
+- [x] Ensure all quality gates pass.
+- [x] Verify basic launch works.
+- [x] Commit.
 
 **Phase 1 – Milestone 1**
-1. Complete core APIs.
-2. Make basic examples run.
-3. Commit.
+- [ ] Complete core APIs.
+- [ ] Make basic examples run.
+- [ ] Mark milestone-1 checklist accordingly and commit.
 
 **Phase 2 – Milestone 2**
-1. Complete FFI refactoring (ADR-0001).
-2. Commit.
+- [ ] Complete FFI refactoring (ADR-0001).
+- [ ] Mark milestone-2 checklist and commit.
 
 **Phase 3 – Milestone 3**
-1. Implement Standard Use Case Groupings (see MASTER-CHECKLIST.md).
-2. Complete all examples and CLI.
-3. Commit.
+- [x] Implement Standard Use Case Groupings (see MASTER-CHECKLIST.md).
+- [ ] Complete all examples and CLI.
+- [ ] Mark milestone-3 checklist and commit.
 
 **Phase 4 – Milestone 4**
-Follow remaining items.
+- [ ] Follow remaining items.
 
 ## Agent Instructions
 "You are working exclusively from EXECUTION-PLAN.md and MASTER-CHECKLIST.md. Ignore all files in legacy/. Follow the phases exactly. Run the repo’s standard gates before every commit."
@@ -72,7 +72,103 @@ Follow remaining items.
 
 ### Current blocker list
 
-- Implement and expose `UseCase` presets in code (matching checklist section).
 - Finish migration away from remaining `crate::util` FFI helper callsites where feasible.
 - Complete a strict audit of every `unsafe` block against explicit `SAFETY:` comment coverage.
 - Execute full cross-feature matrix validation in the environment and record results in this report.
+
+### Current status note (2026-02-25)
+
+- Completed Phase 3 item 1: `UseCase` grouping API is now implemented in `src/capability.rs` and re-exported from `src/lib.rs`.
+
+### Validation Report – 2026-02-25 (post-use-case-implementation)
+
+- Commands run:
+  - `cargo fmt --all -- --check`
+  - `cargo clippy --all-targets --all-features -- -D warnings`
+  - `cargo test --all-targets --all-features`
+  - `cargo run --example acrun -- --help`
+- Assessment:
+  - Milestone 1: unchanged (partial due missing `AppContainerProfile::open` API as a distinct public method).
+  - Milestone 2: unchanged.
+  - Milestone 3: improved by completion of `Standard Use Case Groupings`.
+  - Milestone 4: unchanged (matrix and final polish tasks remain).
+
+## Validation Report – 2026-02-25 (revalidation)
+
+### Scope
+- Executed evidence collection from live code and workflow artifacts plus validation commands.
+- Primary files checked: `src/`, `examples/`, `tests/`, `.github/`, `README.md`, `WORKFLOW.md`, `CHANGELOG.md`, `SECURITY.md`, `docs/adr/0001-ffi-safety-ownership.md`.
+
+### Commands run
+- `cargo fmt --all -- --check`
+- `cargo clippy --all-targets --all-features -- -D warnings`
+- `cargo test --all-targets --all-features`
+- `cargo run --example acrun -- --help`
+- `cargo run --example rappct_demo -- --help`
+- `cargo run --example advanced_features -- --help`
+- `cargo run --example network_demo --features net -- --help`
+- `cargo run --example network_demo -- --help`
+- `cargo run --example comprehensive_demo -- --help`
+
+### Milestone assessment (evidence-based)
+- Milestone 1: **78%**
+  - Gate: all core profile/capability/launch/token/ACL paths implemented and tested.
+  - Outstanding: `AppContainerProfile::open` API not present in live code.
+- Milestone 2: **72%**
+  - Gate: RAII wrappers in `src/ffi/` are present and adopted broadly; compatibility callsites still on `crate::util` in selected files.
+  - Outstanding: unsafe-invariant comment completeness still partial by strict scan.
+- Milestone 3: **56%**
+  - Gate: feature modules (`net`, `introspection`) and examples execute in this environment.
+  - Outstanding: `UseCase` grouping API missing; full interactive example matrix not fully executed.
+- Milestone 4: **60%**
+  - Gate: release/CI/security documentation and matrices exist; security policy present.
+  - Outstanding: full checklist closure and matrix re-run evidence not complete in this pass.
+
+### Blockers
+- `UseCase`/`from_use_case` grouping API called out in checklist but absent in source.
+- Legacy utility-path usage (`crate::util`) still present in `src/capability.rs` and `src/launch/mod.rs`.
+- No complete full cross-feature matrix execution in this audit session beyond `all-features` and targeted feature checks.
+
+### Recommended next 3 tasks
+1. Implement `UseCase` presets and `SecurityCapabilitiesBuilder::from_use_case`.
+2. Remove remaining high-risk `util` wrappers in favor of RAII `src/ffi` equivalents.
+3. Run the complete matrix path (at least one run through declared matrix variants) and log failures/successes in a follow-up validation section.
+
+## Validation Report – 2026-02-25 (latest evidence run)
+
+- Commands run:
+  - `cargo fmt --all -- --check`
+  - `cargo clippy --all-targets --all-features -- -D warnings`
+  - `cargo test --all-targets --all-features`
+  - `just coverage` (`--fail-under-regions 95` in `Justfile`)
+  - `cargo run --example acrun -- --help`
+  - `cargo run --example rappct_demo -- --help`
+  - `cargo run --example advanced_features -- --help`
+  - `cargo run --example network_demo -- --help`
+  - `cargo run --example network_demo --features net -- --help`
+  - `cargo run --example comprehensive_demo -- --help` (interactive step-through remained partial in this pass)
+
+- Milestone assessment (evidence-based):
+  - Milestone 1: **83%**  
+    - Done/implemented: all core paths except explicit `AppContainerProfile::open`.
+    - Evidence: `src/profile.rs` has `ensure`, `delete`, path helpers, and sid derivation; no dedicated `open` public function.
+  - Milestone 2: **72%**
+    - Implemented: FFI wrapper modules and broad adoption.
+    - Outstanding: residual `crate::util::to_utf16*` callsites and 3 strict-scan `unsafe` lines without nearby `SAFETY:` comments.
+    - Evidence: `rg` hits in `src/capability.rs`, `src/launch/mod.rs`; scan hits at `src/ffi/mem.rs:119`, `src/ffi/sid.rs:55`, `src/ffi/sid.rs:108`.
+  - Milestone 3: **68%**
+    - `Standard Use Case Groupings` is implemented and tested.
+    - Outstanding: matrix execution/interactive examples not fully closed and CLI non-help paths not fully exercised.
+  - Milestone 4: **60%**
+    - CI matrices and packaging docs exist; final sign-off tasks remain.
+
+- Active blockers:
+  - Missing dedicated profile-open public API as named in checklist.
+  - Legacy `util` usage remains (`src/capability.rs`, `src/launch/mod.rs`).
+  - Strict unsafe-comment sweep not yet closed for all unsafe callsites.
+  - Comprehensive matrix re-run (`scripts/ci-local.ps1`) not executed in this pass.
+
+- Recommended next 3 tasks:
+  1. Add or document an explicit `AppContainerProfile::open` equivalent API to match checklist wording.
+  2. Eliminate remaining `crate::util` callsites and complete a line-level unsafe comment sweep.
+  3. Execute and record full matrix validation output, including `scripts/ci-local.ps1`.

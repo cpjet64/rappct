@@ -476,6 +476,43 @@ pub struct SecurityCapabilitiesBuilder {
     lpac: bool,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+#[non_exhaustive]
+pub enum UseCase {
+    /// Internet-enabled scrape-like workloads with minimal extra rights.
+    SecureWebScraper,
+    /// LPAC default baseline with registry-focused access pattern.
+    IsolatedBuildEnvironment,
+    /// Networked tool with private network capability, typically paired with loopback checks.
+    NetworkConstrainedTool,
+    /// Minimal LPAC-only capability set.
+    MinimalLpac,
+    /// Broad set intended for interactive desktop-style workloads.
+    FullDesktopApp,
+    /// No preset; callers should add capabilities explicitly.
+    Custom,
+}
+
+pub struct UseCaseCapabilities {
+    caps_named: Vec<String>,
+    lpac: bool,
+}
+
+impl UseCaseCapabilities {
+    pub fn with_profile_sid(self, sid: &AppContainerSid) -> SecurityCapabilitiesBuilder {
+        SecurityCapabilitiesBuilder {
+            package: sid.clone(),
+            caps_named: self.caps_named,
+            lpac: self.lpac,
+        }
+    }
+
+    #[cfg(test)]
+    fn named_caps_for_test(&self) -> &[String] {
+        &self.caps_named
+    }
+}
+
 impl SecurityCapabilitiesBuilder {
     pub fn new(pkg: &AppContainerSid) -> Self {
         Self {
@@ -507,6 +544,67 @@ impl SecurityCapabilitiesBuilder {
     pub fn lpac(mut self, enabled: bool) -> Self {
         self.lpac = enabled;
         self
+    }
+    pub fn from_use_case(use_case: UseCase) -> UseCaseCapabilities {
+        let mut caps_named = Vec::new();
+        let mut lpac = false;
+        match use_case {
+            UseCase::SecureWebScraper => {
+                caps_named.push(KnownCapability::InternetClient.as_str().to_string());
+            }
+            UseCase::IsolatedBuildEnvironment => {
+                caps_named.extend([
+                    KnownCapability::RegistryRead.as_str().to_string(),
+                    KnownCapability::LpacCom.as_str().to_string(),
+                ]);
+                lpac = true;
+            }
+            UseCase::NetworkConstrainedTool => {
+                caps_named.push(
+                    KnownCapability::PrivateNetworkClientServer
+                        .as_str()
+                        .to_string(),
+                );
+            }
+            UseCase::MinimalLpac => {
+                caps_named.extend([
+                    KnownCapability::RegistryRead.as_str().to_string(),
+                    KnownCapability::LpacCom.as_str().to_string(),
+                ]);
+                lpac = true;
+            }
+            UseCase::FullDesktopApp => {
+                caps_named.extend([
+                    KnownCapability::InternetClient.as_str().to_string(),
+                    KnownCapability::InternetClientServer.as_str().to_string(),
+                    KnownCapability::PrivateNetworkClientServer
+                        .as_str()
+                        .to_string(),
+                    KnownCapability::EnterpriseAuthentication
+                        .as_str()
+                        .to_string(),
+                    KnownCapability::SharedUserCertificates.as_str().to_string(),
+                    KnownCapability::UserAccountInformation.as_str().to_string(),
+                    KnownCapability::DocumentsLibrary.as_str().to_string(),
+                    KnownCapability::PicturesLibrary.as_str().to_string(),
+                    KnownCapability::VideosLibrary.as_str().to_string(),
+                    KnownCapability::MusicLibrary.as_str().to_string(),
+                    KnownCapability::Appointments.as_str().to_string(),
+                    KnownCapability::Contacts.as_str().to_string(),
+                    KnownCapability::PhoneCall.as_str().to_string(),
+                    KnownCapability::VoipCall.as_str().to_string(),
+                    KnownCapability::Location.as_str().to_string(),
+                    KnownCapability::Microphone.as_str().to_string(),
+                    KnownCapability::Webcam.as_str().to_string(),
+                    KnownCapability::LowLevelDevices.as_str().to_string(),
+                    KnownCapability::HumanInterfaceDevice.as_str().to_string(),
+                    KnownCapability::InputInjectionBrokered.as_str().to_string(),
+                    KnownCapability::RemovableStorage.as_str().to_string(),
+                ]);
+            }
+            UseCase::Custom => {}
+        };
+        UseCaseCapabilities { caps_named, lpac }
     }
     pub fn build(self) -> Result<SecurityCapabilities> {
         let caps = derive_named_capability_sids(
@@ -567,7 +665,7 @@ mod tests {
 
 #[cfg(test)]
 mod builder_tests {
-    use super::{KnownCapability, SecurityCapabilitiesBuilder};
+    use super::{KnownCapability, SecurityCapabilitiesBuilder, UseCase};
     use crate::sid::AppContainerSid;
 
     fn sample_sid() -> AppContainerSid {
@@ -610,5 +708,34 @@ mod builder_tests {
                 "lpacCom"
             ]
         );
+    }
+
+    #[test]
+    fn from_use_case_creates_expected_caps() {
+        let secure = SecurityCapabilitiesBuilder::from_use_case(UseCase::SecureWebScraper);
+        let names: Vec<&str> = secure
+            .named_caps_for_test()
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        assert_eq!(names, vec!["internetClient"]);
+
+        let minimal = SecurityCapabilitiesBuilder::from_use_case(UseCase::MinimalLpac);
+        let names: Vec<&str> = minimal
+            .named_caps_for_test()
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        assert_eq!(names, vec!["registryRead", "lpacCom"]);
+    }
+
+    #[test]
+    fn from_use_case_allows_profile_sid_to_finalize() {
+        let sid = sample_sid();
+        let builder =
+            SecurityCapabilitiesBuilder::from_use_case(UseCase::MinimalLpac).with_profile_sid(&sid);
+        let built = builder.build().expect("build from preset");
+        assert!(built.lpac);
+        assert_eq!(built.caps.len(), 2);
     }
 }
