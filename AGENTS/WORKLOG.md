@@ -5,10 +5,11 @@ Last updated: 2026-02-25
 ## Now
 - Repo is classified as **IN-PROGRESS**.
 - Standard gates pass locally: `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features`.
-- Phase 3 execution started and delivered `UseCase` grouping API implementation.
+- Phase 1 implementation resumed and completed: `AppContainerProfile::open` is now available and covered by test.
 - Verified executable help flow remains healthy via `cargo run --example acrun -- --help`.
 
 ## Next
+- Close Phase 1 milestone by validating examples and marking remaining phase checkboxes.
 - Run explicit matrix validation (`scripts/ci-local.ps1`) and persist results.
 - Tighten and close remaining `master` checklist milestones (CLI full-functional and documentation/examples coverage).
 - Finish residual `crate::util` migration in live FFI callsites where practical.
@@ -23,6 +24,8 @@ Last updated: 2026-02-25
 - Added `UseCase::with_profile_sid`-style finalization flow via `UseCaseCapabilities`.
 - Re-exported `UseCase` in `src/lib.rs`.
 - Added unit tests covering preset composition and profile finalization.
+- Added `AppContainerProfile::open` in `src/profile.rs`.
+- Added Windows integration test `profile_open_resolves_existing_name` in `tests/windows_profile.rs`.
 - Re-ran `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features` after code changes.
 
 ## Decisions Needed

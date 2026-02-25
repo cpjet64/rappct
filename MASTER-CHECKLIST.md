@@ -4,7 +4,7 @@
 **Agent instruction:** Verify every item against the live codebase. Do not pre-mark anything.
 
 ## Milestone 1 – First Functional Library (Core AppContainer Features)
-- [ ] AppContainerProfile ensure/open/delete works
+- [x] AppContainerProfile ensure/open/delete works
 - [x] SecurityCapabilitiesBuilder + KnownCapability mapping works
 - [x] launch_in_container (basic + with_io) works
 - [x] Token introspection works
@@ -342,3 +342,16 @@ let caps = SecurityCapabilitiesBuilder::from_use_case(UseCase::SecureWebScraper)
 1. Add/align profile `open` API semantics with checklist definition.
 2. Finish migration from `crate::util` callsites and strict unsafe-invariant audit.
 3. Run `scripts/ci-local.ps1` end-to-end and store result logs in a new validation report block.
+
+## Validation Report – 2026-02-25 (profile-open closeout)
+
+- Commands run:
+  - `cargo fmt --all -- --check`
+  - `cargo clippy --all-targets --all-features -- -D warnings`
+  - `cargo test --all-targets --all-features`
+- Milestone 1 evidence now updated:
+  - **AppContainerProfile ensure/open/delete works**: **Done**.
+  - `src/profile.rs` defines `AppContainerProfile::open(&str) -> Result<Self>`.
+  - `tests/windows_profile.rs` adds coverage in `profile_open_resolves_existing_name`.
+- Milestone status impact:
+  - Milestone 1 estimate remains 83% overall due broader Phase 1 examples and matrix coverage still in progress.

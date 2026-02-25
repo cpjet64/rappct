@@ -19,6 +19,20 @@ fn profile_ensure_and_delete_roundtrip() {
 
 #[cfg(windows)]
 #[test]
+fn profile_open_resolves_existing_name() {
+    let name = format!("rappct.test.profile.open.{}", std::process::id());
+    let first = AppContainerProfile::ensure(&name, &name, Some("rappct open test"))
+        .expect("ensure profile");
+    let first_sid = first.sid.as_string().to_string();
+    drop(first);
+
+    let opened = AppContainerProfile::open(&name).expect("open existing profile");
+    assert_eq!(first_sid, opened.sid.as_string());
+    opened.delete().expect("delete opened profile");
+}
+
+#[cfg(windows)]
+#[test]
 fn profile_ensure_existing_handles_metadata_mismatch() {
     let name = format!("rappct.test.profile.ensure.{}", std::process::id());
     let first = AppContainerProfile::ensure(&name, &name, Some("display one")).expect("ensure");

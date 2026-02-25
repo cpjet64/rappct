@@ -27,7 +27,7 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
 - [x] Commit.
 
 **Phase 1 – Milestone 1**
-- [ ] Complete core APIs.
+- [x] Complete core APIs.
 - [ ] Make basic examples run.
 - [ ] Mark milestone-1 checklist accordingly and commit.
 
@@ -172,3 +172,16 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
   1. Add or document an explicit `AppContainerProfile::open` equivalent API to match checklist wording.
   2. Eliminate remaining `crate::util` callsites and complete a line-level unsafe comment sweep.
   3. Execute and record full matrix validation output, including `scripts/ci-local.ps1`.
+
+## Validation Report – 2026-02-25 (open-api closeout)
+
+- Commands run:
+  - `cargo fmt --all -- --check`
+  - `cargo clippy --all-targets --all-features -- -D warnings`
+  - `cargo test --all-targets --all-features`
+- Outcome:
+  - `src/profile.rs` now includes `AppContainerProfile::open(&str)`.
+  - `tests/windows_profile.rs` adds `profile_open_resolves_existing_name`.
+  - `MASTER-CHECKLIST.md` Milestone 1 checkbox for `AppContainerProfile ensure/open/delete works` is now checked.
+- Phase status:
+  - Phase 1: Core APIs complete; move to Phase 1 remaining item "Make basic examples run".

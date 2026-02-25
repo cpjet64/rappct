@@ -106,6 +106,17 @@ impl AppContainerProfile {
             Err(AcError::UnsupportedPlatform)
         }
     }
+    /// Open an AppContainer profile by name, deriving its package SID from the profile name.
+    ///
+    /// This is intentionally lightweight and does not mutate the profile by itself.
+    pub fn open(_name: &str) -> Result<Self> {
+        let sid = derive_sid_from_name(_name)?;
+        Ok(Self {
+            name: _name.to_string(),
+            sid,
+        })
+    }
+
     /// Deletes the AppContainer profile from the system.
     pub fn delete(self) -> Result<()> {
         #[cfg(windows)]
