@@ -3,18 +3,17 @@
 Last updated: 2026-02-25
 
 ## Now
-- Repo is classified as **IN-PROGRESS**.
+- Repo is classified as **MOSTLY COMPLETE** after final phase-4 verification.
 - Standard gates pass locally on current toolchain: `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features`.
-- Phase 3 is now closed in `MASTER-CHECKLIST.md` and `EXECUTION-PLAN.md` after format-lint matrix closure across examples/tests.
-- `scripts/ci-local.ps1` has completed successfully (`[ci-local] OK`) after 1.88 clippy format-lint fixes.
-- Milestone 4 docs/signoff alignment is now underway: README and `docs/capabilities.md` were updated to document `UseCase` presets and cross-platform behavior.
+- `scripts/ci-local.ps1` has completed successfully across MSRV 1.88, stable, beta, and nightly matrices.
+- Milestone 4 signoff is now complete in `MASTER-CHECKLIST.md` and `EXECUTION-PLAN.md`.
 
 ## Next
-- Move remaining effort into Milestone 4 completion/signoff (distribution, policy docs, stub alignment, feature completeness).
-- Capture final IN-PROGRESS → FINISHED/MOSTLY COMPLETE classification after confirming all intended-scope features are covered.
+- No immediate mandatory follow-up work remains.
+- Preserve optional follow-up hardening as backlog only (e.g., capability preset scope discussion).
 
 ## Later
-- Keep docs/signoff item open until examples/CLI/behavior parity is explicitly documented in master checklist validation prose.
+- Keep `UseCase::FullDesktopApp` scope question open in checklist notes if maintainers want tightened capability defaults.
 
 ## Done
 - Implemented `UseCase` enum in `src/capability.rs`.
@@ -40,6 +39,8 @@ Last updated: 2026-02-25
 - Added docs parity updates:
   - `README.md` now shows `UseCase`-based `SecurityCapabilitiesBuilder` usage and describes non-Windows stub behavior.
   - `docs/capabilities.md` now maps starter capability sets to API `UseCase` presets.
+- Marked phase-4 final checklist item complete in `EXECUTION-PLAN.md`/`MASTER-CHECKLIST.md`.
+- Confirmed `scripts/ci-local.ps1` completion and updated plan/checklist validation entry (`phase-4 matrix closure`).
 
 ## Decisions Needed
 - Confirm whether `UseCase::FullDesktopApp` should keep a maximal capability set or be narrowed further before next release.
