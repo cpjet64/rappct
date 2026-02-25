@@ -20,10 +20,11 @@
 - [ ] Unit tests for guard drop semantics and conversions
 - [ ] Windows smoke tests for launch/profile/acl paths
 
-## Milestone 3 – Initial MVP (All Features + Examples)
+## Milestone 3 – Initial MVP (All Features + Examples + Use Case Groupings)
+- [ ] Standard Use Case Groupings implemented (see below)
 - [ ] Network isolation helpers (`net` feature) work
 - [ ] Diagnostics and configuration validation (`introspection`)
-- [ ] All examples run cleanly (`acrun`, `network_demo`, `advanced_features`, `comprehensive_demo`)
+- [ ] All examples run cleanly
 - [ ] Full CLI tool (`acrun`) functional
 - [ ] Cross-feature matrix tests pass
 - [ ] Documentation and examples match behavior
@@ -34,16 +35,32 @@
 - [ ] Security policy and responsible disclosure documented
 - [ ] All stubs resolved or intentionally documented
 - [ ] 100% of intended features complete and tested
-- [ ] Production-ready with full polish and examples
+
+## Standard Use Case Groupings (New High-Level API)
+Developers can now use these presets instead of manually building capabilities:
+
+- `UseCase::SecureWebScraper` → InternetClient + file ACL helpers
+- `UseCase::IsolatedBuildEnvironment` → LPAC defaults + limited registry
+- `UseCase::NetworkConstrainedTool` → privateNetworkClientServer + loopback
+- `UseCase::MinimalLpac` → registryRead + lpacCom only
+- `UseCase::FullDesktopApp` → broad capabilities for desktop tools
+- `UseCase::Custom` → fallback for manual builder
+
+Usage example:
+```rust
+let caps = SecurityCapabilitiesBuilder::from_use_case(UseCase::SecureWebScraper)
+    .with_profile_sid(&profile.sid)
+    .build()?;
+```
 
 ## Component Checklists (for reference only)
 - Core Profile & Launch
 - Capability & SID Handling
 - ACL Utilities
 - Token Introspection
-- Network Helpers (`net` feature)
-- Diagnostics (`introspection` feature)
-- FFI Safety & Ownership (ADR-0001)
+- Network Helpers
+- Diagnostics
+- FFI Safety & Ownership
+- Use Case Groupings (new)
 - Examples & CLI Tool
 - CI / Release Pipeline
-- Documentation & Security
