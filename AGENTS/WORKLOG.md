@@ -6,6 +6,7 @@ Last updated: 2026-02-25
 - Repo is classified as **finished/mostly complete**.
 - No implementation stubs or blocking TODO/FIXME/XXX/HACK markers remain in source.
 - Verification gates currently pass on this host for `fmt`, `clippy`, `cargo test`, and `just ci-fast` (including nextest path).
+- Added missing `.cargo/config.toml` to satisfy repository standards checks for Rust project verification.
 
 ## Next
 - Keep repository in finished mode.
@@ -23,6 +24,7 @@ Last updated: 2026-02-25
 - Ran `just ci-fast` successfully in this environment (including `nextest`, `cargo machete`, and `cargo llvm-cov`).
 - Verified existing workflow files and tooling (`.githooks`, `Justfile`, `scripts/hygiene.ps1`, `AGENTS` docs set) are functional and aligned.
 - Updated worklog to reflect current classification and remaining tasks.
+- Added `AGENTS` worklist note and a minimal `.cargo/config.toml` placeholder to align with tooling checks.
 
 ## Decisions Needed
 - None.
@@ -35,6 +37,7 @@ Last updated: 2026-02-25
 - `just ci-fast`: passed (`hygiene`, `fmt`, `clippy`, `build`, `nextest`).
 - Tooling checks: `sccache`, `cargo nextest`, `cargo llvm-cov`, `cargo deny`, `cargo audit`, `cargo machete`, `just` all available.
 - Repository status: clean at end of this pass.
+- `RUN-THIS-PROMPT.md` compliance item for `.cargo/config.toml` fixed by adding a minimal config file.
 
 ## Assumptions
 - `ci-fast` success is sufficient evidence for finished-state validation in this environment.

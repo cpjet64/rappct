@@ -1,0 +1,2 @@
+[build]
+# Intentionally minimal; sccache is configured via global toolchain environment.
