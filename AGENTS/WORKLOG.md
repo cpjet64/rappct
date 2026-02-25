@@ -7,6 +7,7 @@ Last updated: 2026-02-25
 - No implementation stubs or blocking TODO/FIXME/XXX/HACK markers remain in source.
 - Verification gates currently pass on this host for `fmt`, `clippy`, `cargo test`, and `just ci-fast` (including nextest path).
 - Added missing `.cargo/config.toml` to satisfy repository standards checks for Rust project verification.
+- Archived `TODO_AUTOPILOT.md` to `legacy/docs/TODO_AUTOPILOT.md` because the file now contains completed work-log items only.
 
 ## Next
 - Keep repository in finished mode.
@@ -25,6 +26,7 @@ Last updated: 2026-02-25
 - Verified existing workflow files and tooling (`.githooks`, `Justfile`, `scripts/hygiene.ps1`, `AGENTS` docs set) are functional and aligned.
 - Updated worklog to reflect current classification and remaining tasks.
 - Added `AGENTS` worklist note and a minimal `.cargo/config.toml` placeholder to align with tooling checks.
+- Archived stale root-level `TODO_AUTOPILOT.md` to `legacy/docs/TODO_AUTOPILOT.md`.
 
 ## Decisions Needed
 - None.
@@ -38,6 +40,7 @@ Last updated: 2026-02-25
 - Tooling checks: `sccache`, `cargo nextest`, `cargo llvm-cov`, `cargo deny`, `cargo audit`, `cargo machete`, `just` all available.
 - Repository status: clean at end of this pass.
 - `RUN-THIS-PROMPT.md` compliance item for `.cargo/config.toml` fixed by adding a minimal config file.
+- `TODO_AUTOPILOT.md` now lives at `legacy/docs/TODO_AUTOPILOT.md` and is no longer the active operational worklist.
 
 ## Assumptions
 - `ci-fast` success is sufficient evidence for finished-state validation in this environment.
