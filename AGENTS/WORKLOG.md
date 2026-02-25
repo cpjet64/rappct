@@ -38,7 +38,7 @@ Last updated: 2026-02-25
 - `cargo clippy --all-targets --all-features -- -D warnings`: passed.
 - `cargo test --all-targets`: passed (47+ unit + integration tests in run set).
 - `cargo llvm-cov nextest --all-features --fail-under-regions 95` now fails on this host (`76.91%` reported), which is below 95%.
-- `just ci-fast`: previously passed with the older 75% coverage threshold.
+- `just ci-fast`: now enforces a 95% coverage threshold in pre-commit via `Justfile`.
 - Tooling checks: `sccache`, `cargo nextest`, `cargo llvm-cov`, `cargo deny`, `cargo audit`, `cargo machete`, `just` all available.
 - Repository status: clean at end of this pass.
 - `RUN-THIS-PROMPT.md` compliance item for `.cargo/config.toml` fixed by adding a minimal config file.
@@ -47,4 +47,4 @@ Last updated: 2026-02-25
 
 ## Assumptions
 - `ci-fast` success is sufficient evidence for finished-state validation in this environment.
-- `cargo llvm-cov --fail-under-regions 75` remains stable with current test matrix on this branch.
+- `cargo llvm-cov --fail-under-regions 95` is now the active branch threshold for pre-commit gate validation.
