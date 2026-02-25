@@ -378,13 +378,13 @@ fn derive_single_capability_sids(name: &str) -> Result<Vec<SidAndAttributes>> {
     unsafe {
         #[cfg(feature = "tracing")]
         tracing::trace!("derive_single_capability_sids: name={}", name);
-        let wide: Vec<u16> = crate::util::to_utf16(name);
+        let wide = WideString::from_str(name);
         let mut group_sids: *mut *mut std::ffi::c_void = std::ptr::null_mut();
         let mut group_count: u32 = 0;
         let mut cap_sids: *mut *mut std::ffi::c_void = std::ptr::null_mut();
         let mut cap_count: u32 = 0;
         let ok = DeriveCapabilitySidsFromName(
-            PCWSTR(wide.as_ptr()),
+            wide.as_pcwstr(),
             &mut group_sids as *mut _ as *mut _,
             &mut group_count,
             &mut cap_sids as *mut _ as *mut _,

@@ -8,6 +8,8 @@ Last updated: 2026-02-25
 - Phase 1 implementation resumed and completed: `AppContainerProfile::open` is now available and covered by test.
 - Phase 1 examples validated via help/run paths (`rappct_demo`, `advanced_features`, `acrun`, `network_demo`, and `comprehensive_demo`).
 - Phase 1 work now complete; moving to Phase 2.
+- Phase 2 migration started: removed remaining `crate::util::to_utf16*` callsites from
+  `src/capability.rs` and `src/launch/mod.rs`; still other legacy references remain.
 
 ## Next
 - Run explicit matrix validation (`scripts/ci-local.ps1`) and persist results.

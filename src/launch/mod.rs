@@ -17,6 +17,8 @@ use crate::ffi::sec_caps::OwnedSecurityCapabilities;
 #[cfg(windows)]
 use crate::ffi::sid::OwnedSid;
 #[cfg(windows)]
+use crate::ffi::wstr::WideString;
+#[cfg(windows)]
 use core::ffi::c_void;
 #[cfg(windows)]
 use env::make_wide_block;
@@ -488,12 +490,12 @@ fn setup_stdio(
                 lpSecurityDescriptor: std::ptr::null_mut(),
                 bInheritHandle: TRUE,
             };
-            let nul: Vec<u16> = crate::util::to_utf16("NUL");
+            let nul = WideString::from_str("NUL");
 
             // SAFETY: NUL device path is static and ACCESS flags are valid for read/write access.
             let stdin_handle = unsafe {
                 CreateFileW(
-                    PCWSTR(nul.as_ptr()),
+                    nul.as_pcwstr(),
                     FILE_GENERIC_READ.0,
                     FILE_SHARE_READ | FILE_SHARE_WRITE,
                     Some(&sa as *const _),
@@ -510,7 +512,7 @@ fn setup_stdio(
             // SAFETY: NUL device path is static and ACCESS flags are valid for read/write access.
             let stdout_handle = unsafe {
                 CreateFileW(
-                    PCWSTR(nul.as_ptr()),
+                    nul.as_pcwstr(),
                     FILE_GENERIC_WRITE.0,
                     FILE_SHARE_READ | FILE_SHARE_WRITE,
                     Some(&sa as *const _),
@@ -527,7 +529,7 @@ fn setup_stdio(
             // SAFETY: NUL device path is static and ACCESS flags are valid for read/write access.
             let stderr_handle = unsafe {
                 CreateFileW(
-                    PCWSTR(nul.as_ptr()),
+                    nul.as_pcwstr(),
                     FILE_GENERIC_WRITE.0,
                     FILE_SHARE_READ | FILE_SHARE_WRITE,
                     Some(&sa as *const _),
@@ -677,12 +679,12 @@ fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<Launc
         None
     };
 
-    let exe_w: Vec<u16> = crate::util::to_utf16_os(opts.exe.as_os_str());
+    let exe_w = WideString::from_os_str(opts.exe.as_os_str());
     let mut args_w = make_cmd_args(&opts.cmdline);
     let mut cwd_w = opts
         .cwd
         .as_ref()
-        .map(|p| crate::util::to_utf16_os(p.as_os_str()));
+        .map(|p| WideString::from_os_str(p.as_os_str()));
     if std::env::var_os("RAPPCT_TEST_NO_CWD").is_some() {
         cwd_w = None;
     }
@@ -734,7 +736,7 @@ fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<Launc
         .map(|block| block.as_ptr() as *const c_void);
     let cwd_ptr = cwd_w
         .as_mut()
-        .map(|c| PCWSTR(c.as_mut_ptr()))
+        .map(|c| c.as_pcwstr())
         .unwrap_or(PCWSTR::null());
     let cmd_ptr = args_w.as_mut().map(|v| PWSTR(v.as_mut_ptr()));
 
@@ -742,7 +744,7 @@ fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<Launc
     // process creation path and with correctly sized pointers to argument/env/cwd buffers.
     let create_res = unsafe {
         CreateProcessW(
-            PCWSTR(exe_w.as_ptr()),
+            exe_w.as_pcwstr(),
             cmd_ptr,
             None,
             None,
