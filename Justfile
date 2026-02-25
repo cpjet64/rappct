@@ -3,10 +3,12 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 # === Modes ===
 
 # Pre-commit: fast checks (~10-30s)
-ci-fast: hygiene fmt lint build test-quick
+ci-fast: hygiene fmt lint build test-quick coverage
 
 # Pre-push: exhaustive checks (~5-15min)
 ci-deep: ci-fast test-full coverage security docs
+
+ci-pre-commit: ci-fast
 
 # === Repo Hygiene ===
 hygiene:
@@ -30,7 +32,7 @@ test-full:
     cargo nextest run --all-features --locked
 
 coverage:
-    cargo llvm-cov nextest --all-features --fail-under-regions 70 --lcov --output-path lcov.info
+    cargo llvm-cov nextest --all-features --fail-under-regions 75 --lcov --output-path lcov.info
 
 security:
     cargo deny check

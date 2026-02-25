@@ -125,8 +125,8 @@ These modules are complete implementations but marked with `#[allow(dead_code)]`
 ### 4.1 Minimal Test File
 
 - **[tests/integration_launch.rs](tests/integration_launch.rs)**: Only 8 lines
-  - Contains a single sanity test `skeleton_compiles_and_exports()` that just checks type sizes
-  - **Status**: Placeholder for future comprehensive integration tests
+  - Contains a single sanity test `launch_api_is_exported()` that just checks API reachability (`size_of::<LaunchOptions>()`).
+  - **Status**: Intentional lightweight export sanity check (not a placeholder for missing behavior).
   - **Impact**: Low. Integration testing is already extensive in other test files (10 test files, ~450 LOC).
 
 ### 4.2 Ignored Tests (Require Opt-In)
