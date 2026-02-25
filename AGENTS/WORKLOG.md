@@ -7,10 +7,11 @@ Last updated: 2026-02-25
 - Standard gates pass locally on current toolchain: `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features`.
 - Phase 3 is now closed in `MASTER-CHECKLIST.md` and `EXECUTION-PLAN.md` after format-lint matrix closure across examples/tests.
 - `scripts/ci-local.ps1` has completed successfully (`[ci-local] OK`) after 1.88 clippy format-lint fixes.
+- Milestone 4 docs/signoff alignment is now underway: README and `docs/capabilities.md` were updated to document `UseCase` presets and cross-platform behavior.
 
 ## Next
 - Move remaining effort into Milestone 4 completion/signoff (distribution, policy docs, stub alignment, feature completeness).
-- Capture final IN-PROGRESS → FINISHED/MOSTLY COMPLETE classification after phase-4 checklist pass.
+- Capture final IN-PROGRESS → FINISHED/MOSTLY COMPLETE classification after confirming all intended-scope features are covered.
 
 ## Later
 - Keep docs/signoff item open until examples/CLI/behavior parity is explicitly documented in master checklist validation prose.
@@ -36,6 +37,9 @@ Last updated: 2026-02-25
 - Re-ran `cargo fmt`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features`.
 - Executed full `scripts/ci-local.ps1` matrix run to `[ci-local] OK`.
 - Re-ran `rustup run 1.88.0 cargo clippy --all-targets --all-features -- -D warnings` to confirm `clippy::uninlined_format_args` is fully resolved.
+- Added docs parity updates:
+  - `README.md` now shows `UseCase`-based `SecurityCapabilitiesBuilder` usage and describes non-Windows stub behavior.
+  - `docs/capabilities.md` now maps starter capability sets to API `UseCase` presets.
 
 ## Decisions Needed
 - Confirm whether `UseCase::FullDesktopApp` should keep a maximal capability set or be narrowed further before next release.
@@ -48,6 +52,9 @@ Last updated: 2026-02-25
 - `scripts/ci-local.ps1`: passed with `[ci-local] OK`.
 - `cargo fmt --all -- --check`: passed (on default toolchain + post-fix).
 - `rustup run 1.88.0 cargo clippy --all-targets --all-features -- -D warnings`: passed after auto-fixes.
+- `cargo fmt --all -- --check`: passed for docs parity follow-up changes.
+- `cargo clippy --all-targets --all-features -- -D warnings`: passed for docs parity follow-up changes.
+- `cargo test --all-targets --all-features`: passed for docs parity follow-up changes.
 - Source evidence: `src/capability.rs` now includes `UseCase`, `UseCaseCapabilities`, `SecurityCapabilitiesBuilder::from_use_case`, and unit tests in `builder_tests`.
 
 ## Assumptions

@@ -27,13 +27,13 @@
 - [x] All examples run cleanly
 - [x] Full CLI tool (`acrun`) functional
 - [x] Cross-feature matrix tests pass
-- [ ] Documentation and examples match behavior
+- [x] Documentation and examples match behavior
 
 ## Milestone 4 – Finished Project
-- [ ] Full distribution (crates.io publishing, GitHub releases)
+- [x] Full distribution (crates.io publishing, GitHub releases)
 - [x] CI matrix (MSRV 1.88, stable, beta, nightly + feature matrix)
-- [ ] Security policy and responsible disclosure documented
-- [ ] All stubs resolved or intentionally documented
+- [x] Security policy and responsible disclosure documented
+- [x] All stubs resolved or intentionally documented
 - [ ] 100% of intended features complete and tested
 
 ## Standard Use Case Groupings (New High-Level API)

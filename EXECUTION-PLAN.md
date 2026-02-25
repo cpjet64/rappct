@@ -74,11 +74,12 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
 
 - Completed Phase 3 item 1: `UseCase` grouping API is now implemented in `src/capability.rs` and re-exported from `src/lib.rs`.
 - Completed Phase 3 item 2: format-string lint cleanup (`clippy::uninlined_format_args`) removed and full matrix/toolchain validation completed; examples + CLI command surfaces remain covered by tests/smokes.
+- Completed Phase 4 evidence tasks: docs/examples parity was updated for `UseCase` presets and non-Windows behavior, and milestone-4 checklist items were reclassified from documentation-only blockers.
 
 ### Current blocker list
 
 - Remaining blockers are now concentrated in Milestone 4:
-  - complete final distribution/release polish items and docs/signoff sync.
+  - final sign-off item (`100% of intended features complete and tested`) pending explicit scope confirmation.
 
 ### Validation Report – 2026-02-25 (post-use-case-implementation)
 

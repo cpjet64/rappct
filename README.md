@@ -24,6 +24,7 @@ that needs to compose profiles, capabilities, process launches, ACL helpers, and
 
 - AppContainer profile lifecycle helpers (create, open, delete) and profile path resolution.
 - Capability derivation via `DeriveCapabilitySidsFromName`, with ergonomic builders for known and custom capability SIDs.
+- Preset capability workflows via `UseCase` (`SecureWebScraper`, `IsolatedBuildEnvironment`, `NetworkConstrainedTool`, etc.) for common policies.
 - Secure process launch helpers (AC/LPAC) with `STARTUPINFOEX`, optional job object integration, and stdio redirection.
 - Token inspection helpers to understand the effective AppContainer/LPAC context at runtime.
 - Optional modules for diagnostics (`introspection`) and network loopback management (`net`).
@@ -80,13 +81,18 @@ cargo add rappct --git https://github.com/cpjet64/rappct.git --branch main
 ## Usage Snapshot
 
 ```rust
-use rappct::{AppContainerProfile, KnownCapability, LaunchOptions, SecurityCapabilitiesBuilder, launch_in_container};
+use rappct::{
+    AppContainerProfile,
+    LaunchOptions,
+    SecurityCapabilitiesBuilder,
+    UseCase,
+    launch_in_container,
+};
 
 fn main() -> rappct::Result<()> {
     let profile = AppContainerProfile::ensure("demo.rappct", "Demo", Some("rappct example"))?;
-    let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
-        .with_known(&[KnownCapability::InternetClient])
-        .with_lpac_defaults() // opt in to LPAC defaults when required
+    let caps = SecurityCapabilitiesBuilder::from_use_case(UseCase::SecureWebScraper)
+        .with_profile_sid(&profile.sid)
         .build()?;
 
     let opts = LaunchOptions { exe: "C:/Windows/System32/notepad.exe".into(), ..Default::default() };
@@ -193,9 +199,14 @@ See also: docs/capabilities.md for common capability SIDs and starter sets.
 
 ## Repository Layout
 
-- `src/` &mdash; core library modules (capabilities, launch, ACLs, diagnostics).
-- `examples/` &mdash; runnable samples such as `acrun` for quick CLI exploration.
-- `tests/` &mdash; integration tests covering launch/ACL/token behaviours on Windows.
+- `src/` — core library modules (capabilities, launch, ACLs, diagnostics).
+- `examples/` — runnable samples such as `acrun` for quick CLI exploration.
+- `tests/` — integration tests covering launch/ACL/token behaviours on Windows.
+- `docs/` — capability catalog and engineering notes (including FFI ownership ADR).
+
+## Cross-platform Behavior
+
+On non-Windows hosts, platform-specific operations return `UnsupportedPlatform`; this is intentional and documented in the library’s compatibility path.
 
 ## Development Workflow
 
