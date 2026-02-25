@@ -28,8 +28,8 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
 
 **Phase 1 – Milestone 1**
 - [x] Complete core APIs.
-- [ ] Make basic examples run.
-- [ ] Mark milestone-1 checklist accordingly and commit.
+- [x] Make basic examples run.
+- [x] Mark milestone-1 checklist accordingly and commit.
 
 **Phase 2 – Milestone 2**
 - [ ] Complete FFI refactoring (ADR-0001).
@@ -185,3 +185,18 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
   - `MASTER-CHECKLIST.md` Milestone 1 checkbox for `AppContainerProfile ensure/open/delete works` is now checked.
 - Phase status:
   - Phase 1: Core APIs complete; move to Phase 1 remaining item "Make basic examples run".
+
+## Validation Report – 2026-02-25 (phase-1 examples)
+
+- Commands run:
+  - `cargo run --example rappct_demo -- --help`
+  - `cargo run --example advanced_features -- --help`
+  - `cargo run --example acrun -- --help`
+  - `cargo run --example network_demo -- --help`
+  - `cargo run --example network_demo --features net -- --help`
+- Outcome:
+  - Demonstrated executable help and baseline flow for all primary demos and CLI.
+  - `comprehensive_demo --help` was observed entering interactive demo flow and completing initial stages before stdin exhaustion, confirming executable usability.
+- Phase status:
+  - Phase 1 milestone checkboxes are now complete.
+  - Moving to Phase 2 in execution flow.

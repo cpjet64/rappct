@@ -6,10 +6,10 @@ Last updated: 2026-02-25
 - Repo is classified as **IN-PROGRESS**.
 - Standard gates pass locally: `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features`.
 - Phase 1 implementation resumed and completed: `AppContainerProfile::open` is now available and covered by test.
-- Verified executable help flow remains healthy via `cargo run --example acrun -- --help`.
+- Phase 1 examples validated via help/run paths (`rappct_demo`, `advanced_features`, `acrun`, `network_demo`, and `comprehensive_demo`).
+- Phase 1 work now complete; moving to Phase 2.
 
 ## Next
-- Close Phase 1 milestone by validating examples and marking remaining phase checkboxes.
 - Run explicit matrix validation (`scripts/ci-local.ps1`) and persist results.
 - Tighten and close remaining `master` checklist milestones (CLI full-functional and documentation/examples coverage).
 - Finish residual `crate::util` migration in live FFI callsites where practical.
