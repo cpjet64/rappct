@@ -21,7 +21,7 @@ High-level `UseCase` presets in the API mirror these starter sets:
 - `IsolatedBuildEnvironment` → LPAC defaults (`registryRead`, `lpacCom`) plus base AC profile restrictions
 - `NetworkConstrainedTool` → `privateNetworkClientServer`
 - `MinimalLpac` → `registryRead`, `lpacCom`
-- `FullDesktopApp` → representative broad set used by examples
+- `FullDesktopApp` → safer baseline for desktop-style tooling (`internetClient`, `privateNetworkClientServer`, `internetClientServer`, `userAccountInformation`)
 - `Custom` → manual composition with `SecurityCapabilitiesBuilder`
 
 References

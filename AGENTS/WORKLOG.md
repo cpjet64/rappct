@@ -10,10 +10,10 @@ Last updated: 2026-02-25
 
 ## Next
 - No immediate mandatory follow-up work remains.
-- Preserve optional follow-up hardening as backlog only (e.g., capability preset scope discussion).
+- Preserve optional follow-up hardening as backlog only (e.g., additional desktop preset tightening).
 
 ## Later
-- Keep `UseCase::FullDesktopApp` scope question open in checklist notes if maintainers want tightened capability defaults.
+- Track any additional `FullDesktopApp` tightening in the next roadmap milestone.
 
 ## Done
 - Implemented `UseCase` enum in `src/capability.rs`.
@@ -41,9 +41,10 @@ Last updated: 2026-02-25
   - `docs/capabilities.md` now maps starter capability sets to API `UseCase` presets.
 - Marked phase-4 final checklist item complete in `EXECUTION-PLAN.md`/`MASTER-CHECKLIST.md`.
 - Confirmed `scripts/ci-local.ps1` completion and updated plan/checklist validation entry (`phase-4 matrix closure`).
+- Narrowed `UseCase::FullDesktopApp` to a safer baseline preset (`internetClient`, `internetClientServer`, `privateNetworkClientServer`, `userAccountInformation`) and aligned docs/tests.
 
 ## Decisions Needed
-- Confirm whether `UseCase::FullDesktopApp` should keep a maximal capability set or be narrowed further before next release.
+- None at this time.
 
 ## Evidence
 - `cargo fmt --all -- --check`: passed.

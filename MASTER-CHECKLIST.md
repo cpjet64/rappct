@@ -43,7 +43,7 @@ Developers can now use these presets instead of manually building capabilities:
 - `UseCase::IsolatedBuildEnvironment` → LPAC defaults + limited registry
 - `UseCase::NetworkConstrainedTool` → privateNetworkClientServer + loopback
 - `UseCase::MinimalLpac` → registryRead + lpacCom only
-- `UseCase::FullDesktopApp` → broad capabilities for desktop tools
+- `UseCase::FullDesktopApp` → safer desktop baseline (`internetClient`, `internetClientServer`, `privateNetworkClientServer`, `userAccountInformation`)
 - `UseCase::Custom` → fallback for manual builder
 
 Usage example:

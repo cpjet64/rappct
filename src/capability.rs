@@ -487,7 +487,7 @@ pub enum UseCase {
     NetworkConstrainedTool,
     /// Minimal LPAC-only capability set.
     MinimalLpac,
-    /// Broad set intended for interactive desktop-style workloads.
+    /// Safer desktop-style baseline for interactive workloads.
     FullDesktopApp,
     /// No preset; callers should add capabilities explicitly.
     Custom,
@@ -576,30 +576,11 @@ impl SecurityCapabilitiesBuilder {
             UseCase::FullDesktopApp => {
                 caps_named.extend([
                     KnownCapability::InternetClient.as_str().to_string(),
-                    KnownCapability::InternetClientServer.as_str().to_string(),
                     KnownCapability::PrivateNetworkClientServer
                         .as_str()
                         .to_string(),
-                    KnownCapability::EnterpriseAuthentication
-                        .as_str()
-                        .to_string(),
-                    KnownCapability::SharedUserCertificates.as_str().to_string(),
+                    KnownCapability::InternetClientServer.as_str().to_string(),
                     KnownCapability::UserAccountInformation.as_str().to_string(),
-                    KnownCapability::DocumentsLibrary.as_str().to_string(),
-                    KnownCapability::PicturesLibrary.as_str().to_string(),
-                    KnownCapability::VideosLibrary.as_str().to_string(),
-                    KnownCapability::MusicLibrary.as_str().to_string(),
-                    KnownCapability::Appointments.as_str().to_string(),
-                    KnownCapability::Contacts.as_str().to_string(),
-                    KnownCapability::PhoneCall.as_str().to_string(),
-                    KnownCapability::VoipCall.as_str().to_string(),
-                    KnownCapability::Location.as_str().to_string(),
-                    KnownCapability::Microphone.as_str().to_string(),
-                    KnownCapability::Webcam.as_str().to_string(),
-                    KnownCapability::LowLevelDevices.as_str().to_string(),
-                    KnownCapability::HumanInterfaceDevice.as_str().to_string(),
-                    KnownCapability::InputInjectionBrokered.as_str().to_string(),
-                    KnownCapability::RemovableStorage.as_str().to_string(),
                 ]);
             }
             UseCase::Custom => {}
@@ -727,6 +708,22 @@ mod builder_tests {
             .map(|s| s.as_str())
             .collect();
         assert_eq!(names, vec!["registryRead", "lpacCom"]);
+
+        let desktop = SecurityCapabilitiesBuilder::from_use_case(UseCase::FullDesktopApp);
+        let names: Vec<&str> = desktop
+            .named_caps_for_test()
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        assert_eq!(
+            names,
+            vec![
+                "internetClient",
+                "privateNetworkClientServer",
+                "internetClientServer",
+                "userAccountInformation"
+            ]
+        );
     }
 
     #[test]
