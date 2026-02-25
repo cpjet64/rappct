@@ -198,3 +198,70 @@ pub use win::to_utf16_os;
 pub use win::{FreeSidGuard, LocalFreeGuard, OwnedHandle};
 #[cfg(windows)]
 pub use win::{to_utf16, to_utf16_os};
+
+#[cfg(test)]
+#[cfg(windows)]
+#[allow(deprecated)]
+mod tests {
+    use super::win::{FreeSidGuard, LocalFreeGuard, OwnedHandle};
+    use std::ffi::OsStr;
+    use std::io::Read;
+    use std::os::windows::io::IntoRawHandle;
+    use std::ptr;
+    use windows::Win32::Foundation::HANDLE;
+    use windows::Win32::Security::PSID;
+
+    #[test]
+    fn to_utf16_appends_nul_terminator() {
+        let wide = super::to_utf16("abc");
+        assert_eq!(wide, vec![97, 98, 99, 0]);
+        let empty = super::to_utf16("");
+        assert_eq!(empty, vec![0]);
+    }
+
+    #[test]
+    fn to_utf16_os_appends_nul_terminator() {
+        let wide = super::to_utf16_os(OsStr::new("abc"));
+        assert_eq!(wide, vec![97, 98, 99, 0]);
+    }
+
+    #[test]
+    fn owned_handle_into_file_roundtrips_content() {
+        let path = std::env::temp_dir().join("rappct-owned-handle-test.txt");
+        std::fs::write(&path, b"owned-handle").expect("write test fixture");
+
+        let file = std::fs::File::open(&path).expect("open fixture");
+        let raw = file.into_raw_handle();
+        let expected = HANDLE(raw);
+        // SAFETY: `file` is converted to a raw handle with exclusive ownership via
+        // `into_raw_handle`, and `OwnedHandle` becomes the sole owner.
+        let handle = unsafe { OwnedHandle::from_raw(expected) };
+        assert_eq!(handle.as_raw().0, expected.0);
+
+        let mut reopened = handle.into_file();
+        let mut out = Vec::new();
+        reopened
+            .read_to_end(&mut out)
+            .expect("read fixture from moved handle");
+        assert_eq!(out, b"owned-handle");
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn local_free_guard_null_pointer_behaves() {
+        // SAFETY: null pointer is a valid sentinel for this test helper and cannot be freed.
+        let guard = unsafe { LocalFreeGuard::<u16>::new(ptr::null_mut()) };
+        assert!(guard.is_null());
+        assert!(guard.as_ptr().is_null());
+        assert!(guard.into_raw().is_null());
+    }
+
+    #[test]
+    fn free_sid_guard_null_pointer_behaves() {
+        // SAFETY: default PSID is valid for this constructor and remains owned by the wrapper.
+        let guard = unsafe { FreeSidGuard::new(PSID::default()) };
+        assert!(guard.as_psid().0.is_null());
+        assert!(guard.into_raw().0.is_null());
+    }
+}

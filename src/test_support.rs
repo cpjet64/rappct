@@ -57,3 +57,46 @@ impl AttributeList {
         self.0.as_mut_ptr()
     }
 }
+
+#[cfg(test)]
+#[cfg(windows)]
+mod tests {
+    use super::*;
+    use crate::capability::CapabilityName;
+    use crate::sid::AppContainerSid;
+
+    #[test]
+    fn app_sid_converts_from_app_container() {
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let wrapped = AppSid::from_app_container(&sid).expect("from app container sid");
+        let _ = wrapped.into_inner();
+    }
+
+    #[test]
+    fn app_sid_converts_from_sddl() {
+        let wrapped = AppSid::from_sddl("S-1-15-2-1").expect("from sddl");
+        let _ = wrapped.into_inner();
+    }
+
+    #[test]
+    fn app_sid_invalid_sddl_is_rejected() {
+        assert!(AppSid::from_sddl("not-a-sid").is_err());
+    }
+
+    #[test]
+    fn catalog_caps_from_known_names() {
+        let sid = AppSid::from_sddl("S-1-15-2-1").expect("app sid");
+        let wrapped = CatalogCaps::from_catalog(sid, &[CapabilityName::InternetClient])
+            .expect("catalog caps");
+        let _ = wrapped.inner();
+    }
+
+    #[test]
+    fn attribute_list_roundtrips_security_caps() {
+        let sid = AppSid::from_sddl("S-1-15-2-1").expect("app sid");
+        let caps = CatalogCaps::from_catalog(sid, &[CapabilityName::InternetClient]).expect("caps");
+        let mut list = AttributeList::with_capacity(1).expect("attribute list");
+        list.set_security_capabilities(&caps).expect("set caps");
+        assert!(!list.as_mut_ptr().0.is_null());
+    }
+}
