@@ -239,3 +239,52 @@ unsafe fn sid_to_string(psid: windows::Win32::Security::PSID) -> Result<String> 
 fn is_win32_error(err: &windows::core::Error, code: u32) -> bool {
     err.code() == HRESULT::from_win32(code)
 }
+
+#[cfg(test)]
+#[cfg(windows)]
+mod tests {
+    use super::*;
+    use windows::Win32::Foundation::HANDLE;
+    use windows::Win32::Security::PSID;
+
+    #[test]
+    fn sid_to_string_rejects_null() {
+        // SAFETY: Passing a null SID pointer validates the conversion helper's error-path behavior.
+        let err = unsafe { sid_to_string(PSID(std::ptr::null_mut())) }.unwrap_err();
+        assert!(err.to_string().contains("null SID"));
+    }
+
+    #[test]
+    fn query_bool_errors_on_invalid_handle() {
+        let handle = HANDLE::default();
+        // SAFETY: A null/zero handle is intentionally invalid and should trigger the error branch.
+        let err = unsafe { query_bool(handle, windows::Win32::Security::TokenIsAppContainer) }
+            .expect_err("invalid handle should fail");
+        assert!(err.to_string().contains("GetTokenInformation"));
+    }
+
+    #[test]
+    fn query_appcontainer_sid_errors_on_invalid_handle() {
+        let handle = HANDLE::default();
+        // SAFETY: A null/zero handle is intentionally invalid and should trigger the error branch.
+        let err =
+            unsafe { query_appcontainer_sid(handle) }.expect_err("invalid handle should fail");
+        assert!(err.to_string().contains("GetTokenInformation"));
+    }
+
+    #[test]
+    fn query_capabilities_errors_on_invalid_handle() {
+        let handle = HANDLE::default();
+        // SAFETY: A null/zero handle is intentionally invalid and should trigger the error branch.
+        let err = unsafe { query_capabilities(handle) }.expect_err("invalid handle should fail");
+        assert!(err.to_string().contains("GetTokenInformation"));
+    }
+
+    #[test]
+    fn is_win32_error_matches() {
+        let expected = windows::core::HRESULT::from_win32(1234);
+        let err = windows::core::Error::from_hresult(expected);
+        assert!(is_win32_error(&err, 1234));
+        assert!(!is_win32_error(&err, 4321));
+    }
+}

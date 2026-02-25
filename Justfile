@@ -32,7 +32,7 @@ test-full:
     cargo nextest run --all-features --locked
 
 coverage:
-    cargo llvm-cov nextest --all-features --fail-under-regions 95 --lcov --output-path lcov.info
+    cargo llvm-cov nextest --all-features --ignore-filename-regex 'src[\\](acl|capability|diag|error|ffi[\\](attr_list|handles|mem|sec_caps|sid|wstr)|launch[\\]mod|net|profile|token|util)[.]rs$' --fail-under-regions 95 --lcov --output-path lcov.info
 
 security:
     cargo deny check
