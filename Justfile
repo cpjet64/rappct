@@ -32,7 +32,7 @@ test-full:
     cargo nextest run --all-features --locked
 
 coverage:
-    cargo llvm-cov nextest --all-features --fail-under-regions 75 --lcov --output-path lcov.info
+    cargo llvm-cov nextest --all-features --fail-under-regions 95 --lcov --output-path lcov.info
 
 security:
     cargo deny check
