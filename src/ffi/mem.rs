@@ -1,7 +1,5 @@
 //! RAII guards for Windows memory allocators (LocalFree, CoTaskMemFree).
 
-#![allow(clippy::undocumented_unsafe_blocks)]
-
 use core::ffi::c_void;
 
 /// Guard for memory that must be released with LocalFree.
@@ -116,6 +114,7 @@ mod tests {
 
     #[test]
     fn localalloc_guard_round_trip_string_sid() {
+        // SAFETY: test data uses a known valid SID string and API calls are validated by return codes.
         unsafe {
             // SAFETY: Provide valid SDDL for well-known SID (Administrators).
             let sddl = super::super::wstr::WideString::from_str("S-1-5-32-544");

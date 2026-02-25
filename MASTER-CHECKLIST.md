@@ -14,9 +14,9 @@
 
 ## Milestone 2 – Full FFI Safety & Ownership
 - [x] All FFI RAII wrappers in `src/ffi/` implemented and adopted
-- [ ] Legacy `util.rs` guards migrated to new ffi wrappers
-- [ ] All `unsafe` blocks have explicit safety comments
-- [ ] ADR-0001 checklist fully complete
+- [x] Legacy `util.rs` guards migrated to new ffi wrappers
+- [x] All `unsafe` blocks have explicit safety comments
+- [x] ADR-0001 checklist fully complete
 - [x] Unit tests for guard drop semantics and conversions
 - [x] Windows smoke tests for launch/profile/acl paths
 
@@ -355,3 +355,22 @@ let caps = SecurityCapabilitiesBuilder::from_use_case(UseCase::SecureWebScraper)
   - `tests/windows_profile.rs` adds coverage in `profile_open_resolves_existing_name`.
 - Milestone status impact:
   - Milestone 1 estimate remains 83% overall due broader Phase 1 examples and matrix coverage still in progress.
+
+## Validation Report – 2026-02-25 (phase-2 closure)
+
+- Commands run:
+  - `cargo fmt --all -- --check`
+  - `cargo clippy --all-targets --all-features -- -D warnings`
+  - `cargo test --all-targets --all-features`
+- Milestone 2 evidence update:
+  - `src/ffi/sid.rs` and `src/ffi/mem.rs` removed local `#![allow(clippy::undocumented_unsafe_blocks)]`.
+  - `src/lib.rs` and `src/ffi/mod.rs` still enforce `clippy::undocumented_unsafe_blocks`.
+  - Live production modules in `src/` no longer call `crate::util::to_utf16*` helpers.
+- Milestone 2 status:
+  - **All FFI RAII wrappers in `src/ffi/` implemented and adopted**: Done.
+  - **Legacy `util.rs` guards migrated to new ffi wrappers**: Done (legacy module remains compatibility-only).
+  - **All `unsafe` blocks have explicit safety comments**: Done (based on strict neighborhood scan in this audit pass).
+  - **ADR-0001 checklist fully complete**: Done (checklist file indicates completion of phases 1–4).
+- Plan/doc update:
+  - `MASTER-CHECKLIST.md` milestone 2 checkboxes were marked complete.
+  - `EXECUTION-PLAN.md` phase 2 checkboxes were marked complete.

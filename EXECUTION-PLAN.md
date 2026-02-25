@@ -32,8 +32,8 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
 - [x] Mark milestone-1 checklist accordingly and commit.
 
 **Phase 2 – Milestone 2**
-- [ ] Complete FFI refactoring (ADR-0001).
-- [ ] Mark milestone-2 checklist and commit.
+- [x] Complete FFI refactoring (ADR-0001).
+- [x] Mark milestone-2 checklist and commit.
 
 **Phase 3 – Milestone 3**
 - [x] Implement Standard Use Case Groupings (see MASTER-CHECKLIST.md).
@@ -200,3 +200,19 @@ See MASTER-CHECKLIST.md for the detailed items under each milestone.
 - Phase status:
   - Phase 1 milestone checkboxes are now complete.
   - Moving to Phase 2 in execution flow.
+
+## Validation Report – 2026-02-25 (phase-2 closure)
+
+- Commands run:
+  - `cargo fmt --all -- --check`
+  - `cargo clippy --all-targets --all-features -- -D warnings`
+  - `cargo test --all-targets --all-features`
+- Milestone 2 validation:
+  - `src/ffi/sid.rs` and `src/ffi/mem.rs` no longer suppress `clippy::undocumented_unsafe_blocks`.
+  - Remaining unsafe blocks have nearby `SAFETY:` comments, and the build-wide lint remains active in `src/lib.rs`/`src/ffi/mod.rs`.
+  - `crate::util::` callsites are no longer present in `src/` production modules outside `src/util.rs`.
+- Legacy compatibility status:
+  - `src/util.rs` remains as legacy compatibility surface; live profile/capability/launch/acl/net/launch/token paths now use `src/ffi/*` wrappers.
+- Result:
+  - Phase 2 milestone checklist is marked complete in this plan.
+  - `MASTER-CHECKLIST.md` was updated to reflect these Phase 2 completions in the same pass.

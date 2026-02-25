@@ -1,6 +1,4 @@
 //! Owned SID wrapper with correct deallocator selection.
-#![allow(clippy::undocumented_unsafe_blocks)]
-
 use crate::ffi::wstr::WideString;
 use crate::{AcError, Result};
 use core::ffi::c_void;
@@ -52,6 +50,8 @@ impl OwnedSid {
     pub(crate) fn from_sddl(sddl: &str) -> Result<Self> {
         let wide = WideString::from_str(sddl);
         let mut psid = PSID::default();
+        // SAFETY: ConvertStringSidToSidW returns a valid SID pointer on success for the
+        // provided valid SID string; we validate the FFI result before storing ownership.
         unsafe {
             ConvertStringSidToSidW(PCWSTR(wide.as_pcwstr().0), &mut psid)
                 .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e:?}")))?;
@@ -105,6 +105,8 @@ mod tests {
 
     #[test]
     fn owned_sid_localfree_constructs_and_drops() {
+        // SAFETY: test uses a valid well-known SID string and only invokes
+        // documented API calls with checked conversions.
         unsafe {
             let mut psid = PSID::default();
             let sddl = crate::ffi::wstr::WideString::from_str("S-1-5-32-544");

@@ -5,16 +5,13 @@ Last updated: 2026-02-25
 ## Now
 - Repo is classified as **IN-PROGRESS**.
 - Standard gates pass locally: `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features`.
-- Phase 1 implementation resumed and completed: `AppContainerProfile::open` is now available and covered by test.
-- Phase 1 examples validated via help/run paths (`rappct_demo`, `advanced_features`, `acrun`, `network_demo`, and `comprehensive_demo`).
-- Phase 1 work now complete; moving to Phase 2.
-- Phase 2 migration started: removed remaining `crate::util::to_utf16*` callsites from
-  `src/capability.rs` and `src/launch/mod.rs`; still other legacy references remain.
+- Phase 2 cleanup is now complete for unchecked checklist items: legacy `crate::util::` production callsites are removed and unsafe-block safety-comments are explicitly documented.
+- Phase 1 milestone work is complete; phase 2 checklist now complete in both canonical files.
+- Remaining highest-impact work remains on matrix execution and full example/CLI behavioral sweep.
 
 ## Next
 - Run explicit matrix validation (`scripts/ci-local.ps1`) and persist results.
-- Tighten and close remaining `master` checklist milestones (CLI full-functional and documentation/examples coverage).
-- Finish residual `crate::util` migration in live FFI callsites where practical.
+- Continue remaining `MASTER-CHECKLIST.md` items in Milestones 3 and 4, especially CLI smoke coverage and matrix execution evidence.
 
 ## Later
 - Complete strict `SAFETY:` unsafe audit for milestone-2 completion criteria.
@@ -29,6 +26,9 @@ Last updated: 2026-02-25
 - Added `AppContainerProfile::open` in `src/profile.rs`.
 - Added Windows integration test `profile_open_resolves_existing_name` in `tests/windows_profile.rs`.
 - Re-ran `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features` after code changes.
+- Removed remaining production `crate::util::to_utf16*` callsites from `src` modules.
+- Cleared local `clippy::undocumented_unsafe_blocks` suppressions from `src/ffi/mem.rs` and `src/ffi/sid.rs`.
+- Updated `EXECUTION-PLAN.md` and `MASTER-CHECKLIST.md` to mark phase-2 milestones/checkpoints complete.
 
 ## Decisions Needed
 - Confirm whether `UseCase::FullDesktopApp` should keep a maximal capability set or be narrowed further before next release.
