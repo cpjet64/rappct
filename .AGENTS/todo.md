@@ -149,3 +149,29 @@
   - `just ci-fast` passed.
   - `just ci-deep` passed.
 - Pending: local commit for this verified coverage iteration.
+
+## 2026-02-26 - dependency upgrades (autonomous)
+
+- [x] Initialize dependency-upgrader workflow and capture baseline versions/toolchain.
+- [x] Create dependency upgrade plan file under `.AGENTS/plans/`.
+- [x] Create/update `docs/dependency-upgrade-report.md` with baseline and risk waves.
+- [x] Apply wave 1 (security + patch/minor lockfile updates only).
+- [x] Run validation matrix + security scans for wave 1.
+- [x] Commit verified wave 1 locally (no push).
+- [x] Apply additional safe waves if needed and repeat validation/commit.
+- [x] Finalize report with outcomes, residual risks, and follow-ups.
+
+## Review (Dependency Upgrader)
+
+- Wave 1 applied with lockfile-only updates:
+  - `clap` `4.5.56 -> 4.5.60`
+  - `tempfile` `3.24.0 -> 3.26.0`
+  - transitive updates: `clap_builder`, `clap_lex`, `libc`, `linux-raw-sys`, `rustix`
+- Outdated scan after wave: `cargo outdated -R` reports all dependencies up to date.
+- Validation/security outcomes:
+  - `just ci-fast` passed.
+  - `just ci-deep` passed.
+  - `cargo deny check` passed.
+  - `cargo audit` passed.
+  - `scripts/enforce_advisory_policy.py` passed.
+- No code changes required for compatibility; changes are limited to `Cargo.lock` and workflow/report tracking docs.
