@@ -50,17 +50,16 @@ cargo test --all-targets --features "net introspection tracing serde"
 
 ## High-Level Component Map
 
-```mermaid
-flowchart LR
-    profile[profile] --> capability[capability]
-    capability --> launch[launch]
-    sid[sid] --> capability
-    sid --> acl[acl]
-    token[token] --> launch
-    launch --> acl
-    diag[diag (feature)] --> capability
-    net[net (feature)] --> profile
-```
+This project structure is rendered below in plain text for maximum compatibility:
+
+- `profile` -> `capability`
+  - `sid` and `capability` both feed into capability selection and security context assembly.
+- `capability` -> `launch`
+- `sid` -> `acl`
+- `token` -> `launch`
+- `launch` -> `acl`
+- `diag` (under `introspection`) -> `capability`
+- `net` feature -> `profile` helpers and lifecycle integration
 
 ## Regeneration Entry Point
 

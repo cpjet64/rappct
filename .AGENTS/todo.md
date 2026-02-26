@@ -427,3 +427,9 @@
 - Verification status before integration:
   - `just ci-fast`: PASS
   - `just ci-deep`: PASS
+
+## 2026-02-27 - docs rendering compatibility fix
+
+- [x] Remove Mermaid block from `docs/index.md` to avoid GitHub "unable to render rich display" failures.
+- [x] Replace with plain Markdown component map for non-renderer-dependent readability.
+- [x] Verify `docs/index.md` remains a valid canonical docs entry point.
