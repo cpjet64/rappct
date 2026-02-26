@@ -33,3 +33,85 @@
   - `MASTER-CHECKLIST.md`: 0 unchecked items.
   - `EXECUTION-PLAN.md`: 0 unchecked items.
 - Worktree base created at `.worktrees/main` for orchestrator compliance.
+
+## 2026-02-26 - autonomous codebase documentation (full refresh)
+
+- [x] Load documenter skill and tooling matrix.
+- [x] Archive existing `docs/` and root docs to `legacy/docs/`.
+- [x] Create fresh `docs/` and initialize `docs/PROGRESS.md`.
+- [x] Run parallel explorer agents for major repo areas.
+- [x] Run parallel analyzer agents for architecture/safety/governance.
+- [x] Generate `docs/SPEC.md` via spec-writer.
+- [x] Generate companion docs (`README`, `ARCHITECTURE`, `API`, `TOOLING`, `index`, module docs).
+- [x] Generate docs artifacts (`cargo doc`, mdBook scaffold/build if available).
+- [x] Update root docs pointers as needed.
+- [ ] Run verification gates and commit locally (no push).
+
+## 2026-02-26 - synthesize docs/SPEC.md from current repo
+
+- [x] Confirm request scope and required section names.
+- [x] Inventory source of truth: `src/`, `tests/`, `examples/`, `scripts/`, `.github/workflows`, `Cargo.toml`, `Justfile`.
+- [x] Draft `docs/SPEC.md` with required sections and Mermaid diagrams.
+- [x] Validate spec claims against concrete file paths and feature flags.
+- [x] Run docs-local verification for touched file(s) and record review notes.
+
+## 2026-02-26 - docs navigation/tooling refresh (targeted)
+
+- [x] Read `Justfile` and repo module/feature metadata.
+- [x] Create `docs/README.md`, `docs/index.md`, and `docs/TOOLING.md`.
+- [x] Add module documentation pages under `docs/modules/`.
+- [x] Add mdBook manifest/navigation (`docs/book.toml`, `docs/SUMMARY.md`) for reproducible docs generation.
+- [x] Verify links/paths for rustdoc and mdBook generated outputs.
+
+## Review (Docs Navigation/Tooling Refresh)
+
+- Added requested docs entry points and module docs with cross-links.
+- `docs/index.md` now links documentation sources plus generated artifacts:
+  - `target/doc/rappct/index.html`
+  - `docs/book/index.html`
+- `docs/TOOLING.md` contains prerequisites and exact regeneration commands for both:
+  - `cargo doc --workspace --all-features --no-deps`
+  - `mdbook build docs --dest-dir book`
+
+## Review (2026-02-26 - synthesize docs/SPEC.md from current repo)
+
+- Wrote `docs/SPEC.md` with required sections exactly:
+  - Project Overview
+  - Architecture Overview (with Mermaid diagram)
+  - Components & Modules
+  - Data Models & Flows (Mermaid)
+  - APIs & Interfaces
+  - Non-Functional Requirements
+  - Deployment & Setup
+  - Glossary
+  - References
+- Grounded content against current repository files in `src/`, `tests/`, `examples/`, `scripts/`, and `.github/workflows`.
+- Included requested specifics: Windows-first behavior, feature flags (`net`, `introspection`, `tracing`, `serde`), FFI RAII safety model, launch/profile/capability/token/acl flows, CI governance differences (`just ci-fast`/`just ci-deep` vs hosted workflows), and LPAC policy.
+- Verification run: `cargo fmt --all -- --check` passed.
+
+## Review (Autonomous Codebase Documentation)
+
+- Archive/init completed: prior `docs/` moved to `legacy/docs/refresh-20260225-191727/`.
+- Parallel exploration and deep analysis completed for source, examples, tests, and CI/governance workflows.
+- Generated fresh docs set:
+  - `docs/SPEC.md`
+  - `docs/ARCHITECTURE.md`
+  - `docs/API.md`
+  - `docs/README.md`
+  - `docs/index.md`
+  - `docs/TOOLING.md`
+  - `docs/modules/*`
+  - mdBook scaffolding (`docs/book.toml`, `docs/SUMMARY.md`)
+- Pending finalization: docs artifact generation, root pointer verification, CI verification, and local commit.
+
+## Review (Autonomous Codebase Documentation Finalization)
+
+- Docs artifacts:
+  - `cargo doc --workspace --all-features --no-deps` passed.
+  - mdBook scaffolding added (`docs/book.toml`, `docs/SUMMARY.md`); `mdbook` CLI is not installed on PATH, so build was not executed.
+- Root documentation pointer restored with `README.md` linking to `docs/index.md`.
+- Verification gates executed:
+  - `just ci-fast` passed.
+  - `just ci-deep` passed.
+- Remaining action: local commit for this verified documentation change set.
+

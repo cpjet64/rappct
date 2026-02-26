@@ -1,46 +1,38 @@
 # Documentation Progress
 
-Date: 2026-02-25
+Date: 2026-02-26
 Skill: `autonomous-codebase-documenter`
 
 ## Phase 0 - Initialization
 
 - Archiving legacy docs -> generating fresh docs in `./docs/` (including `SPEC.md`).
-- Archived prior `docs/` content to `legacy/docs/`.
-- Archived root user-facing markdown docs to `legacy/docs/root/`.
-- Preserved governance documents in place (`AGENTS.md`, `CLAUDE.md`).
+- Archived prior `docs/` content to `legacy/docs/refresh-20260225-191727/`.
+- Root-level docs candidates (`README.md`, `ARCHITECTURE.md`, `SPEC.md`, `API.md`) checked and archived when present.
 
 ## Tooling Selection
 
-- Detected stack: Rust library crate (`rappct`).
-- API/reference docs tool: `rustdoc` (`cargo doc`).
-- Project/user docs tool: `mdBook`.
-- Rationale: matches 2026 matrix defaults for Rust, keeps API docs native, and supports linked guide-style documentation.
+- Detected stack: Rust library crate with PowerShell automation.
+- Code reference/API docs: `rustdoc` via `cargo doc`.
+- Full project/user docs: `mdBook`.
+- Rationale: aligned with `doc-generation-combos-2026.md` defaults for Rust and reproducible local docs workflows.
 
-## Next Actions
+## Next
 
-- Run parallel `explorer` agents for major code areas.
-- Run parallel `analyzer` agents for deep module analysis.
-- Synthesize `docs/SPEC.md` and companion docs (`README`, `ARCHITECTURE`, `API`, `TOOLING`, `index`).
+- Completed parallel explorer agents for `src`, `examples`, `tests`, and automation workflows.
+- Completed analyzer agents for architecture, FFI safety, optional features, and quality governance.
+- Generated `SPEC.md`, `ARCHITECTURE.md`, `API.md`, `TOOLING.md`, `README.md`, `index.md`, and module docs.
 
-## Phase 1 - Parallel Exploration (Completed)
+## Completion Summary
 
-- Explorer agent outputs collected for:
-  - `src/` (module map, API exports, feature-gating, dependency graph).
-  - `examples/` (end-to-end usage patterns and runtime caveats).
-  - `tests/` (coverage structure and confidence profile).
-  - `scripts/` + `.github/` (local/hosted CI automation and release/security wiring).
-
-## Phase 2 - Deep Analysis (Completed)
-
-- Analyzer outputs collected for:
-  - Core runtime architecture and data flows (`profile` -> `capabilities` -> `launch` -> `token` verification).
-  - FFI ownership/lifetime and RAII safety model (`src/ffi/*` with launch sequence).
-  - Optional feature modules (`net`, `introspection`) and operational safety posture.
-  - CI/release/security governance and local-vs-hosted gate differences.
-
-## Next Actions (Current)
-
-- Generate `docs/SPEC.md` from synthesized analysis.
-- Generate parallel companion docs (`README`, `ARCHITECTURE`, `API`, `TOOLING`, `index`).
-- Generate Rust docs artifacts (`cargo doc`) and mdBook scaffolding/build.
+- Generated fresh documentation set in `docs/`:
+  - `SPEC.md`
+  - `ARCHITECTURE.md`
+  - `API.md`
+  - `README.md`
+  - `index.md`
+  - `TOOLING.md`
+  - `modules/*.md`
+  - `book.toml` + `SUMMARY.md` for mdBook scaffolding
+- Legacy docs preserved under `legacy/docs/refresh-20260225-191727/`.
+- `cargo doc --workspace --all-features --no-deps` is run in verification.
+- mdBook is scaffolded; `mdbook` CLI was not available on PATH during this run, so build was not executed.

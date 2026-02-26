@@ -1,0 +1,11 @@
+[book]
+title = "rappct Documentation"
+description = "Project documentation for the rappct Rust crate"
+authors = ["rappct maintainers"]
+language = "en"
+multilingual = false
+src = "."
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
