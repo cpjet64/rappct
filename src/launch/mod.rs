@@ -923,6 +923,9 @@ mod tests {
     use super::{
         InheritList, JobObjectDropGuard, LaunchOptions, LaunchedIo, make_cmd_args, merge_parent_env,
     };
+    use crate::capability::CapabilityName;
+    use crate::ffi::sec_caps::OwnedSecurityCapabilities;
+    use crate::ffi::sid::OwnedSid;
     use std::ffi::OsString;
     use std::os::windows::io::AsRawHandle;
     use std::time::Duration;
@@ -1017,6 +1020,7 @@ mod tests {
     fn job_object_drop_guard_disable_flips_state_and_invalid_assign_fails() {
         let mut guard = JobObjectDropGuard::new().expect("create guard");
         assert!(guard.kill_on_drop);
+        assert_ne!(guard.as_handle().0, std::ptr::null_mut());
         guard.disable_kill_on_drop().expect("disable kill on drop");
         assert!(!guard.kill_on_drop);
 
@@ -1065,5 +1069,14 @@ mod tests {
             }
             other => panic!("expected timeout LaunchFailed, got: {other:?}"),
         }
+    }
+
+    #[test]
+    fn with_security_capabilities_sets_internal_override() {
+        let sid = OwnedSid::from_sddl("S-1-15-2-1").expect("owned sid");
+        let caps = OwnedSecurityCapabilities::from_catalog(sid, &[CapabilityName::InternetClient])
+            .expect("security caps");
+        let opts = LaunchOptions::default().with_security_capabilities(caps);
+        assert!(opts.extra.security_caps.is_some());
     }
 }

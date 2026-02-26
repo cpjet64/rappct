@@ -560,6 +560,74 @@ fn launch_waits_for_exit_code() {
     prof.delete().ok();
 }
 
+#[cfg(windows)]
+#[test]
+fn launch_with_null_stdio_has_no_parent_streams() {
+    let name = format!("rappct.test.launch.nullstdio.{}", std::process::id());
+    let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
+    let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
+        .with_known(&[KnownCapability::InternetClient])
+        .unwrap()
+        .build()
+        .expect("build caps");
+    let opts = LaunchOptions {
+        exe: cmd_exe(),
+        cmdline: Some(" /C exit 0".to_string()),
+        stdio: StdioConfig::Null,
+        ..Default::default()
+    };
+
+    let child = launch_in_container_with_io(&caps, &opts).expect("launch with null stdio");
+    assert!(
+        child.stdin.is_none(),
+        "stdin should be detached for Null stdio"
+    );
+    assert!(
+        child.stdout.is_none(),
+        "stdout should be detached for Null stdio"
+    );
+    assert!(
+        child.stderr.is_none(),
+        "stderr should be detached for Null stdio"
+    );
+    let code = child
+        .wait(Some(std::time::Duration::from_secs(5)))
+        .expect("wait exit");
+    assert_eq!(code, 0);
+    prof.delete().ok();
+}
+
+#[cfg(windows)]
+#[test]
+fn launch_with_explicit_handle_list_succeeds() {
+    use std::os::windows::io::{AsRawHandle, BorrowedHandle};
+
+    let name = format!("rappct.test.launch.handles.{}", std::process::id());
+    let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
+    let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
+        .with_known(&[KnownCapability::InternetClient])
+        .unwrap()
+        .build()
+        .expect("build caps");
+
+    let fixture = std::fs::File::open(cmd_exe()).expect("open fixture");
+    // SAFETY: The borrowed handle remains valid while `fixture` is alive.
+    let borrowed = unsafe { BorrowedHandle::borrow_raw(fixture.as_raw_handle()) };
+    let opts = LaunchOptions {
+        exe: cmd_exe(),
+        cmdline: Some(" /C exit 0".to_string()),
+        ..Default::default()
+    }
+    .with_handle_list(&[borrowed]);
+
+    let child = launch_in_container_with_io(&caps, &opts).expect("launch with explicit handles");
+    let code = child
+        .wait(Some(std::time::Duration::from_secs(5)))
+        .expect("wait exit");
+    assert_eq!(code, 0);
+    prof.delete().ok();
+}
+
 #[cfg(all(windows, feature = "introspection"))]
 #[test]
 fn diagnostics_reports_missing_caps() {

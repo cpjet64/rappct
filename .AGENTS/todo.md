@@ -268,3 +268,32 @@
 - Verification gates completed successfully for this change set:
   - `just ci-fast`
   - `just ci-deep`
+## 2026-02-26 - autonomous coverage maximizer (round 3)
+
+- [x] Create isolated worktree branch (`agent/coverage-max-2026-02-26-r3b`) and capture rollback SHA.
+- [x] Run fresh full baseline coverage scan and enumerate uncovered items.
+- [x] Implement highest-yield additional tests/comments for coverable/uncoverable branches.
+- [x] Run required verification gates (`just ci-fast`, `just ci-deep`).
+- [x] Commit verified round-3 change set locally (no push).
+
+## Review (Autonomous Coverage Maximizer Round 3)
+
+- Branch: `agent/coverage-max-2026-02-26-r3b`.
+- Round-3 baseline:
+  - Regions: `88.52%`
+  - Functions: `86.53%`
+  - Lines: `86.51%`
+- Round-3 final:
+  - Regions: `90.90%`
+  - Functions: `87.25%`
+  - Lines: `88.80%`
+- Round-3 net gain:
+  - Regions: `+2.38 pp`
+  - Functions: `+0.72 pp`
+  - Lines: `+2.29 pp`
+- New tests added in:
+  - `src/launch/mod.rs`
+  - `tests/windows_launch.rs`
+  - `tests/windows_acl.rs`
+- Archived prior report and wrote new `docs/coverage-report.md`.
+- Remaining gap remains primarily Win32 defensive/error paths and environment-specific token/profile states.
