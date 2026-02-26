@@ -9,4 +9,4 @@ Continue maximizing coverage after round 3 by targeting remaining deterministic 
 - [x] Targeted test additions on highest-yield remaining branches
 - [x] Add comments where newly-identified paths are practically uncoverable (none newly required in this round)
 - [x] Verify via just ci-fast and just ci-deep
-- [ ] Commit locally (no push)
+- [x] Commit locally (no push)
