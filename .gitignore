@@ -19,3 +19,6 @@ build/
 __pycache__/
 .venv/
 /.worktrees/
+# Agent runtime artifacts
+.agent-logs/
+.agent-state/
