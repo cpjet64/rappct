@@ -297,3 +297,34 @@
   - `tests/windows_acl.rs`
 - Archived prior report and wrote new `docs/coverage-report.md`.
 - Remaining gap remains primarily Win32 defensive/error paths and environment-specific token/profile states.
+## 2026-02-26 - autonomous coverage maximizer (round 4)
+
+- [x] Create isolated worktree branch (`agent/coverage-max-2026-02-26-r4`) and capture rollback SHA.
+- [x] Run fresh full baseline coverage scan and enumerate uncovered items.
+- [x] Implement highest-yield additional tests/comments for remaining coverable branches.
+- [x] Run required verification gates (`just ci-fast`, `just ci-deep`).
+- [ ] Commit verified round-4 change set locally (no push).
+
+## Review (Autonomous Coverage Maximizer Round 4)
+
+- Branch: `agent/coverage-max-2026-02-26-r4`.
+- Round-4 baseline:
+  - Regions: `90.90%`
+  - Functions: `87.25%`
+  - Lines: `88.80%`
+- Round-4 final:
+  - Regions: `91.87%`
+  - Functions: `87.58%`
+  - Lines: `89.37%`
+- Round-4 net gain:
+  - Regions: `+0.97 pp`
+  - Functions: `+0.33 pp`
+  - Lines: `+0.57 pp`
+- Changes shipped in:
+  - `src/launch/mod.rs`
+  - `tests/windows_profile.rs`
+  - `tests/windows_launch.rs`
+- Archived prior report to `legacy/coverage/coverage-report-round3-20260226-001447.md`.
+- Verification gates completed successfully:
+  - `just ci-fast`
+  - `just ci-deep`

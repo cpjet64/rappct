@@ -33,6 +33,15 @@ fn profile_open_resolves_existing_name() {
 
 #[cfg(windows)]
 #[test]
+fn profile_open_matches_derived_sid_for_name() {
+    let name = "rappct.invalid\\name";
+    let derived = derive_sid_from_name(name).expect("derive sid");
+    let opened = AppContainerProfile::open(name).expect("open profile by name");
+    assert_eq!(opened.sid.as_string(), derived.as_string());
+}
+
+#[cfg(windows)]
+#[test]
 fn profile_ensure_existing_handles_metadata_mismatch() {
     let name = format!("rappct.test.profile.ensure.{}", std::process::id());
     let first = AppContainerProfile::ensure(&name, &name, Some("display one")).expect("ensure");

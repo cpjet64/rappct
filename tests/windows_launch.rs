@@ -628,6 +628,38 @@ fn launch_with_explicit_handle_list_succeeds() {
     prof.delete().ok();
 }
 
+#[cfg(windows)]
+#[test]
+fn launch_with_stdio_inherit_overrides_succeeds() {
+    use std::os::windows::io::{AsRawHandle, BorrowedHandle};
+
+    let name = format!("rappct.test.launch.inherit.{}", std::process::id());
+    let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
+    let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
+        .with_known(&[KnownCapability::InternetClient])
+        .unwrap()
+        .build()
+        .expect("build caps");
+
+    let fixture = std::fs::File::open(cmd_exe()).expect("open fixture");
+    // SAFETY: The borrowed handle remains valid while `fixture` stays in scope.
+    let borrowed = unsafe { BorrowedHandle::borrow_raw(fixture.as_raw_handle()) };
+
+    let opts = LaunchOptions {
+        exe: cmd_exe(),
+        cmdline: Some(" /C exit 0".to_string()),
+        ..Default::default()
+    }
+    .with_stdio_inherit(Some(borrowed), Some(borrowed), Some(borrowed));
+
+    let child = launch_in_container_with_io(&caps, &opts).expect("launch with stdio overrides");
+    let code = child
+        .wait(Some(std::time::Duration::from_secs(5)))
+        .expect("wait exit");
+    assert_eq!(code, 0);
+    prof.delete().ok();
+}
+
 #[cfg(all(windows, feature = "introspection"))]
 #[test]
 fn diagnostics_reports_missing_caps() {

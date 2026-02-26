@@ -988,13 +988,13 @@ mod tests {
             unsafe { std::os::windows::io::BorrowedHandle::borrow_raw(file.as_raw_handle()) };
         let opts = LaunchOptions::default()
             .with_handle_list(&[borrowed])
-            .with_stdio_inherit(Some(borrowed), Some(borrowed), None);
+            .with_stdio_inherit(Some(borrowed), Some(borrowed), Some(borrowed));
 
         assert_eq!(opts.extra.handle_list.len(), 1);
         assert_eq!(opts.extra.handle_list[0], file.as_raw_handle());
         assert_eq!(opts.extra.stdio.stdin, Some(file.as_raw_handle()));
         assert_eq!(opts.extra.stdio.stdout, Some(file.as_raw_handle()));
-        assert_eq!(opts.extra.stdio.stderr, None);
+        assert_eq!(opts.extra.stdio.stderr, Some(file.as_raw_handle()));
     }
 
     #[test]
