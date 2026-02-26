@@ -45,7 +45,7 @@
 - [x] Generate companion docs (`README`, `ARCHITECTURE`, `API`, `TOOLING`, `index`, module docs).
 - [x] Generate docs artifacts (`cargo doc`, mdBook scaffold/build if available).
 - [x] Update root docs pointers as needed.
-- [ ] Run verification gates and commit locally (no push).
+- [x] Run verification gates and commit locally (no push).
 
 ## 2026-02-26 - synthesize docs/SPEC.md from current repo
 
@@ -114,4 +114,5 @@
   - `just ci-fast` passed.
   - `just ci-deep` passed.
 - Remaining action: local commit for this verified documentation change set.
+- Local commit completed on branch `feat/100pct-coverage`; no push performed.
 
