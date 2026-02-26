@@ -28,21 +28,16 @@ impl WideBlock {
 /// The block is sorted case-insensitively by key, each `key=value` pair is
 /// NUL-terminated, and the entire block ends with an extra NUL (double-NUL).
 pub(crate) fn make_wide_block(entries: &[(OsString, OsString)]) -> WideBlock {
-    let mut pairs: Vec<(OsString, OsString)> = entries.to_vec();
+    let mut pairs: Vec<&(OsString, OsString)> = entries.iter().collect();
 
-    pairs.sort_by(|a, b| {
-        a.0.to_string_lossy()
-            .to_ascii_lowercase()
-            .cmp(&b.0.to_string_lossy().to_ascii_lowercase())
-    });
+    pairs.sort_by_cached_key(|(key, _)| key.to_string_lossy().to_ascii_lowercase());
 
-    let mut buf: Vec<u16> = Vec::new();
-    for (key, value) in &pairs {
-        let mut line: Vec<u16> = key.encode_wide().collect();
-        line.push(b'=' as u16);
-        line.extend(value.encode_wide());
-        line.push(0);
-        buf.extend_from_slice(&line);
+    let mut buf: Vec<u16> = Vec::with_capacity(entries.len().saturating_mul(24));
+    for (key, value) in pairs {
+        buf.extend(key.encode_wide());
+        buf.push(b'=' as u16);
+        buf.extend(value.encode_wide());
+        buf.push(0);
     }
     buf.push(0);
 

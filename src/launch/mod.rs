@@ -292,11 +292,12 @@ pub fn merge_parent_env(mut custom: Vec<(OsString, OsString)>) -> Vec<(OsString,
         "TMP",
         "PATH",
     ];
+    custom.reserve(KEYS.len());
     for key in KEYS {
-        if std::env::var_os(key).is_some()
-            && !custom.iter().any(|(k, _)| k == key)
-            && let Some(val) = std::env::var_os(key)
-        {
+        if custom.iter().any(|(k, _)| k == key) {
+            continue;
+        }
+        if let Some(val) = std::env::var_os(key) {
             custom.push((OsString::from(key), val));
         }
     }

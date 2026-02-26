@@ -175,3 +175,28 @@
   - `cargo audit` passed.
   - `scripts/enforce_advisory_policy.py` passed.
 - No code changes required for compatibility; changes are limited to `Cargo.lock` and workflow/report tracking docs.
+
+## 2026-02-26 - autonomous performance optimizer
+
+- [x] Initialize performance optimizer workflow and create `perf-opt-1772071285` branch.
+- [x] Create/update `docs/optimization-report.md` with initialization details.
+- [x] Generate weighted optimization findings (analyzer pass).
+- [x] Capture baseline benchmark metrics for selected hot paths.
+- [x] Apply top optimization one-at-a-time with re-benchmarking.
+- [x] Re-test prior accepted optimizations in combination with each new candidate.
+- [x] Run full verification gates and record outcomes.
+- [x] Commit validated performance change set(s) locally (no push).
+- [x] Finalize optimization report with net gain summary and residual opportunities.
+
+## Review (Autonomous Performance Optimizer)
+
+- Branch: `perf-opt-1772071285`.
+- Analyzer findings prioritized `make_wide_block` and `merge_parent_env` as top opportunities.
+- Measured optimization loop outcomes:
+  - `make_wide_block`: `174659.38 -> 60271.85 ns/iter` (**65.49% faster**).
+  - `merge_parent_env`: `93100.29 -> 88419.58 ns/iter` (**5.03% faster**).
+  - Rejected variant: `merge_parent_env` HashSet/case-fold index (`119503.04 ns/iter`, regression).
+- Full verification completed successfully:
+  - `just ci-fast` passed.
+  - `just ci-deep` passed.
+- Optimization report updated at `docs/optimization-report.md` with baseline, attempts, accepted changes, and aggregate summary.
