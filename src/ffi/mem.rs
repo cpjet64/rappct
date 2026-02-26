@@ -110,6 +110,7 @@ fn local_free(ptr: *mut c_void) {
 mod tests {
     use super::*;
     use windows::Win32::Security::Authorization::{ConvertSidToStringSidW, ConvertStringSidToSidW};
+    use windows::Win32::System::Com::{CoTaskMemAlloc, CoTaskMemFree};
     use windows::core::PCWSTR;
 
     #[test]
@@ -129,5 +130,56 @@ mod tests {
             // Free input SID (also LocalAlloc) using LocalAllocGuard.
             let _ = LocalAllocGuard::<core::ffi::c_void>::from_raw(psid.0);
         }
+    }
+
+    #[test]
+    fn localalloc_guard_handles_null_utf16_pointer() {
+        // SAFETY: null pointer is valid for this helper path and returns an empty string.
+        let guard = unsafe { LocalAllocGuard::<u16>::from_raw(std::ptr::null_mut()) };
+        // SAFETY: Contract allows calling on null to return empty string.
+        let s = unsafe { guard.to_string_lossy() };
+        assert!(s.is_empty());
+    }
+
+    #[test]
+    fn localalloc_guard_into_raw_releases_ownership() {
+        // SAFETY: test data uses a known valid SID string and LocalAlloc-managed output.
+        unsafe {
+            let sddl = super::super::wstr::WideString::from_str("S-1-5-32-544");
+            let mut psid = windows::Win32::Security::PSID::default();
+            ConvertStringSidToSidW(PCWSTR(sddl.as_pcwstr().0), &mut psid)
+                .expect("ConvertStringSidToSidW");
+
+            let mut out = windows::core::PWSTR::null();
+            ConvertSidToStringSidW(psid, &mut out).expect("ConvertSidToStringSidW");
+
+            let guard = LocalAllocGuard::<u16>::from_raw(out.0);
+            let raw = guard.into_raw();
+            assert!(!raw.is_null());
+            super::local_free(raw.cast());
+
+            let _ = LocalAllocGuard::<core::ffi::c_void>::from_raw(psid.0);
+        }
+    }
+
+    #[test]
+    fn cotaskmem_round_trip_alloc_and_into_raw() {
+        // SAFETY: CoTaskMemAlloc returns memory compatible with CoTaskMemFree.
+        unsafe {
+            let raw = CoTaskMemAlloc(16);
+            assert!(!raw.is_null(), "CoTaskMemAlloc returned null");
+            let guard = CoTaskMem::<u8>::from_raw(raw.cast::<u8>());
+            assert!(!guard.as_ptr().is_null());
+            let raw_back = guard.into_raw();
+            assert!(!raw_back.is_null());
+            CoTaskMemFree(Some(raw_back.cast()));
+        }
+    }
+
+    #[test]
+    fn cotaskmem_drop_accepts_null() {
+        // SAFETY: null is a valid no-op input to CoTaskMemFree on drop.
+        let guard = unsafe { CoTaskMem::<u8>::from_raw(std::ptr::null_mut()) };
+        assert!(guard.as_ptr().is_null());
     }
 }

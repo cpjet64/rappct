@@ -106,6 +106,7 @@ pub(crate) fn from_win32(handle: HANDLE) -> Result<Handle> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::os::windows::io::AsRawHandle;
     use windows::Win32::Foundation::WAIT_OBJECT_0;
     use windows::Win32::System::Threading::{CreateEventW, SetEvent, WaitForSingleObject};
 
@@ -125,5 +126,47 @@ mod tests {
             // Drop closes exactly once; any extra close would be UB but OwnedHandle prevents it.
             let _ = h;
         }
+    }
+
+    #[test]
+    fn from_raw_rejects_null_and_invalid_handle_value() {
+        // SAFETY: Intentionally passing sentinel invalid raw handles to validate guards.
+        unsafe {
+            let null_err = Handle::from_raw(std::ptr::null_mut()).unwrap_err();
+            assert!(null_err.to_string().contains("invalid null handle"));
+
+            let invalid_err = Handle::from_raw((-1isize) as RawHandle).unwrap_err();
+            assert!(invalid_err.to_string().contains("invalid handle value"));
+        }
+    }
+
+    #[test]
+    fn duplicate_from_raw_rejects_invalid_handle() {
+        let err = duplicate_from_raw(std::ptr::null_mut(), false).unwrap_err();
+        assert!(err.to_string().contains("DuplicateHandle failed"));
+    }
+
+    #[test]
+    fn duplicate_handle_round_trip_to_file() {
+        let path = std::env::temp_dir().join(format!(
+            "rappct-duplicate-handle-{}.txt",
+            std::process::id()
+        ));
+        std::fs::write(&path, b"dup-handle").expect("write fixture");
+        let file = std::fs::File::open(&path).expect("open fixture");
+
+        // SAFETY: File owns a valid OS handle while borrowed.
+        let borrowed = unsafe { BorrowedHandle::borrow_raw(file.as_raw_handle()) };
+        let dup = duplicate_handle(borrowed, false).expect("duplicate file handle");
+        let mut dup_file = dup.into_file();
+
+        use std::io::Read;
+        let mut out = Vec::new();
+        dup_file
+            .read_to_end(&mut out)
+            .expect("read duplicated handle");
+        assert_eq!(out, b"dup-handle");
+
+        let _ = std::fs::remove_file(path);
     }
 }

@@ -116,3 +116,36 @@
 - Remaining action: local commit for this verified documentation change set.
 - Local commit completed on branch `feat/100pct-coverage`; no push performed.
 
+
+## 2026-02-26 - autonomous coverage maximizer
+- [x] Initialize coverage-max branch and plan.
+- [x] Archive old coverage reports and write baseline report.
+- [x] Run baseline coverage and enumerate uncovered code.
+- [x] Investigate uncovered code (dead/uncoverable/testable).
+- [x] Apply removals/tests/comments and iterate coverage.
+- [x] Run verification gates and commit locally (no push).
+
+## Review (Autonomous Coverage Maximizer)
+
+- Branch created: `coverage-max-20260225-200509`.
+- Baseline coverage (`cargo nextest run --all-features && cargo llvm-cov --html`):
+  - Regions: 80.34%
+  - Functions: 77.49%
+  - Lines: 77.41%
+- Iteration 1 changes focused on coverable low-risk branches:
+  - `src/acl.rs`
+  - `src/ffi/handles.rs`
+  - `src/ffi/mem.rs`
+  - `src/launch/mod.rs`
+  - `src/token.rs`
+  - `src/util.rs`
+- Post-iteration coverage:
+  - Regions: 85.24% (+4.90)
+  - Functions: 84.19% (+6.70)
+  - Lines: 83.02% (+5.61)
+- Dead-code classification: no proven dead code removed.
+- Remaining gaps are predominantly defensive Win32 failure paths and privileged/environment-specific branches.
+- Verification gates run on coverage branch:
+  - `just ci-fast` passed.
+  - `just ci-deep` passed.
+- Pending: local commit for this verified coverage iteration.

@@ -478,4 +478,43 @@ mod tests {
             "expected registry open failure, got: {msg}"
         );
     }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_to_capability_rejects_invalid_sddl() {
+        use super::{AccessMask, ResourcePath, grant_to_capability};
+        let path = std::env::temp_dir();
+        let err = grant_to_capability(
+            ResourcePath::Directory(path),
+            "not-a-valid-capability-sid",
+            AccessMask::GENERIC_ALL,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ConvertStringSidToSidW"),
+            "expected SID conversion failure, got: {msg}"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_nonexistent_registry_key_with_full_root_name() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let err = grant_to_package(
+            ResourcePath::RegistryKey(
+                "HKEY_CURRENT_USER\\Software\\__rappct_nonexistent_key_test_full__".into(),
+            ),
+            &sid,
+            AccessMask::GENERIC_ALL,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("RegOpenKeyExW"),
+            "expected registry open failure, got: {msg}"
+        );
+    }
 }

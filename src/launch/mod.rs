@@ -911,10 +911,11 @@ pub fn launch_in_container_with_io(
     Err(AcError::UnsupportedPlatform)
 }
 
-#[cfg(test)]
+#[cfg(all(test, windows))]
 mod tests {
-    use super::merge_parent_env;
+    use super::{LaunchOptions, make_cmd_args, merge_parent_env};
     use std::ffi::OsString;
+    use std::os::windows::io::AsRawHandle;
 
     #[test]
     fn merge_parent_env_includes_essentials_if_present() {
@@ -923,5 +924,61 @@ mod tests {
         if std::env::var_os("SystemRoot").is_some() {
             assert!(out.iter().any(|(k, _)| k == "SystemRoot"));
         }
+    }
+
+    #[test]
+    fn merge_parent_env_does_not_duplicate_existing_keys() {
+        let out = merge_parent_env(vec![(
+            OsString::from("SystemRoot"),
+            OsString::from("X:\\Custom"),
+        )]);
+        let matches = out.iter().filter(|(k, _)| k == "SystemRoot").count();
+        assert_eq!(matches, 1, "SystemRoot should not be duplicated");
+        assert!(
+            out.iter()
+                .any(|(k, v)| k == "SystemRoot" && v == "X:\\Custom")
+        );
+    }
+
+    #[test]
+    fn make_cmd_args_handles_none_and_some() {
+        assert!(make_cmd_args(&None).is_none());
+
+        let args = make_cmd_args(&Some(" /C exit 0".to_string())).expect("expected args");
+        assert_eq!(args.last().copied(), Some(0));
+        assert_eq!(
+            String::from_utf16_lossy(&args[..args.len() - 1]),
+            " /C exit 0"
+        );
+    }
+
+    #[test]
+    fn with_env_merge_accumulates_existing_and_added_values() {
+        let opts = LaunchOptions {
+            env: Some(vec![(OsString::from("A"), OsString::from("1"))]),
+            ..Default::default()
+        }
+        .with_env_merge(&[(OsString::from("B"), OsString::from("2"))]);
+
+        let env = opts.env.expect("env should be populated");
+        assert!(env.iter().any(|(k, v)| k == "A" && v == "1"));
+        assert!(env.iter().any(|(k, v)| k == "B" && v == "2"));
+    }
+
+    #[test]
+    fn with_handle_list_and_stdio_inherit_record_raw_handles() {
+        let file = std::fs::File::open("C:\\Windows\\System32\\cmd.exe").expect("open fixture");
+        // SAFETY: Borrowed handle is valid while `file` remains alive.
+        let borrowed =
+            unsafe { std::os::windows::io::BorrowedHandle::borrow_raw(file.as_raw_handle()) };
+        let opts = LaunchOptions::default()
+            .with_handle_list(&[borrowed])
+            .with_stdio_inherit(Some(borrowed), Some(borrowed), None);
+
+        assert_eq!(opts.extra.handle_list.len(), 1);
+        assert_eq!(opts.extra.handle_list[0], file.as_raw_handle());
+        assert_eq!(opts.extra.stdio.stdin, Some(file.as_raw_handle()));
+        assert_eq!(opts.extra.stdio.stdout, Some(file.as_raw_handle()));
+        assert_eq!(opts.extra.stdio.stderr, None);
     }
 }

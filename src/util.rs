@@ -209,7 +209,9 @@ mod tests {
     use std::os::windows::io::IntoRawHandle;
     use std::ptr;
     use windows::Win32::Foundation::HANDLE;
+    use windows::Win32::Security::Authorization::{ConvertSidToStringSidW, ConvertStringSidToSidW};
     use windows::Win32::Security::PSID;
+    use windows::core::PCWSTR;
 
     #[test]
     fn to_utf16_appends_nul_terminator() {
@@ -263,5 +265,41 @@ mod tests {
         let guard = unsafe { FreeSidGuard::new(PSID::default()) };
         assert!(guard.as_psid().0.is_null());
         assert!(guard.into_raw().0.is_null());
+    }
+
+    #[test]
+    fn local_free_guard_round_trip_string_and_pwstr() {
+        // SAFETY: Known-good SID conversion APIs allocate LocalFree-managed memory for output.
+        unsafe {
+            let sddl = super::to_utf16("S-1-5-32-544");
+            let mut psid = windows::Win32::Security::PSID::default();
+            ConvertStringSidToSidW(PCWSTR(sddl.as_ptr()), &mut psid)
+                .expect("ConvertStringSidToSidW");
+
+            let mut sid_str = windows::core::PWSTR::null();
+            ConvertSidToStringSidW(psid, &mut sid_str).expect("ConvertSidToStringSidW");
+            let guard = LocalFreeGuard::<u16>::new(sid_str.0);
+            assert!(!guard.as_pwstr().is_null());
+            let text = guard.to_string_lossy();
+            assert!(text.starts_with("S-1-5-32-544"));
+
+            let _ = LocalFreeGuard::<core::ffi::c_void>::new(psid.0);
+        }
+    }
+
+    #[test]
+    fn free_sid_guard_non_null_into_raw_roundtrip() {
+        // SAFETY: ConvertStringSidToSidW allocates a SID that must be released with FreeSid.
+        unsafe {
+            let sddl = super::to_utf16("S-1-5-32-545");
+            let mut psid = windows::Win32::Security::PSID::default();
+            ConvertStringSidToSidW(PCWSTR(sddl.as_ptr()), &mut psid)
+                .expect("ConvertStringSidToSidW");
+            let guard = FreeSidGuard::new(psid);
+            assert!(!guard.as_psid().0.is_null());
+            let raw = guard.into_raw();
+            assert!(!raw.0.is_null());
+            let _ = windows::Win32::Security::FreeSid(raw);
+        }
     }
 }

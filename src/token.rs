@@ -283,4 +283,20 @@ mod tests {
         assert!(is_win32_error(&err, 1234));
         assert!(!is_win32_error(&err, 4321));
     }
+
+    #[test]
+    fn query_current_process_token_returns_consistent_shape() {
+        let info = query_current_process_token().expect("query current process token");
+        if info.is_appcontainer {
+            assert!(
+                info.package_sid.is_some(),
+                "AppContainer token should have a package SID"
+            );
+        } else {
+            assert!(
+                info.package_sid.is_none(),
+                "non-AppContainer token should not have a package SID"
+            );
+        }
+    }
 }
