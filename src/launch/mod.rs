@@ -928,6 +928,7 @@ mod tests {
     use crate::ffi::sid::OwnedSid;
     use std::ffi::OsString;
     use std::os::windows::io::AsRawHandle;
+    use std::rc::Rc;
     use std::time::Duration;
     use windows::Win32::Foundation::HANDLE;
     use windows::Win32::System::Threading::CreateEventW;
@@ -1078,5 +1079,30 @@ mod tests {
             .expect("security caps");
         let opts = LaunchOptions::default().with_security_capabilities(caps);
         assert!(opts.extra.security_caps.is_some());
+    }
+
+    #[test]
+    fn inflate_security_caps_prefers_override_when_provided() {
+        let sec = crate::capability::SecurityCapabilities {
+            package: crate::sid::AppContainerSid::from_sddl("S-1-15-2-1"),
+            caps: Vec::new(),
+            lpac: false,
+        };
+        let sid = OwnedSid::from_sddl("S-1-15-2-1").expect("owned sid");
+        let override_caps = Rc::new(
+            OwnedSecurityCapabilities::from_catalog(sid, &[CapabilityName::InternetClient])
+                .expect("override caps"),
+        );
+        let got = super::inflate_security_caps(&sec, Some(override_caps.clone()))
+            .expect("inflate with override");
+        assert!(Rc::ptr_eq(&got, &override_caps));
+    }
+
+    #[test]
+    fn duplicate_additional_handles_ignores_null_entries() {
+        let mut list = InheritList::default();
+        let handles = [std::ptr::null_mut()];
+        super::duplicate_additional_handles(&handles, &mut list).expect("duplicate handles");
+        assert!(list.is_empty(), "null raw handles should be ignored");
     }
 }

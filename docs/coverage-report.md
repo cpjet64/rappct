@@ -1,9 +1,9 @@
-# Coverage Maximization Report (Round 4)
+# Coverage Maximization Report (Round 5)
 
 Date: 2026-02-26
-Branch: `agent/coverage-max-2026-02-26-r4`
+Branch: `agent/coverage-max-2026-02-26-r5`
 
-## Baseline (Round 4)
+## Baseline (Round 5)
 
 Tooling combo:
 - `cargo nextest run --all-features`
@@ -15,31 +15,27 @@ Baseline totals:
 
 | Metric | Value |
 |---|---:|
-| Regions | 90.90% |
-| Functions | 87.25% |
-| Lines | 88.80% |
+| Regions | 91.87% |
+| Functions | 87.58% |
+| Lines | 89.37% |
 
-## Round 4 Targeted Changes
+## Round 5 Targeted Changes
 
-Added deterministic tests for remaining launch/profile branches:
+Added deterministic unit tests for previously uncovered launch helper branches:
 - `src/launch/mod.rs`
-  - extended `with_handle_list_and_stdio_inherit_record_raw_handles` to cover explicit stderr override in `with_stdio_inherit`
-- `tests/windows_profile.rs`
-  - replaced invalid-name assumption with deterministic SID equivalence test:
-    - `profile_open_matches_derived_sid_for_name`
-- `tests/windows_launch.rs`
-  - `launch_with_stdio_inherit_overrides_succeeds`
+  - `inflate_security_caps_prefers_override_when_provided`
+  - `duplicate_additional_handles_ignores_null_entries`
 
-No newly identified dead code was removed in this round.
-No additional uncoverable comments were required for the specific branches closed in this round.
+No dead-code removals were identified in this round.
+No additional uncoverable-path comments were required for the branches closed in this round.
 
-## Final Totals (Round 4)
+## Final Totals (Round 5)
 
 | Metric | Baseline | Final | Delta |
 |---|---:|---:|---:|
-| Regions | 90.90% | 91.87% | +0.97 pp |
-| Functions | 87.25% | 87.58% | +0.33 pp |
-| Lines | 88.80% | 89.37% | +0.57 pp |
+| Regions | 91.87% | 91.95% | +0.08 pp |
+| Functions | 87.58% | 87.67% | +0.09 pp |
+| Lines | 89.37% | 89.46% | +0.09 pp |
 
 ## Combined Progress Since Round 2 Baseline
 
@@ -47,22 +43,22 @@ No additional uncoverable comments were required for the specific branches close
   - Regions: 85.22%
   - Functions: 84.19%
   - Lines: 82.99%
-- Current (after round 4):
-  - Regions: 91.87%
-  - Functions: 87.58%
-  - Lines: 89.37%
+- Current (after round 5):
+  - Regions: 91.95%
+  - Functions: 87.67%
+  - Lines: 89.46%
 
-Net gain across rounds 2+3+4:
-- Regions: +6.65 pp
-- Functions: +3.39 pp
-- Lines: +6.38 pp
+Net gain across rounds 2+3+4+5:
+- Regions: +6.73 pp
+- Functions: +3.48 pp
+- Lines: +6.47 pp
 
 ## Remaining Gap Classification
 
 Remaining uncovered code is still concentrated in:
-1. Win32 hard-failure defensive branches requiring privileged/fault-injection scenarios.
-2. Token/profile paths that depend on specific runtime token/AppContainer states not consistently reproducible in standard CI.
-3. Error-path guards around API failures that are intentionally difficult to force without intrusive seam injection.
+1. Win32 hard-failure defensive branches requiring privileged or synthetic fault-injection scenarios.
+2. Token/profile paths that require runtime states not consistently reproducible in standard CI.
+3. Error-path branches around OS API failure modes that are intentionally difficult to force safely.
 
 ## Verification Plan
 
@@ -76,4 +72,4 @@ Verification outcomes:
 
 ## What This Means
 
-Coverage improved again without weakening behavior guarantees, but 100% remains impractical under normal test environments without invasive fault-injection hooks or privileged environment orchestration.
+Coverage continues to increase incrementally with deterministic tests and no behavior regressions. 100% remains impractical without intrusive fault-injection seams and specialized runtime orchestration.
