@@ -16,6 +16,28 @@
 - `ci-deep` completed all stages: hygiene, fmt, clippy, machete, build, nextest quick/full, coverage, deny, audit, advisory policy, docs.
 - Local integration commit completed; no push performed.
 
+## 2026-02-27 - autonomous-gh-review-and-fixer pass
+
+- [x] Inspect and triage all open GitHub issues and open PRs for repository blockers.
+- [x] Review latest GitHub Actions `CI` and `release` failure runs and extract root-cause deltas.
+- [x] Patch CI workflow action reference and pin manifest dependencies to non-wildcard versions.
+- [x] Run mandatory validation before merge (`just ci-fast`, `just ci-deep`).
+- [x] Create/update `GH-REVIEW-SUMMARY.md` and `.agent-logs` entry.
+- [x] Leave findings and applied fixes tracked in `.AGENTS/todo.md`.
+
+## Review (Autonomous GH Review and Fixer)
+
+- Open issues/PRs at start of pass: none.
+- `CI` run `22445823454` failed in matrix job `test (1.90.0, introspection,net)` due `dtolnay/rust-toolchain@master` action download failures.
+- `release` run `22445823456` failed from wildcard dependency versions in `Cargo.toml` (`*` constraints).
+- Applied fixes:
+  - `.github/workflows/ci.yml`: switched non-stable matrix toolchain install from `dtolnay/rust-toolchain@master` to `dtolnay/rust-toolchain@stable`.
+  - `Cargo.toml`: pinned `thiserror`, `strsim`, `tracing`, `serde`, `windows`, `clap`, `serde_json`, and `tempfile` to concrete versions.
+- Verified gates:
+  - `cargo check --all-targets --all-features --locked` pass.
+  - `just ci-fast` pass.
+  - `just ci-deep` pass.
+
 ## 2026-02-26 - autonomous-development-orchestrator preflight
 
 - [x] Run mandatory docs preflight for root `MASTER-CHECKLIST.md` / `EXECUTION-PLAN.md`.

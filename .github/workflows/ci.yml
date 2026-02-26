@@ -39,7 +39,7 @@ jobs:
 
       - name: Install Rust (${{ matrix.rust }})
         if: ${{ matrix.rust != 'stable' && matrix.rust != 'beta' && matrix.rust != 'nightly' }}
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
           components: clippy
