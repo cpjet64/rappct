@@ -248,3 +248,37 @@ fn grant_to_package_updates_registry_dacl() {
     }
     profile.delete().ok();
 }
+
+#[cfg(windows)]
+#[test]
+fn grant_to_package_updates_directory_custom_dacl() {
+    let root = tempfile::tempdir().expect("temp dir");
+    let dir_path = root.path().join("acl-dir");
+    std::fs::create_dir_all(&dir_path).expect("create dir");
+
+    let profile =
+        AppContainerProfile::ensure("rappct.test.acl.dir", "rappct acl", Some("acl test"))
+            .expect("ensure profile");
+    let sid_str = profile.sid.as_string().to_string();
+
+    let before = security_sddl_for_path(&dir_path);
+    assert!(
+        !before.contains(&sid_str),
+        "pre-grant directory DACL unexpectedly contained SID"
+    );
+
+    acl::grant_to_package(
+        ResourcePath::DirectoryCustom(dir_path.clone(), acl::AceInheritance::OBJECTS_ONLY),
+        &profile.sid,
+        AccessMask(0x120089),
+    )
+    .expect("grant directory access");
+
+    let after = security_sddl_for_path(&dir_path);
+    assert!(
+        after.contains(&sid_str),
+        "post-grant directory DACL missing SID {sid_str}: {after}"
+    );
+
+    profile.delete().ok();
+}

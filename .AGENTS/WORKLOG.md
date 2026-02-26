@@ -40,3 +40,8 @@ Last updated: 2026-02-25
 ## Assumptions
 - In-progress vs finished classification is based on completed functionality plus green functional gates.
 - Remaining work is quality-risk reduction: restore coverage gate to meet the 75 regions requirement without reducing guardrails.
+
+## Coverage iteration post4 - 2026-02-25 23:48:56 -05:00
+- Commands: cargo nextest run --all-features, cargo llvm-cov --html, summary + missing reports generated.
+- Post4 totals: regions 3702/3277 covered (88.52%); functions 257/297 covered (86.53%); lines 2112/2441 covered (86.52%).
+- Delta vs post3: regions cover +0.04 pp (+31 regions, +2 missed); functions cover +0.04 pp (+1 funcs, 0 missed); lines cover +0.19 pp (+20 lines, -2 missed).

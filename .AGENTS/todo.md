@@ -229,3 +229,42 @@
   - `just ci-fast` passed.
   - `just ci-deep` passed.
 - Optimization report updated at `docs/optimization-report.md` with baseline, attempts, accepted changes, and aggregate summary.
+
+## 2026-02-26 - autonomous coverage maximizer (round 2)
+
+- [x] Preflight dirty-state handling (classify transient files and commit `.gitignore` update).
+- [x] Create isolated coverage worktree branch (`agent/coverage-max-2026-02-26`) and capture baseline HEAD rollback point.
+- [x] Archive prior coverage report to `legacy/coverage/`.
+- [x] Run fresh baseline coverage with Rust 2026 combo and enumerate uncovered lines/functions.
+- [x] Investigate uncovered regions (dead vs coverable vs uncoverable) and prioritize highest-impact testable paths.
+- [x] Implement targeted tests and iterate coverage in small verified batches.
+- [x] Insert detailed inline comments for remaining uncoverable paths touched in this round.
+- [x] Run verification gates for this change set and commit locally (no push).
+- [x] Update `docs/coverage-report.md` with before/after metrics and round-2 findings.
+
+## Review (Autonomous Coverage Maximizer Round 2)
+
+- Worktree branch: `agent/coverage-max-2026-02-26`.
+- Baseline totals:
+  - Regions: `85.22%`
+  - Functions: `84.19%`
+  - Lines: `82.99%`
+- Final totals after iterations:
+  - Regions: `88.52%`
+  - Functions: `86.53%`
+  - Lines: `86.52%`
+- Net gain:
+  - Regions: `+3.30 pp`
+  - Functions: `+2.34 pp`
+  - Lines: `+3.53 pp`
+- Added tests in:
+  - `src/launch/env.rs`
+  - `src/launch/mod.rs`
+  - `tests/windows_acl.rs`
+- Added detailed uncoverable-path comments in:
+  - `src/launch/mod.rs` (`WAIT_FAILED` branch)
+  - `src/acl.rs` (`SetNamedSecurityInfoW` failure branch)
+- Dead-code removal: none (no proven dead code in investigated uncovered set).
+- Verification gates completed successfully for this change set:
+  - `just ci-fast`
+  - `just ci-deep`

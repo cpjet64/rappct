@@ -82,4 +82,19 @@ mod tests {
         assert_eq!(with_data.buf.len(), 2);
         assert!(!with_data.buf.is_empty());
     }
+
+    #[test]
+    fn wide_block_exposes_pointer_and_len() {
+        let data = vec![b'K' as u16, b'=' as u16, b'V' as u16, 0, 0];
+        let block = WideBlock::new(data.clone());
+        assert_eq!(block.len(), data.len());
+        assert!(!block.as_ptr().is_null());
+    }
+
+    #[test]
+    fn make_block_empty_entries_still_double_terminated() {
+        let block = make_wide_block(&[]);
+        assert_eq!(block.len(), 1);
+        assert_eq!(block.buf, vec![0]);
+    }
 }

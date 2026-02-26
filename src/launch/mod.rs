@@ -884,6 +884,12 @@ impl LaunchedIo {
                 .unwrap_or(INFINITE);
             let r = WaitForSingleObject(self.process.as_win32(), ms);
             if r == WAIT_FAILED {
+                // This branch is intentionally defensive and remains effectively uncoverable in
+                // regular CI: reaching WAIT_FAILED requires a kernel-level handle/state fault
+                // (invalidated PROCESS handle, object manager corruption, or API contract break).
+                // Normal tests only exercise valid handles and timeout/success outcomes.
+                // Safety is established by strict handle ownership (ffi::Handle) plus integration
+                // tests validating wait success/timeout behavior on real waitable objects.
                 return Err(AcError::Win32("WaitForSingleObject failed".into()));
             }
             if r == WAIT_TIMEOUT {
@@ -914,9 +920,14 @@ pub fn launch_in_container_with_io(
 
 #[cfg(all(test, windows))]
 mod tests {
-    use super::{LaunchOptions, make_cmd_args, merge_parent_env};
+    use super::{
+        InheritList, JobObjectDropGuard, LaunchOptions, LaunchedIo, make_cmd_args, merge_parent_env,
+    };
     use std::ffi::OsString;
     use std::os::windows::io::AsRawHandle;
+    use std::time::Duration;
+    use windows::Win32::Foundation::HANDLE;
+    use windows::Win32::System::Threading::CreateEventW;
 
     #[test]
     fn merge_parent_env_includes_essentials_if_present() {
@@ -981,5 +992,78 @@ mod tests {
         assert_eq!(opts.extra.stdio.stdin, Some(file.as_raw_handle()));
         assert_eq!(opts.extra.stdio.stdout, Some(file.as_raw_handle()));
         assert_eq!(opts.extra.stdio.stderr, None);
+    }
+
+    #[test]
+    fn launch_options_default_matches_expected_windows_shape() {
+        let opts = LaunchOptions::default();
+        assert_eq!(
+            opts.exe,
+            std::path::PathBuf::from("C:\\Windows\\System32\\notepad.exe")
+        );
+        assert_eq!(
+            opts.cwd,
+            Some(std::path::PathBuf::from("C:\\Windows\\System32"))
+        );
+        assert!(opts.cmdline.is_none());
+        assert!(opts.env.is_none());
+        assert!(matches!(opts.stdio, super::StdioConfig::Inherit));
+        assert!(!opts.suspended);
+        assert!(opts.join_job.is_none());
+        assert!(opts.startup_timeout.is_none());
+    }
+
+    #[test]
+    fn job_object_drop_guard_disable_flips_state_and_invalid_assign_fails() {
+        let mut guard = JobObjectDropGuard::new().expect("create guard");
+        assert!(guard.kill_on_drop);
+        guard.disable_kill_on_drop().expect("disable kill on drop");
+        assert!(!guard.kill_on_drop);
+
+        let err = guard
+            .assign_process_handle(HANDLE::default())
+            .expect_err("assigning null process handle should fail");
+        assert!(err.to_string().contains("AssignProcessToJobObject"));
+    }
+
+    #[test]
+    fn inherit_list_tracks_pushed_handles_and_raw_slice() {
+        let mut list = InheritList::default();
+        assert!(list.is_empty());
+
+        // SAFETY: CreateEventW returns an owned event handle on success.
+        let event = unsafe { CreateEventW(None, true, false, None).expect("create event") };
+        let owned = super::handles::from_win32(event).expect("wrap event handle");
+        let raw = owned.as_win32();
+
+        list.push(owned);
+        assert!(!list.is_empty());
+        assert_eq!(list.slice(), &[raw]);
+    }
+
+    #[test]
+    fn launched_io_wait_returns_timeout_for_unsignaled_waitable_handle() {
+        // SAFETY: CreateEventW returns an owned event handle on success.
+        let event = unsafe { CreateEventW(None, true, false, None).expect("create event") };
+        let process = super::handles::from_win32(event).expect("wrap event handle");
+        let io = LaunchedIo {
+            pid: 42,
+            stdin: None,
+            stdout: None,
+            stderr: None,
+            job_guard: None,
+            process,
+        };
+
+        let err = io
+            .wait(Some(Duration::from_millis(1)))
+            .expect_err("unsignaled handle should time out");
+        match err {
+            crate::AcError::LaunchFailed { stage, hint, .. } => {
+                assert_eq!(stage, "wait");
+                assert_eq!(hint, "timeout");
+            }
+            other => panic!("expected timeout LaunchFailed, got: {other:?}"),
+        }
     }
 }

@@ -208,6 +208,12 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
                 )
             };
             if st3.0 != 0 {
+                // This is a hard OS-path failure branch: in normal test environments with valid
+                // temp files/directories and caller-owned ACL mutation rights, SetNamedSecurityInfoW
+                // succeeds. Forcing this path requires privilege revocation races, object handle
+                // invalidation, or low-level Win32 fault injection that we do not perform in CI.
+                // We validate the surrounding behavior via success-path integration tests and
+                // explicit negative-input tests for unsupported roots/invalid SIDs/nonexistent paths.
                 return Err(AcError::Win32(format!(
                     "SetNamedSecurityInfoW failed: {st3:?}"
                 )));
