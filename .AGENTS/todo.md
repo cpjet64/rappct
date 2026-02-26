@@ -230,6 +230,44 @@
   - `just ci-deep` passed.
 - Optimization report updated at `docs/optimization-report.md` with baseline, attempts, accepted changes, and aggregate summary.
 
+## 2026-02-26 - merge cleanup and push
+
+- [x] Verify all pending branch/worktree tasks are merged into `feat/100pct-coverage`.
+- [x] Run `just ci-fast` and `just ci-deep` one last time before pushing.
+- [x] Remove completed/stale local worktrees.
+- [x] Delete local branch aliases that were already fully merged or duplicate.
+- [x] Push `feat/100pct-coverage` to origin.
+
+## Review (Merge Cleanup and Push)
+
+- `feat/100pct-coverage` is cleanly ahead of all prior local task branches; no remaining local branches contain unique changes not in this branch.
+- `just ci-fast` and `just ci-deep` both pass after cleanup.
+- Stale worktrees removed:
+  - `C:/Dev/repos/active/agent-coverage-max-2026-02-26-r6`
+  - `C:/Dev/repos/active/rappct/.worktrees/agent-coverage-max-2026-02-26`
+  - `C:/Dev/repos/active/rappct/.worktrees/agent-coverage-max-2026-02-26-r3b`
+  - `C:/Dev/repos/active/rappct/.worktrees/agent-coverage-max-2026-02-26-r4`
+  - `C:/Dev/repos/active/rappct/.worktrees/agent-coverage-max-2026-02-26-r5`
+  - `C:/Dev/repos/active/rappct/.worktrees/agent-full-pipeline-2026-02-26`
+  - `C:/Dev/repos/active/rappct/.worktrees/main`
+- Deleted local branches:
+  - `agent/coverage-max-2026-02-26`
+  - `agent/coverage-max-2026-02-26-r3`
+  - `agent/coverage-max-2026-02-26-r3b`
+  - `agent/coverage-max-2026-02-26-r4`
+  - `agent/coverage-max-2026-02-26-r5`
+  - `agent/full-pipeline-2026-02-26`
+  - `backup/rappct-pre-integration-2026-02-24`
+  - `chore/bump-0.13.2`
+  - `chore/mark-dev-prerelease-robust`
+  - `coverage-max-2026-02-26-r6` (patch duplicate of current HEAD content)
+  - `coverage-max-20260225-200509`
+  - `feat/adr-0001-acceptance-safety-sweep`
+  - `feat/ffi-safety-ownership`
+  - `perf-opt-1772071285`
+- Push completed with pre-push hook gate passing:
+  - `git push -u origin feat/100pct-coverage`
+
 ## 2026-02-26 - autonomous coverage maximizer (round 2)
 
 - [x] Preflight dirty-state handling (classify transient files and commit `.gitignore` update).
