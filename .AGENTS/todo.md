@@ -334,7 +334,7 @@
 - [x] Run fresh full baseline coverage scan and enumerate uncovered items.
 - [x] Implement highest-yield additional tests/comments for remaining coverable branches.
 - [x] Run required verification gates (`just ci-fast`, `just ci-deep`).
-- [ ] Commit verified round-5 change set locally (no push).
+- [x] Commit verified round-5 change set locally (no push).
 
 ## Review (Autonomous Coverage Maximizer Round 5)
 
