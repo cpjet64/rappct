@@ -251,3 +251,22 @@ fn supports_lpac_override_unsupported() {
     }
     assert!(matches!(result, Err(rappct::AcError::UnsupportedLpac)));
 }
+
+#[cfg(windows)]
+#[test]
+fn supports_lpac_unknown_override_uses_runtime_result() {
+    let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+    #[allow(unused_unsafe)]
+    unsafe {
+        std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "maybe-later");
+    }
+    let result = rappct::supports_lpac();
+    #[allow(unused_unsafe)]
+    unsafe {
+        std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
+    }
+    assert!(
+        result.is_ok(),
+        "unknown override values should fall back to runtime LPAC detection"
+    );
+}

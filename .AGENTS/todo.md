@@ -357,3 +357,13 @@
 - Verification gates completed successfully:
   - `just ci-fast`
   - `just ci-deep`
+## 2026-02-26 - autonomous coverage maximizer (round 6)
+- [x] Add windows integration test for unknown LPAC override value in `tests/windows_core.rs` to cover env var fallback path.
+
+## Review (Autonomous Coverage Maximizer Round 6)
+- Baseline in this round was still three miss lines in `src/lib.rs` after filtering (`line 89` and OS-gating guards).
+- Added `supports_lpac_unknown_override_uses_runtime_result` and kept platform guard lines documented as defensive/uncoverable in `src/lib.rs`.
+- `coverage` command improved aggregate for filtered scope.
+- Verification status before integration:
+  - `just ci-fast`: PASS
+  - `just ci-deep`: PASS

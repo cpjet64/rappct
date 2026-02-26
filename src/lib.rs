@@ -117,13 +117,25 @@ pub fn supports_lpac() -> Result<()> {
             };
             let st = RtlGetVersion(&mut v as *mut _);
             if st != 0 {
+                // Defensive return for `RtlGetVersion` failures.
+                // This branch is not practically reachable in normal test hosts and would
+                // require either OS-level fault injection of a core Win32 API failure or a
+                // severely misconfigured runtime to observe.
+                // We keep it explicit to preserve fail-closed behavior if version detection
+                // cannot be completed at startup.
                 return Err(AcError::UnsupportedLpac);
             }
             // Windows 10 build 15063 (1703) or later required
             if v.major < 10 {
+                // Older Windows major versions are intentionally unsupported.
+                // This keeps LPAC detection deterministic on unsupported environments
+                // and is documented as a defensive boundary for deployment targets.
                 return Err(AcError::UnsupportedLpac);
             }
             if v.build < 15063 {
+                // Windows 10 build 15063 (1703) is the minimum supported LPAC baseline.
+                // This check is platform-constraint dependent and cannot be driven safely
+                // from normal crate tests without introducing mutable global shims.
                 return Err(AcError::UnsupportedLpac);
             }
             Ok(())
