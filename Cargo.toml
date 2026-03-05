@@ -1,6 +1,6 @@
 [package]
 name = "rappct"
-version = "0.13.4"
+version = "0.13.10"
 edition = "2024"
 rust-version = "1.88"
 license = "MIT"
@@ -11,24 +11,14 @@ documentation = "https://docs.rs/rappct"
 keywords = ["windows", "appcontainer", "lpac", "sandbox", "security"]
 categories = ["os::windows-apis", "security", "api-bindings"]
 readme = "README.md"
-exclude = [
-    ".claude/",
-    ".github/",
-    ".githooks/",
-    "scripts/",
-    "docs/",
-    "AGENTS.md",
-    "STUBS.md",
-    "RUN_EXAMPLES.md",
-    "TODO.md",
-    "WORKFLOW.md",
-    "EXAMPLES.md",
-    "cliff.toml",
-    "deny.toml",
-    "release-plz.toml",
-    "rust-toolchain.toml",
+include = [
+    "LICENSE",
+    "./README.md",
+    "./Cargo.toml",
+    "src",
+    "examples",
+    "tests",
 ]
-
 # docs.rs configuration for Windows-only crate
 [package.metadata.docs.rs]
 default-target = "x86_64-pc-windows-msvc"

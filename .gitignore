@@ -16,6 +16,7 @@ target/
 node_modules/
 dist/
 build/
+output/
 __pycache__/
 .venv/
 /.worktrees/

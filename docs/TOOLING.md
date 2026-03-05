@@ -64,8 +64,30 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-targets
 ```
 
+## Local Release Commands
+
+- `just release-version-check` - checks local `Cargo.toml` version is greater than latest published crates.io version.
+- `just package-list` - runs `cargo package --list --allow-dirty --locked`.
+- `just package-list-clean` - runs `cargo package --list --locked` with a clean-tree precheck.
+- `just publish-dry-run` - runs `cargo publish --dry-run --allow-dirty --locked` for ad-hoc checks.
+- `just publish-dry-run-clean` - runs `cargo publish --dry-run --locked` on a clean working tree.
+- `just release-gate` - runs full release gate (version check + `ci-fast` + package listing + dry-run).
+- `just release-publish` - runs local preflight and real publish command (single interactive confirmation required in scripts).
+- `just release-gate-log` - executes `release_gate` with full transcript to:
+  - `output/release-gate/release-gate-YYYY-MM-DD_HH-mm-ss.log`
+  - `git branch -a`
+  - `git worktree list`
+  - `git status --short`
+- `just release` - runs the logged gate and then prompts for explicit publish confirmation via local credentials only.
+
+### Release safety rule
+
+- No unattended publish is possible through the local scripts.
+- Do not edit `output/release-gate` directly; it is evidence for release review and traceability.
+
 ## Notes
 
 - `cargo doc` uses local crate sources and feature flags from `Cargo.toml`.
 - `mdbook build docs --dest-dir book` requires `docs/book.toml` and `docs/SUMMARY.md`.
 - Keep links in [index.md](./index.md) synchronized if output paths change.
+

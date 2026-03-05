@@ -127,7 +127,7 @@ flowchart TD
 - `tests/`: Windows-heavy integration and API surface validation.
 - `examples/`: end-to-end demos (`acrun`, `network_demo`, `comprehensive_demo`, `advanced_features`, `rappct_demo`).
 - `scripts/`: local CI orchestration and policy checks.
-- `.github/workflows/`: hosted CI matrix, CodeQL, and release automation.
+- `.github/workflows/`: hosted CI matrix and CodeQL; release is local-only through `just release`.
 
 ## Data Models & Flows (Mermaid)
 Key data models:
@@ -250,7 +250,7 @@ Hosted CI governance differences:
 - `.github/workflows/ci.yml` runs on `windows-latest` with Rust matrix (`stable`, `1.88.0`..`1.93.0`, `beta`, `nightly`) and feature matrix (`""`, `introspection`, `net`, `introspection,net`).
 - Hosted CI enforces fmt/clippy/tests/cargo tree duplicate check but does not run the full local deep stack (`cargo deny`, `cargo audit`, advisory policy script, docs, coverage) in that same workflow.
 - `.github/workflows/codeql.yml` adds GitHub CodeQL analysis (actions + rust categories).
-- `.github/workflows/release.yml` automates release on `main` via `release-plz`.
+- `.github/workflows/release.yml` is not used; local release is performed through `just release-gate-log` and `just release`.
 
 Operational notes:
 - Loopback exemption tests and some job/process behavior tests are opt-in via env vars (`RAPPCT_ALLOW_NET_TESTS`, `RAPPCT_ALLOW_JOB_TESTS`, `RAPPCT_ITESTS`).
@@ -307,4 +307,4 @@ Operational notes:
 - `Justfile`
 - `.github/workflows/ci.yml`
 - `.github/workflows/codeql.yml`
-- `.github/workflows/release.yml`
+- `scripts/release_version_check.ps1`

@@ -6,7 +6,7 @@
 //! Windows implementations for AppContainer profiles, capabilities, secure process launch (AC/LPAC),
 //! token introspection, ACLs, optional network isolation helpers, and diagnostics.
 //!
-//! MSRV: Rust 1.90. See README for tooling/CI details.
+//! MSRV: Rust 1.88. See README for tooling/CI details.
 //!
 //! Tour:
 //! - Capabilities: derive SIDs by known or named capability strings.
@@ -14,7 +14,7 @@
 //! - Diagnostics: feature `introspection` surfaces helpful configuration warnings.
 //! - Network helpers: feature `net` for enumeration and loopback RAII guard.
 //!
-//! Capability catalog: see `docs/capabilities.md` in the repository for common capability SIDs
+//! Capability catalog: see `docs/modules/capability.md` in the repository for common capability SIDs
 //! and starter sets, plus links to Microsoft documentation.
 //!
 //! Quick example: launch with pipes and job limits

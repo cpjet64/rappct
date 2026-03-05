@@ -1,0 +1,138 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- Restored `CHANGELOG.md` after accidental deletion and normalized historical entries.
+- Expanded targeted Windows coverage rounds, including LPAC override fallback behavior coverage.
+
+### Changed
+
+- Regenerated and refreshed the documentation suite; archived legacy docs snapshots.
+- Reduced launch environment-block construction and environment-merge overhead.
+- Updated lockfile dependency set, including `clap` and `tempfile`.
+
+### Fixed
+
+- Stabilized CI toolchain installation behavior and dependency pinning for reliability.
+- Replaced Mermaid-dependent docs index content with renderer-compatible Markdown mapping.
+
+## [0.13.4] - 2025-10-24
+
+### Added
+
+- Capability catalog + `OwnedSecurityCapabilities::from_catalog` (Windows). Additive API; no breaking changes.
+- Version bump: crate now published as 0.13.4 (additive API release).
+
+## [0.13.3] - 2025-10-23
+
+### Added
+
+- FFI RAII: crate-private `ffi::*` wrappers for handles, LocalFree/CoTaskMem memory, SIDs, UTF-16 strings, SECURITY_CAPABILITIES, and PROC_THREAD_ATTRIBUTE_LIST; adoption across capability/profile/acl/launch/net.
+- Windows-only CI matrix: stable, MSRV (1.90.0), beta, nightly with feature matrix; hooks and local scripts for parity.
+
+### Changed
+
+- launch: box `OwnedSecurityCapabilities` to stabilize SECURITY_CAPABILITIES pointer; remove legacy `launch::attr` in favor of `ffi::attr_list`.
+
+### Fixed
+
+- Improve CreateProcessW diagnostics (GLE, HRESULT, message). Add local-only test toggles for diagnosing environment/cwd issues: `RAPPCT_TEST_FORCE_ENV`, `RAPPCT_TEST_NO_CWD`, `RAPPCT_DEBUG_LAUNCH`.
+
+### Changed
+
+- ADR-0001 updated (Phases 1–3 complete). README badges for CI (1.90.0, stable, beta, nightly) and Local Test Toggles section.
+
+## [0.13.1] - 2025-10-22
+
+### Changed
+
+- Raised MSRV alignment to Rust 1.90 and synchronized toolchain/version docs.
+- Added RAII loopback guard, launch environment merge helper, and job drop-guard support.
+- Updated examples and docs for capability catalog and revised helper usage.
+- Expanded test coverage for helpers, including opt-in integration tests for loopback/job guard behavior.
+
+### Changed
+
+- Apply rustfmt changes across examples, src, and tests
+
+## [0.12.2](https://github.com/cpjet64/rappct/compare/rappct-v0.12.1...rappct-v0.12.2) (2025-10-21)
+
+### Fixed
+
+* checkout correct tag when publishing to crates.io ([deea246](https://github.com/cpjet64/rappct/commit/deea24647491b2443c82e731d1cdc8eeb46fcd18))
+
+## [0.12.1](https://github.com/cpjet64/rappct/compare/rappct-v0.12.0...rappct-v0.12.1) (2025-10-21)
+
+### Fixed
+
+* add docs.rs metadata for Windows-only crate cross-compilation ([f86c6c6](https://github.com/cpjet64/rappct/commit/f86c6c6db56e04c146b98a65f90892e1bbe10acf))
+* configure release-please-dev to target dev branch instead of main ([ff83f19](https://github.com/cpjet64/rappct/commit/ff83f19573dca442bebbd4d5efa2dd4d78714fef))
+* prevent release-please workflows from running on their own merge commits ([1d96a83](https://github.com/cpjet64/rappct/commit/1d96a830318eeec729e000e1e32e107566e6f484))
+
+## [0.12.0](https://github.com/cpjet64/rappct/compare/rappct-v0.11.1...rappct-v0.12.0) (2025-10-21)
+
+### Added
+
+* implement dual-branch workflow with automated dev releases ([7024aaa](https://github.com/cpjet64/rappct/commit/7024aaab227c9dc2fb242f7cc2da9751f1dc3755))
+
+## [0.11.1](https://github.com/cpjet64/rappct/compare/rappct-v0.11.0...rappct-v0.11.1) (2025-10-21)
+
+### Fixed
+
+* make release-please wait for CI to pass ([a05dadc](https://github.com/cpjet64/rappct/commit/a05dadc1aecdd7774f3053f0b1f1dc706d72da1c))
+
+## [0.11.0](https://github.com/cpjet64/rappct/compare/rappct-v0.10.0...rappct-v0.11.0) (2025-10-21)
+
+### Added
+
+* add automatic crates.io publishing ([827becf](https://github.com/cpjet64/rappct/commit/827becf4b7aba7dacd300e6c3a7b10175509b21b))
+
+## [0.10.0](https://github.com/cpjet64/rappct/compare/rappct-v0.9.0...rappct-v0.10.0) (2025-10-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* v0.9.0 – API ergonomics, Windows CI, wide-string helpers, net softening, docs, release-please setup, ignore Cargo.lock
+
+### Fixed
+
+* **ci:** 2024 edition updates – mark extern blocks unsafe, wrap unsafe ops, clean imports, correct OwnedHandle::into_file; update CI should pass ([c53b3d4](https://github.com/cpjet64/rappct/commit/c53b3d4a48a8b9018e9e06a6c24fadb161b503aa))
+* **ci:** 2024 unsafe rules – annotate unsafe fns, fix EqualSid result handling, silence dead_code in feature stubs, rename unused field; pass -D warnings ([eaa344f](https://github.com/cpjet64/rappct/commit/eaa344f13e0eaf91b48836ee6b103e767a749ce2))
+* **ci:** edition 2024, remove unused imports, avoid LocalFree import; make set_loopback warnings non-fatal ([a80ab91](https://github.com/cpjet64/rappct/commit/a80ab91436143d516a9983ae47b10cd7193365d1))
+* update to googleapis/release-please-action@v4 ([af8f17d](https://github.com/cpjet64/rappct/commit/af8f17d379ef7b9413256b46abfaf0f062e9b9e7))
+
+
+### Miscellaneous Chores
+
+* v0.9.0 – API ergonomics, Windows CI, wide-string helpers, net softening, docs, release-please setup, ignore Cargo.lock ([335f20f](https://github.com/cpjet64/rappct/commit/335f20fad7b8ce9558006f0b0154338c4416afd2))
+
+## [0.9.1]
+
+### Changed
+
+- Build: Update to Rust edition 2024
+- Deps: Update thiserror to 2.0, windows to 0.62
+- Docs: Fix README builder pattern example (remove incorrect `?` operators)
+- Docs: Add `serde` feature to documentation
+- Docs: Update EXAMPLES.md to reference correct examples and clarify admin requirements
+- Docs: Align CLAUDE.md with current codebase state
+
+## [0.9.0]
+
+### Changed
+
+- API: `SecurityCapabilitiesBuilder::{with_known,with_named,with_lpac_defaults}` now return `Self` (breaking change).
+- Windows CI: Add GitHub Actions to test on `windows-latest` across feature matrix.
+- Net: Relax firewall config enum strictness; warn instead of error when mismatch found.
+- Util: Add `to_utf16_os` and use `to_utf16`/`to_utf16_os` across FFI boundaries.
+- Docs: Add pipes + job limits example and LPAC test override note.
+- Examples/Tests updated for new builder ergonomics.
+- OwnedHandle: safer `into_file` conversion; use `from_raw` at call sites.
+- Repo: set `repository` URL and ignore `Cargo.lock` for a library crate.

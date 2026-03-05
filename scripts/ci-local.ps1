@@ -4,6 +4,21 @@ $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) {
   Write-Error "[ci-local] Windows-only checks. Detected non-Windows environment. Aborting."; exit 1
 }
+
+function Invoke-Checked {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Label,
+    [Parameter(Mandatory = $true)]
+    [scriptblock]$Action
+  )
+
+  & $Action
+  if ($LASTEXITCODE -ne 0) {
+    throw "[ci-local] $Label failed with exit code $LASTEXITCODE"
+  }
+}
+
 $features = @("", "introspection", "net", "introspection,net")
 $env:RUST_BACKTRACE = "1"
 $env:RUSTFLAGS = "-D warnings"
@@ -13,19 +28,19 @@ Write-Host "[ci-local] fmt (stable, workspace)"
 # during builds — it mutates the shared RUSTUP_HOME and causes contention
 # when multiple repos build concurrently.
 # To provision: rustup component add rustfmt clippy
-cargo fmt --all -- --check
+Invoke-Checked -Label "fmt (stable, workspace)" -Action { cargo fmt --all -- --check }
 
 Write-Host "[ci-local] clippy check"
 
 foreach ($f in $features) {
   if ($f -eq "") {
-    Write-Host "[ci-local] test (stable, no features)"; cargo test --all-targets
-    Write-Host "[ci-local] clippy (stable, no features)"; cargo clippy --all-targets -- -D warnings
-    cargo tree -d | Out-Null
+    Write-Host "[ci-local] test (stable, no features)"; Invoke-Checked -Label "test (stable, no features)" -Action { cargo test --all-targets }
+    Write-Host "[ci-local] clippy (stable, no features)"; Invoke-Checked -Label "clippy (stable, no features)" -Action { cargo clippy --all-targets -- -D warnings }
+    Invoke-Checked -Label "duplicate dependency check (stable, no features)" -Action { cargo tree -d | Out-Null }
   } else {
-    Write-Host "[ci-local] test (stable, features: $f)"; cargo test --all-targets --features "$f"
-    Write-Host "[ci-local] clippy (stable, features: $f)"; cargo clippy --all-targets --features "$f" -- -D warnings
-    cargo tree -d --features "$f" | Out-Null
+    Write-Host "[ci-local] test (stable, features: $f)"; Invoke-Checked -Label "test (stable, features: $f)" -Action { cargo test --all-targets --features "$f" }
+    Write-Host "[ci-local] clippy (stable, features: $f)"; Invoke-Checked -Label "clippy (stable, features: $f)" -Action { cargo clippy --all-targets --features "$f" -- -D warnings }
+    Invoke-Checked -Label "duplicate dependency check (stable, features: $f)" -Action { cargo tree -d --features "$f" | Out-Null }
   }
 }
 
@@ -41,11 +56,11 @@ foreach ($msrv in $msrvList) {
 
   foreach ($f in $features) {
     if ($f -eq "") {
-      Write-Host "[ci-local] test ($msrv, no features)"; cargo +$msrv test --all-targets
-      Write-Host "[ci-local] clippy ($msrv, no features)"; cargo +$msrv clippy --all-targets -- -D warnings
+      Write-Host "[ci-local] test ($msrv, no features)"; Invoke-Checked -Label "test ($msrv, no features)" -Action { cargo +$msrv test --all-targets }
+      Write-Host "[ci-local] clippy ($msrv, no features)"; Invoke-Checked -Label "clippy ($msrv, no features)" -Action { cargo +$msrv clippy --all-targets -- -D warnings }
     } else {
-      Write-Host "[ci-local] test ($msrv, features: $f)"; cargo +$msrv test --all-targets --features "$f"
-      Write-Host "[ci-local] clippy ($msrv, features: $f)"; cargo +$msrv clippy --all-targets --features "$f" -- -D warnings
+      Write-Host "[ci-local] test ($msrv, features: $f)"; Invoke-Checked -Label "test ($msrv, features: $f)" -Action { cargo +$msrv test --all-targets --features "$f" }
+      Write-Host "[ci-local] clippy ($msrv, features: $f)"; Invoke-Checked -Label "clippy ($msrv, features: $f)" -Action { cargo +$msrv clippy --all-targets --features "$f" -- -D warnings }
     }
   }
 }
