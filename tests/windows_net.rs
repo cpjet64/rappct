@@ -1,6 +1,12 @@
 #[cfg(all(windows, feature = "net"))]
+#[path = "support/windows_test_utils.rs"]
+mod windows_test_utils;
+
+#[cfg(all(windows, feature = "net"))]
 use rappct::*;
 
+#[cfg(all(windows, feature = "net"))]
+use crate::windows_test_utils::{LocalAlloc, LocalWideString};
 #[cfg(all(windows, feature = "net"))]
 use windows::Win32::NetworkManagement::WindowsFirewall::NetworkIsolationGetAppContainerConfig;
 #[cfg(all(windows, feature = "net"))]
@@ -9,39 +15,6 @@ use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 use windows::Win32::Security::SID_AND_ATTRIBUTES;
 #[cfg(all(windows, feature = "net"))]
 use windows::core::PWSTR;
-
-#[cfg(all(windows, feature = "net"))]
-#[link(name = "Kernel32")]
-unsafe extern "system" {
-    fn LocalFree(h: isize) -> isize;
-}
-
-#[cfg(all(windows, feature = "net"))]
-unsafe fn pwstr_to_string_and_free(ptr: PWSTR) -> String {
-    if ptr.is_null() {
-        return String::new();
-    }
-    let mut len = 0usize;
-    unsafe {
-        while *ptr.0.add(len) != 0 {
-            len += 1;
-        }
-    }
-    let s = unsafe { String::from_utf16_lossy(std::slice::from_raw_parts(ptr.0, len)) };
-    unsafe {
-        let _ = LocalFree(ptr.0 as isize);
-    }
-    s
-}
-
-#[cfg(all(windows, feature = "net"))]
-unsafe fn local_free_ptr<T>(ptr: *mut T) {
-    if !ptr.is_null() {
-        unsafe {
-            let _ = LocalFree(ptr as isize);
-        }
-    }
-}
 
 #[cfg(all(windows, feature = "net"))]
 fn loopback_config_sids() -> Result<Vec<String>> {
@@ -54,21 +27,22 @@ fn loopback_config_sids() -> Result<Vec<String>> {
                 "NetworkIsolationGetAppContainerConfig failed: {err}"
             )));
         }
-        let slice = if arr.is_null() {
-            &[][..]
+        let sid_array = if arr.is_null() {
+            None
         } else {
-            std::slice::from_raw_parts(arr, count as usize)
+            Some(LocalAlloc::<SID_AND_ATTRIBUTES>::from_raw(arr))
+        };
+        let slice: &[SID_AND_ATTRIBUTES] = match &sid_array {
+            Some(array) => array.as_slice(count as usize),
+            None => &[],
         };
         let mut out = Vec::with_capacity(slice.len());
         for sa in slice {
             let mut raw = PWSTR::null();
             ConvertSidToStringSidW(sa.Sid, &mut raw)
                 .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
-            let s = pwstr_to_string_and_free(raw);
+            let s = LocalWideString::from_raw(raw).to_string_lossy();
             out.push(s);
-        }
-        if !arr.is_null() {
-            local_free_ptr(arr);
         }
         Ok(out)
     }

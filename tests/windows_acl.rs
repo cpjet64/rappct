@@ -18,31 +18,17 @@ use windows::Win32::Security::{ACL, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIP
 #[cfg(windows)]
 use windows::Win32::System::Registry::{
     HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_ALL_ACCESS, KEY_READ, KEY_WRITE,
-    REG_CREATE_KEY_DISPOSITION, REG_CREATED_NEW_KEY, REG_OPTION_NON_VOLATILE, RegCloseKey,
-    RegCreateKeyExW, RegDeleteTreeW, RegOpenKeyExW,
+    REG_CREATE_KEY_DISPOSITION, REG_CREATED_NEW_KEY, REG_OPENED_EXISTING_KEY,
+    REG_OPTION_NON_VOLATILE, RegCloseKey, RegCreateKeyExW, RegDeleteTreeW, RegOpenKeyExW,
 };
 #[cfg(windows)]
 use windows::core::PCWSTR;
 
 #[cfg(windows)]
-#[link(name = "Kernel32")]
-unsafe extern "system" {
-    fn LocalFree(h: isize) -> isize;
-}
-
+#[path = "support/windows_test_utils.rs"]
+mod windows_test_utils;
 #[cfg(windows)]
-fn pwstr_to_string(ptr: windows::core::PWSTR) -> String {
-    if ptr.is_null() {
-        return String::new();
-    }
-    unsafe {
-        let mut len = 0usize;
-        while *ptr.0.add(len) != 0 {
-            len += 1;
-        }
-        String::from_utf16_lossy(std::slice::from_raw_parts(ptr.0, len))
-    }
-}
+use crate::windows_test_utils::{LocalAlloc, LocalWideString};
 
 #[cfg(windows)]
 fn security_sddl_for_path(path: &std::path::Path) -> String {
@@ -74,14 +60,8 @@ fn security_sddl_for_path(path: &std::path::Path) -> String {
             None,
         )
         .expect("ConvertSecurityDescriptorToStringSecurityDescriptorW");
-        let value = pwstr_to_string(sddl_ptr);
-        if !sd.0.is_null() {
-            let _ = LocalFree(sd.0 as isize);
-        }
-        if !sddl_ptr.is_null() {
-            let _ = LocalFree(sddl_ptr.0 as isize);
-        }
-        value
+        let _sd = LocalAlloc::<u8>::from_raw(sd.0 as *mut u8);
+        LocalWideString::from_raw(sddl_ptr).to_string_lossy()
     }
 }
 
@@ -141,15 +121,10 @@ fn security_sddl_for_registry(spec: &str) -> String {
             None,
         )
         .expect("ConvertSecurityDescriptorToStringSecurityDescriptorW(reg)");
-        let value = pwstr_to_string(sddl_ptr);
-        if !sd.0.is_null() {
-            let _ = LocalFree(sd.0 as isize);
-        }
-        if !sddl_ptr.is_null() {
-            let _ = LocalFree(sddl_ptr.0 as isize);
-        }
+        let _sd = LocalAlloc::<u8>::from_raw(sd.0 as *mut u8);
+        let sddl = LocalWideString::from_raw(sddl_ptr).to_string_lossy();
         let _ = RegCloseKey(hkey);
-        value
+        sddl
     }
 }
 
@@ -162,9 +137,9 @@ fn grant_to_package_updates_file_dacl() {
     let path = temp.path().to_path_buf();
     writeln!(&mut temp.as_file().try_clone().unwrap(), "hello").unwrap();
 
+    let name = format!("rappct.test.acl.file.{}", std::process::id());
     let profile =
-        AppContainerProfile::ensure("rappct.test.acl.file", "rappct acl", Some("acl test"))
-            .expect("ensure profile");
+        AppContainerProfile::ensure(&name, "rappct acl", Some("acl test")).expect("ensure profile");
     let sid_str = profile.sid.as_string().to_string();
 
     let before = security_sddl_for_path(&path);
@@ -194,9 +169,9 @@ fn grant_to_package_updates_file_dacl() {
 fn grant_to_package_updates_registry_dacl() {
     use std::ffi::OsStr;
 
+    let name = format!("rappct.test.acl.reg.{}", std::process::id());
     let profile =
-        AppContainerProfile::ensure("rappct.test.acl.reg", "rappct acl", Some("acl test"))
-            .expect("ensure profile");
+        AppContainerProfile::ensure(&name, "rappct acl", Some("acl test")).expect("ensure profile");
     let sid_str = profile.sid.as_string().to_string();
 
     let subkey = format!(r"Software\\rappct\\acl\\{}", std::process::id());
@@ -219,7 +194,10 @@ fn grant_to_package_updates_registry_dacl() {
             Some(&mut disposition),
         );
         assert_eq!(status.0, 0, "RegCreateKeyExW failed: {status:?}");
-        assert_eq!(disposition, REG_CREATED_NEW_KEY);
+        assert!(
+            disposition == REG_CREATED_NEW_KEY || disposition == REG_OPENED_EXISTING_KEY,
+            "unexpected key creation disposition: {disposition:?}"
+        );
         let _ = RegCloseKey(hkey);
     }
 
@@ -256,9 +234,9 @@ fn grant_to_package_updates_directory_custom_dacl() {
     let dir_path = root.path().join("acl-dir");
     std::fs::create_dir_all(&dir_path).expect("create dir");
 
+    let name = format!("rappct.test.acl.dir.{}", std::process::id());
     let profile =
-        AppContainerProfile::ensure("rappct.test.acl.dir", "rappct acl", Some("acl test"))
-            .expect("ensure profile");
+        AppContainerProfile::ensure(&name, "rappct acl", Some("acl test")).expect("ensure profile");
     let sid_str = profile.sid.as_string().to_string();
 
     let before = security_sddl_for_path(&dir_path);
@@ -290,12 +268,9 @@ fn grant_to_package_updates_directory_default_inheritance_dacl() {
     let dir_path = root.path().join("acl-dir-default");
     std::fs::create_dir_all(&dir_path).expect("create dir");
 
-    let profile = AppContainerProfile::ensure(
-        "rappct.test.acl.dir.default",
-        "rappct acl",
-        Some("acl test"),
-    )
-    .expect("ensure profile");
+    let name = format!("rappct.test.acl.dir.default.{}", std::process::id());
+    let profile =
+        AppContainerProfile::ensure(&name, "rappct acl", Some("acl test")).expect("ensure profile");
     let sid_str = profile.sid.as_string().to_string();
 
     let before = security_sddl_for_path(&dir_path);

@@ -6,6 +6,8 @@
 use crate::ffi::{mem::LocalAllocGuard, sid::OwnedSid, wstr::WideString};
 use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
+#[cfg(windows)]
+use std::os::windows::ffi::OsStringExt;
 
 /// An AppContainer profile with its name and derived package SID.
 #[derive(Clone, Debug)]
@@ -21,7 +23,7 @@ impl AppContainerProfile {
     pub fn ensure(_name: &str, _display: &str, _description: Option<&str>) -> Result<Self> {
         #[cfg(windows)]
         {
-            use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, ERROR_INVALID_PARAMETER};
+            use windows::Win32::Foundation::ERROR_ALREADY_EXISTS;
             use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
             use windows::core::{HRESULT, PCWSTR, PWSTR};
 
@@ -64,11 +66,10 @@ impl AppContainerProfile {
                 );
 
                 let already_exists = HRESULT::from_win32(ERROR_ALREADY_EXISTS.0);
-                let invalid_parameter = HRESULT::from_win32(ERROR_INVALID_PARAMETER.0);
                 let sid_owned = if hr.is_ok() {
-                    OwnedSid::from_freesid_psid(sid_ptr)
-                } else if hr == already_exists || hr == invalid_parameter {
-                    // Fallback to derive SID when profile already exists or metadata mismatches
+                    OwnedSid::from_freesid_psid(sid_ptr)?
+                } else if hr == already_exists {
+                    // Fallback to derive SID when the profile already exists.
                     let mut sid2 = std::ptr::null_mut();
                     let hr2 =
                         DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut sid2);
@@ -78,7 +79,7 @@ impl AppContainerProfile {
                             hr2_code = hr2.0
                         )));
                     }
-                    OwnedSid::from_freesid_psid(sid2)
+                    OwnedSid::from_freesid_psid(sid2)?
                 } else {
                     return Err(AcError::Win32(format!(
                         "CreateAppContainerProfile failed: 0x{hr_code:08X}",
@@ -179,10 +180,15 @@ impl AppContainerProfile {
                         hr_sid_code = hr_sid.0
                     )));
                 }
-                let psid_owned = OwnedSid::from_freesid_psid(psid.0);
+                let psid_owned = OwnedSid::from_freesid_psid(psid.0)?;
                 let mut out: PWSTR = PWSTR::null();
                 let hr = GetAppContainerFolderPath(psid_owned.as_psid(), &mut out);
                 if hr.is_ok() {
+                    if out.is_null() {
+                        return Err(AcError::Win32(
+                            "GetAppContainerFolderPath succeeded but returned null path".into(),
+                        ));
+                    }
                     // Convert returned PWSTR to PathBuf
                     let path = {
                         // SAFETY: `out` is a CoTaskMem PWSTR; guard ensures single free.
@@ -194,15 +200,21 @@ impl AppContainerProfile {
                         }
                         // SAFETY: Slice over initialized UTF-16 code units.
                         let slice = std::slice::from_raw_parts(guard.as_ptr(), len);
-                        let s = String::from_utf16_lossy(slice);
-                        PathBuf::from(s)
+                        let os = std::ffi::OsString::from_wide(slice);
+                        PathBuf::from(os)
                     };
                     Ok(path)
                 } else {
-                    // Fallback: synthesize under LocalAppData\Packages\{SID}
-                    let sid_s = self.sid.as_string().to_string();
+                    if !out.is_null() {
+                        // SAFETY: Defensive cleanup for APIs that may return a partial CoTaskMem
+                        // buffer even when HRESULT indicates failure.
+                        let _ = crate::ffi::mem::CoTaskMem::<u16>::from_raw(out.0);
+                    }
+                    // Fallback: synthesize under LocalAppData\Packages\{ProfileName}
+                    // AppContainer profile storage is keyed by the profile/package name,
+                    // not by the SID string.
                     match std::env::var_os("LOCALAPPDATA") {
-                        Some(base) => Ok(PathBuf::from(base).join("Packages").join(sid_s)),
+                        Some(base) => Ok(PathBuf::from(base).join("Packages").join(&self.name)),
                         None => Err(AcError::Win32(format!(
                             "GetAppContainerFolderPath failed: 0x{hr_code:08X}",
                             hr_code = hr.0
@@ -308,7 +320,7 @@ pub fn derive_sid_from_name(name: &str) -> Result<AppContainerSid> {
                     hr_code = hr.0
                 )));
             }
-            let sid_owned = OwnedSid::from_freesid_psid(sid_ptr);
+            let sid_owned = OwnedSid::from_freesid_psid(sid_ptr)?;
             let mut sddl_ptr = PWSTR::null();
             // SAFETY: Convert valid PSID to SDDL string; LocalAlloc PWSTR returned.
             if ConvertSidToStringSidW(sid_owned.as_psid(), &mut sddl_ptr).is_err() {

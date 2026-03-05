@@ -229,7 +229,15 @@ mod tests {
 
     #[test]
     fn owned_handle_into_file_roundtrips_content() {
-        let path = std::env::temp_dir().join("rappct-owned-handle-test.txt");
+        let unique = format!(
+            "rappct-owned-handle-test-{}-{}.txt",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        );
+        let path = std::env::temp_dir().join(unique);
         std::fs::write(&path, b"owned-handle").expect("write test fixture");
 
         let file = std::fs::File::open(&path).expect("open fixture");

@@ -1,5 +1,6 @@
 //! Helpers for building environment blocks for `CreateProcessW`.
 
+use crate::{AcError, Result};
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStrExt;
 
@@ -27,8 +28,35 @@ impl WideBlock {
 ///
 /// The block is sorted case-insensitively by key, each `key=value` pair is
 /// NUL-terminated, and the entire block ends with an extra NUL (double-NUL).
-pub(crate) fn make_wide_block(entries: &[(OsString, OsString)]) -> WideBlock {
-    let mut pairs: Vec<&(OsString, OsString)> = entries.iter().collect();
+pub(crate) fn make_wide_block(entries: &[(OsString, OsString)]) -> Result<WideBlock> {
+    let mut pairs: Vec<(OsString, OsString)> = Vec::with_capacity(entries.len());
+    for (key, value) in entries {
+        if key.is_empty() {
+            return Err(AcError::Win32(
+                "invalid environment key: empty key is not allowed".into(),
+            ));
+        }
+        if key.encode_wide().any(|ch| ch == 0) {
+            return Err(AcError::Win32(
+                "invalid environment key: embedded NUL is not allowed".into(),
+            ));
+        }
+        if value.encode_wide().any(|ch| ch == 0) {
+            return Err(AcError::Win32(
+                "invalid environment value: embedded NUL is not allowed".into(),
+            ));
+        }
+        if let Some((existing_key, existing_value)) = pairs.iter_mut().find(|(existing_key, _)| {
+            existing_key
+                .to_string_lossy()
+                .eq_ignore_ascii_case(&key.to_string_lossy())
+        }) {
+            *existing_key = key.clone();
+            *existing_value = value.clone();
+            continue;
+        }
+        pairs.push((key.clone(), value.clone()));
+    }
 
     pairs.sort_by_cached_key(|(key, _)| key.to_string_lossy().to_ascii_lowercase());
 
@@ -39,9 +67,13 @@ pub(crate) fn make_wide_block(entries: &[(OsString, OsString)]) -> WideBlock {
         buf.extend(value.encode_wide());
         buf.push(0);
     }
+    if buf.is_empty() {
+        // Windows environment blocks must be double-NUL terminated even when empty.
+        buf.push(0);
+    }
     buf.push(0);
 
-    WideBlock::new(buf)
+    Ok(WideBlock::new(buf))
 }
 
 #[cfg(test)]
@@ -56,7 +88,8 @@ mod tests {
                 OsString::from("ComSpec"),
                 OsString::from(r"C:\\Windows\\System32\\cmd.exe"),
             ),
-        ]);
+        ])
+        .expect("build env block");
 
         assert!(block.buf.len() >= 6, "block too short");
         assert_eq!(block.buf[block.buf.len() - 1], 0);
@@ -66,7 +99,7 @@ mod tests {
         let strings: Vec<String> = utf16
             .split(|c| *c == 0)
             .filter(|s| !s.is_empty())
-            .map(|s| String::from_utf16(s).unwrap())
+            .map(String::from_utf16_lossy)
             .collect();
 
         assert_eq!(strings[0], "ComSpec=C:\\\\Windows\\\\System32\\\\cmd.exe");
@@ -93,8 +126,31 @@ mod tests {
 
     #[test]
     fn make_block_empty_entries_still_double_terminated() {
-        let block = make_wide_block(&[]);
-        assert_eq!(block.len(), 1);
-        assert_eq!(block.buf, vec![0]);
+        let block = make_wide_block(&[]).expect("build empty env block");
+        assert_eq!(block.len(), 2);
+        assert_eq!(block.buf, vec![0, 0]);
+    }
+
+    #[test]
+    fn make_block_deduplicates_case_insensitive_keys() {
+        let block = make_wide_block(&[
+            (OsString::from("PATH"), OsString::from(r"C:\\first")),
+            (OsString::from("path"), OsString::from(r"C:\\second")),
+        ])
+        .expect("build dedup env block");
+
+        let utf16 = &block.buf[..block.buf.len() - 1];
+        let strings: Vec<String> = utf16
+            .split(|c| *c == 0)
+            .filter(|s| !s.is_empty())
+            .map(String::from_utf16_lossy)
+            .collect();
+        assert_eq!(strings, vec![r"path=C:\\second"]);
+    }
+
+    #[test]
+    fn make_block_rejects_empty_key() {
+        let err = make_wide_block(&[(OsString::from(""), OsString::from("value"))]).unwrap_err();
+        assert!(err.to_string().contains("empty key"));
     }
 }

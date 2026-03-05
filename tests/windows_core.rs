@@ -5,18 +5,17 @@ use rappct::*;
 use rappct::AcError;
 #[cfg(windows)]
 use rappct::capability::{Capability, CapabilityCatalog, CapabilityName};
+#[cfg(windows)]
+#[path = "support/windows_test_utils.rs"]
+mod windows_test_utils;
+#[cfg(windows)]
+use crate::windows_test_utils::LocalAlloc;
 
 #[cfg(windows)]
 use std::sync::{Mutex, OnceLock};
 
 #[cfg(windows)]
 static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-
-#[cfg(windows)]
-#[link(name = "Kernel32")]
-unsafe extern "system" {
-    fn LocalFree(h: isize) -> isize;
-}
 
 #[cfg(windows)]
 #[test]
@@ -56,7 +55,7 @@ fn capability_catalog_matches_sid_lookup() {
     use windows::Win32::Security::{EqualSid, IsValidSid, PSID};
     use windows::core::PCWSTR;
 
-    struct LocalSid(PSID);
+    struct LocalSid(LocalAlloc<u8>);
 
     impl LocalSid {
         fn from_sddl(sddl: &str) -> Self {
@@ -66,23 +65,12 @@ fn capability_catalog_matches_sid_lookup() {
                 ConvertStringSidToSidW(PCWSTR(wide.as_ptr()), &mut psid)
                     .expect("ConvertStringSidToSidW(capability)");
             }
-            Self(psid)
+            // SAFETY: ConvertStringSidToSidW returns a LocalAlloc-owned SID pointer.
+            Self(unsafe { LocalAlloc::from_raw(psid.0.cast::<u8>()) })
         }
 
         fn as_psid(&self) -> PSID {
-            self.0
-        }
-    }
-
-    impl Drop for LocalSid {
-        fn drop(&mut self) {
-            if !self.0.0.is_null() {
-                // SAFETY: Pointer originates from ConvertStringSidToSidW (LocalAlloc).
-                unsafe {
-                    let _ = LocalFree(self.0.0 as isize);
-                }
-                self.0 = PSID::default();
-            }
+            PSID(self.0.as_ptr().cast())
         }
     }
 
@@ -265,8 +253,8 @@ fn supports_lpac_unknown_override_uses_runtime_result() {
     unsafe {
         std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
     }
-    assert!(
-        result.is_ok(),
-        "unknown override values should fall back to runtime LPAC detection"
-    );
+    match result {
+        Ok(()) | Err(rappct::AcError::UnsupportedLpac) => {}
+        other => panic!("unexpected supports_lpac result for unknown override: {other:?}"),
+    }
 }

@@ -5,6 +5,8 @@ use rappct::*;
 use rappct::diag::{ConfigWarning, validate_configuration};
 
 #[cfg(windows)]
+use crate::windows_test_utils::LocalWideString;
+#[cfg(windows)]
 use std::sync::{Mutex, OnceLock};
 
 #[cfg(windows)]
@@ -20,10 +22,8 @@ unsafe extern "system" {
 }
 
 #[cfg(windows)]
-#[link(name = "Kernel32")]
-unsafe extern "system" {
-    fn LocalFree(h: isize) -> isize;
-}
+#[path = "support/windows_test_utils.rs"]
+mod windows_test_utils;
 
 #[cfg(windows)]
 #[repr(C)]
@@ -204,15 +204,7 @@ fn launch_appcontainer_token_matches_profile() {
         assert!(!token_sid.0.is_null(), "token AppContainer SID was null");
         let mut sid_str = PWSTR::null();
         ConvertSidToStringSidW(token_sid, &mut sid_str).expect("ConvertSidToStringSidW failed");
-        let sid_value = {
-            let mut len = 0usize;
-            while *sid_str.0.add(len) != 0 {
-                len += 1;
-            }
-            let slice = std::slice::from_raw_parts(sid_str.0, len);
-            String::from_utf16_lossy(slice)
-        };
-        LocalFree(sid_str.0 as isize);
+        let sid_value = LocalWideString::from_raw(sid_str).to_string_lossy();
         assert_eq!(sid_value, prof.sid.as_string(), "child token SID mismatch");
         let mut actual_caps = token_capability_sids(token);
         let mut expected_caps_sorted = expected_caps.clone();
@@ -251,9 +243,7 @@ fn launch_lpac_token_sets_flag_and_caps() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .with_lpac_defaults()
-        .unwrap()
         .lpac(true)
         .build()
         .expect("build caps");
@@ -327,15 +317,7 @@ fn launch_lpac_token_sets_flag_and_caps() {
         assert!(!token_sid.0.is_null(), "token AppContainer SID was null");
         let mut sid_str = PWSTR::null();
         ConvertSidToStringSidW(token_sid, &mut sid_str).expect("ConvertSidToStringSidW failed");
-        let sid_value = {
-            let mut len = 0usize;
-            while *sid_str.0.add(len) != 0 {
-                len += 1;
-            }
-            let slice = std::slice::from_raw_parts(sid_str.0, len);
-            String::from_utf16_lossy(slice)
-        };
-        LocalFree(sid_str.0 as isize);
+        let sid_value = LocalWideString::from_raw(sid_str).to_string_lossy();
         assert_eq!(sid_value, prof.sid.as_string(), "child token SID mismatch");
 
         let mut actual_caps = token_capability_sids(token);
@@ -493,7 +475,6 @@ fn launch_job_guard_drop_terminates_process() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
     let opts = LaunchOptions {
@@ -528,7 +509,6 @@ fn launch_with_pipes_and_echo() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
     let opts = LaunchOptions {
@@ -560,7 +540,6 @@ fn launch_waits_for_exit_code() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
     let opts = LaunchOptions {
@@ -584,7 +563,6 @@ fn launch_with_null_stdio_has_no_parent_streams() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
     let opts = LaunchOptions {
@@ -623,7 +601,6 @@ fn launch_with_explicit_handle_list_succeeds() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
 
@@ -654,7 +631,6 @@ fn launch_with_stdio_inherit_overrides_succeeds() {
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .unwrap()
         .build()
         .expect("build caps");
 
@@ -733,15 +709,7 @@ fn token_capability_sids(token: HANDLE) -> Vec<String> {
         for entry in slice {
             let mut sid_str = PWSTR::null();
             ConvertSidToStringSidW(entry.Sid, &mut sid_str).expect("ConvertSidToStringSidW failed");
-            let sid_value = {
-                let mut len = 0usize;
-                while *sid_str.0.add(len) != 0 {
-                    len += 1;
-                }
-                let slice = std::slice::from_raw_parts(sid_str.0, len);
-                String::from_utf16_lossy(slice)
-            };
-            LocalFree(sid_str.0 as isize);
+            let sid_value = LocalWideString::from_raw(sid_str).to_string_lossy();
             caps.push(sid_value);
         }
         caps

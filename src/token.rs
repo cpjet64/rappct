@@ -11,9 +11,9 @@ use windows::Win32::Foundation::{ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAME
 use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
 #[cfg(windows)]
 use windows::Win32::Security::{
-    GetTokenInformation, TOKEN_APPCONTAINER_INFORMATION, TOKEN_GROUPS, TOKEN_INFORMATION_CLASS,
-    TOKEN_QUERY, TokenAppContainerSid, TokenCapabilities, TokenIsAppContainer,
-    TokenIsLessPrivilegedAppContainer,
+    GetTokenInformation, SID_AND_ATTRIBUTES, TOKEN_APPCONTAINER_INFORMATION, TOKEN_GROUPS,
+    TOKEN_INFORMATION_CLASS, TOKEN_QUERY, TokenAppContainerSid, TokenCapabilities,
+    TokenIsAppContainer, TokenIsLessPrivilegedAppContainer,
 };
 #[cfg(windows)]
 use windows::Win32::System::Threading::GetCurrentProcess;
@@ -146,6 +146,13 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
         ))
     })?;
 
+    if buffer.len() < std::mem::size_of::<TOKEN_APPCONTAINER_INFORMATION>() {
+        return Err(AcError::Win32(format!(
+            "GetTokenInformation(TokenAppContainerSid) returned undersized buffer: {} bytes",
+            buffer.len()
+        )));
+    }
+
     let info_ptr = buffer.as_ptr() as *const TOKEN_APPCONTAINER_INFORMATION;
     // SAFETY: Buffer holds a TOKEN_APPCONTAINER_INFORMATION per API contract; read the SID field.
     let sid = unsafe { (*info_ptr).TokenAppContainer };
@@ -192,20 +199,51 @@ unsafe fn query_capabilities(token: HANDLE) -> Result<Vec<String>> {
         ))
     })?;
 
-    let groups = buffer.as_ptr() as *const TOKEN_GROUPS;
-    // SAFETY: Read the group count from the TOKEN_GROUPS header.
-    let count = unsafe { (*groups).GroupCount as usize };
+    if buffer.len() < std::mem::size_of::<u32>() {
+        return Err(AcError::Win32(format!(
+            "GetTokenInformation(TokenCapabilities) returned undersized buffer: {} bytes",
+            buffer.len()
+        )));
+    }
+
+    // TOKEN_GROUPS is a variable-length structure. Read GroupCount from the first u32.
+    let count = u32::from_ne_bytes([buffer[0], buffer[1], buffer[2], buffer[3]]) as usize;
     let mut out = Vec::with_capacity(count);
     if count == 0 {
         return Ok(out);
     }
-    // SAFETY: TOKEN_GROUPS header indicates `count`; Groups points to an array of that length.
-    let slice = unsafe { std::slice::from_raw_parts((*groups).Groups.as_ptr(), count) };
-    for entry in slice {
+
+    let groups_offset = std::mem::offset_of!(TOKEN_GROUPS, Groups);
+    if buffer.len() < groups_offset {
+        return Err(AcError::Win32(format!(
+            "GetTokenInformation(TokenCapabilities) buffer too small for groups header: {} bytes",
+            buffer.len()
+        )));
+    }
+
+    let groups_bytes = buffer.len() - groups_offset;
+    let available = groups_bytes / std::mem::size_of::<SID_AND_ATTRIBUTES>();
+    if count > available {
+        return Err(AcError::Win32(format!(
+            "GetTokenInformation(TokenCapabilities) reported {count} groups but only {available} fit in buffer"
+        )));
+    }
+
+    // SAFETY: Bounds checked above. Read unaligned entries from the byte buffer because
+    // Vec<u8> does not guarantee SID_AND_ATTRIBUTES alignment.
+    let groups_ptr = unsafe { buffer.as_ptr().add(groups_offset) };
+    for i in 0..count {
+        // SAFETY: `groups_ptr` points to the first SID_AND_ATTRIBUTES entry and the loop bounds
+        // were validated against `buffer_len`, so each computed element address stays in-bounds.
+        let entry_ptr = unsafe {
+            groups_ptr.add(i * std::mem::size_of::<SID_AND_ATTRIBUTES>())
+                as *const SID_AND_ATTRIBUTES
+        };
+        // SAFETY: Pointer arithmetic is bounds-checked above; unaligned read avoids UB.
+        let entry = unsafe { std::ptr::read_unaligned(entry_ptr) };
         if entry.Sid.0.is_null() {
             continue;
         }
-        // SAFETY: Convert a valid SID to SDDL via helper; returns owned String.
         // SAFETY: Convert a valid SID to SDDL via helper; returns owned String.
         let sid_str = unsafe { sid_to_string(entry.Sid)? };
         out.push(sid_str);

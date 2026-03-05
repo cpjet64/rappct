@@ -72,7 +72,7 @@ fn profile_folder_path_fallback_after_delete() {
     };
     let path = ghost.folder_path().expect("folder path fallback");
     let base = std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA not set");
-    let expected = PathBuf::from(base).join("Packages").join(sid.as_string());
+    let expected = PathBuf::from(base).join("Packages").join(&ghost.name);
     assert_eq!(path, expected);
 }
 

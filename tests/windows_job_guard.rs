@@ -12,12 +12,12 @@ fn job_guard_kills_on_drop() {
         return;
     }
     use std::path::PathBuf;
-    use windows::Win32::Foundation::{WAIT_OBJECT_0, WAIT_TIMEOUT};
+    use windows::Win32::Foundation::WAIT_OBJECT_0;
     use windows::Win32::System::Threading::WaitForSingleObject;
     use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
 
-    let profile =
-        AppContainerProfile::ensure("rappct.job.guard", "JobGuard", None).expect("ensure profile");
+    let name = format!("rappct.job.guard.{}", std::process::id());
+    let profile = AppContainerProfile::ensure(&name, "JobGuard", None).expect("ensure profile");
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
         .build()
@@ -28,7 +28,6 @@ fn job_guard_kills_on_drop() {
         exe: PathBuf::from("C:/Windows/System32/cmd.exe"),
         cmdline: Some("/C ping -n 60 127.0.0.1 >NUL".into()),
         stdio: StdioConfig::Inherit,
-        env: Some(Vec::new()),
         join_job: Some(JobLimits {
             memory_bytes: None,
             cpu_rate_percent: None,
@@ -48,7 +47,10 @@ fn job_guard_kills_on_drop() {
         let h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok();
         if let Some(hproc) = h {
             let r = WaitForSingleObject(hproc, 2000);
-            assert!(r == WAIT_OBJECT_0 || r != WAIT_TIMEOUT);
+            assert_eq!(
+                r, WAIT_OBJECT_0,
+                "expected process to exit after dropping job guard"
+            );
             let _ = CloseHandle(hproc);
         }
     }

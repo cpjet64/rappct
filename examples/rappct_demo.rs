@@ -159,8 +159,14 @@ fn main() -> rappct::Result<()> {
     println!("The 'net' feature allows adding a firewall exemption to permit loopback.\n");
 
     // Start a minimal localhost HTTP server on an ephemeral port.
-    let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind localhost");
-    let port = listener.local_addr().unwrap().port();
+    let listener = TcpListener::bind(("127.0.0.1", 0))
+        .map_err(|e| rappct::AcError::Win32(format!("failed to bind localhost listener: {e}")))?;
+    let port = listener
+        .local_addr()
+        .map_err(|e| {
+            rappct::AcError::Win32(format!("failed to query localhost listener address: {e}"))
+        })?
+        .port();
     std::thread::spawn(move || {
         for _ in 0..4 {
             if let Ok((mut stream, _)) = listener.accept() {

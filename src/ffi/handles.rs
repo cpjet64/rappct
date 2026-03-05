@@ -4,7 +4,7 @@ use crate::{AcError, Result};
 use std::os::windows::io::{
     AsHandle, AsRawHandle, BorrowedHandle, FromRawHandle, IntoRawHandle, OwnedHandle, RawHandle,
 };
-use windows::Win32::Foundation::HANDLE;
+use windows::Win32::Foundation::{HANDLE, INVALID_HANDLE_VALUE};
 use windows::Win32::System::Threading::GetCurrentProcess;
 
 #[link(name = "Kernel32")]
@@ -37,8 +37,8 @@ impl Handle {
         if h.is_null() {
             return Err(AcError::Win32("invalid null handle".into()));
         }
-        // INVALID_HANDLE_VALUE is -1 casted; guard against it when possible.
-        if h as isize == -1 {
+        // Guard against INVALID_HANDLE_VALUE on Windows handles, which is semantically invalid.
+        if HANDLE(h) == INVALID_HANDLE_VALUE {
             return Err(AcError::Win32("invalid handle value".into()));
         }
         // SAFETY: Caller guarantees a valid, uniquely owned handle.
@@ -93,6 +93,13 @@ pub(crate) fn duplicate_handle(handle: BorrowedHandle<'_>, inherit: bool) -> Res
 }
 
 pub(crate) fn duplicate_from_raw(handle: RawHandle, inherit: bool) -> Result<Handle> {
+    if handle.is_null() {
+        return Err(AcError::Win32("invalid null handle".into()));
+    }
+    if HANDLE(handle) == INVALID_HANDLE_VALUE {
+        return Err(AcError::Win32("invalid handle value".into()));
+    }
+
     // SAFETY: Caller guarantees `handle` refers to a valid, live handle.
     let borrowed = unsafe { BorrowedHandle::borrow_raw(handle) };
     duplicate_handle(borrowed, inherit)
@@ -143,7 +150,7 @@ mod tests {
     #[test]
     fn duplicate_from_raw_rejects_invalid_handle() {
         let err = duplicate_from_raw(std::ptr::null_mut(), false).unwrap_err();
-        assert!(err.to_string().contains("DuplicateHandle failed"));
+        assert!(err.to_string().contains("invalid null handle"));
     }
 
     #[test]

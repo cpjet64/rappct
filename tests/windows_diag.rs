@@ -8,9 +8,9 @@ use rappct::diag::{ConfigWarning, validate_configuration};
 #[cfg(all(windows, feature = "introspection"))]
 #[test]
 fn diag_no_warnings_for_basic_appcontainer() {
-    let profile =
-        AppContainerProfile::ensure("rappct.test.diag.basic", "rappct diag", Some("diag test"))
-            .expect("ensure profile");
+    let name = format!("rappct.test.diag.basic.{}", std::process::id());
+    let profile = AppContainerProfile::ensure(&name, "rappct diag", Some("diag test"))
+        .expect("ensure profile");
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
         .build()
@@ -24,12 +24,9 @@ fn diag_no_warnings_for_basic_appcontainer() {
 #[cfg(all(windows, feature = "introspection"))]
 #[test]
 fn diag_warns_when_network_caps_missing() {
-    let profile = AppContainerProfile::ensure(
-        "rappct.test.diag.nonetwork",
-        "rappct diag",
-        Some("diag test"),
-    )
-    .expect("ensure profile");
+    let name = format!("rappct.test.diag.nonetwork.{}", std::process::id());
+    let profile = AppContainerProfile::ensure(&name, "rappct diag", Some("diag test"))
+        .expect("ensure profile");
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .build()
         .expect("build caps");
@@ -42,9 +39,9 @@ fn diag_warns_when_network_caps_missing() {
 #[cfg(all(windows, feature = "introspection"))]
 #[test]
 fn diag_warns_when_lpac_missing_defaults() {
-    let profile =
-        AppContainerProfile::ensure("rappct.test.diag.lpac", "rappct diag", Some("diag test"))
-            .expect("ensure profile");
+    let name = format!("rappct.test.diag.lpac.{}", std::process::id());
+    let profile = AppContainerProfile::ensure(&name, "rappct diag", Some("diag test"))
+        .expect("ensure profile");
     let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
         .lpac(true)
         .build()

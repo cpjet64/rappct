@@ -22,20 +22,26 @@ pub(crate) struct OwnedSid {
 impl OwnedSid {
     /// # Safety
     /// `sid` must be a valid PSID allocated by an API requiring `LocalFree`.
-    pub(crate) unsafe fn from_localfree_psid(sid: *mut core::ffi::c_void) -> Self {
-        Self {
+    pub(crate) unsafe fn from_localfree_psid(sid: *mut core::ffi::c_void) -> Result<Self> {
+        if sid.is_null() {
+            return Err(AcError::InvalidSid("null LocalFree SID pointer".into()));
+        }
+        Ok(Self {
             raw: sid,
             kind: FreeKind::LocalFree,
-        }
+        })
     }
 
     /// # Safety
     /// `sid` must be a valid PSID allocated by an API requiring `FreeSid`.
-    pub(crate) unsafe fn from_freesid_psid(sid: *mut core::ffi::c_void) -> Self {
-        Self {
+    pub(crate) unsafe fn from_freesid_psid(sid: *mut core::ffi::c_void) -> Result<Self> {
+        if sid.is_null() {
+            return Err(AcError::InvalidSid("null FreeSid SID pointer".into()));
+        }
+        Ok(Self {
             raw: sid,
             kind: FreeKind::FreeSid,
-        }
+        })
     }
 
     pub(crate) fn as_psid(&self) -> PSID {
@@ -55,7 +61,7 @@ impl OwnedSid {
         unsafe {
             ConvertStringSidToSidW(PCWSTR(wide.as_pcwstr().0), &mut psid)
                 .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e:?}")))?;
-            Ok(OwnedSid::from_localfree_psid(psid.0))
+            OwnedSid::from_localfree_psid(psid.0)
         }
     }
 }
@@ -112,9 +118,18 @@ mod tests {
             let sddl = crate::ffi::wstr::WideString::from_str("S-1-5-32-544");
             ConvertStringSidToSidW(PCWSTR(sddl.as_pcwstr().0), &mut psid)
                 .expect("ConvertStringSidToSidW");
-            let sid = OwnedSid::from_localfree_psid(psid.0);
+            let sid = OwnedSid::from_localfree_psid(psid.0).expect("owned sid");
             assert!(sid.is_valid());
             let _ = sid.as_psid();
+        }
+    }
+
+    #[test]
+    fn owned_sid_from_localfree_rejects_null_pointer() {
+        // SAFETY: The constructor explicitly accepts raw pointers and this test verifies that
+        // a null LocalFree-managed SID is rejected without taking ownership.
+        unsafe {
+            assert!(OwnedSid::from_localfree_psid(core::ptr::null_mut()).is_err());
         }
     }
 }

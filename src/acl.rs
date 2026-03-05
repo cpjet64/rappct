@@ -116,10 +116,15 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
     // Pre-check: verify the target resource exists before attempting the ACL grant.
     match &target {
         ResourcePath::File(path) => {
-            if !path.exists() {
+            if !path.is_file() {
+                let hint = if path.exists() {
+                    "expected a file path; use ResourcePath::Directory for directories"
+                } else {
+                    "create the file before calling grant_to_package()"
+                };
                 return Err(AcError::ResourceNotFound {
                     path: path.display().to_string(),
-                    hint: "create the file before calling grant_to_package()",
+                    hint,
                 });
             }
         }
@@ -282,15 +287,20 @@ unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) ->
         ResourcePath::RegistryKey(spec) => {
             // Parse root and subkey
             fn parse_root(spec: &str) -> Option<(HKEY, Vec<u16>)> {
+                const HKCU_PREFIX: &str = "HKCU\\";
+                const HKEY_CURRENT_USER_PREFIX: &str = "HKEY_CURRENT_USER\\";
+                const HKLM_PREFIX: &str = "HKLM\\";
+                const HKEY_LOCAL_MACHINE_PREFIX: &str = "HKEY_LOCAL_MACHINE\\";
+
                 let up = spec.to_ascii_uppercase();
-                let (root, rest) = if up.strip_prefix("HKCU\\").is_some() {
-                    (HKEY_CURRENT_USER, &spec[5..])
-                } else if up.strip_prefix("HKEY_CURRENT_USER\\").is_some() {
-                    (HKEY_CURRENT_USER, &spec[18..])
-                } else if up.strip_prefix("HKLM\\").is_some() {
-                    (HKEY_LOCAL_MACHINE, &spec[5..])
-                } else if up.strip_prefix("HKEY_LOCAL_MACHINE\\").is_some() {
-                    (HKEY_LOCAL_MACHINE, &spec[19..])
+                let (root, rest) = if up.starts_with(HKCU_PREFIX) {
+                    (HKEY_CURRENT_USER, &spec[HKCU_PREFIX.len()..])
+                } else if up.starts_with(HKEY_CURRENT_USER_PREFIX) {
+                    (HKEY_CURRENT_USER, &spec[HKEY_CURRENT_USER_PREFIX.len()..])
+                } else if up.starts_with(HKLM_PREFIX) {
+                    (HKEY_LOCAL_MACHINE, &spec[HKLM_PREFIX.len()..])
+                } else if up.starts_with(HKEY_LOCAL_MACHINE_PREFIX) {
+                    (HKEY_LOCAL_MACHINE, &spec[HKEY_LOCAL_MACHINE_PREFIX.len()..])
                 } else {
                     return None;
                 };
@@ -521,6 +531,27 @@ mod tests {
         assert!(
             msg.contains("RegOpenKeyExW"),
             "expected registry open failure, got: {msg}"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn grant_rejects_nonexistent_registry_key_with_lowercase_root_prefix() {
+        use super::{AccessMask, ResourcePath, grant_to_package};
+        use crate::sid::AppContainerSid;
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let err = grant_to_package(
+            ResourcePath::RegistryKey(
+                "hkcu\\software\\__rappct_nonexistent_key_test_lowercase__".into(),
+            ),
+            &sid,
+            AccessMask::GENERIC_ALL,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("RegOpenKeyExW"),
+            "expected lowercase variant to be parsed and reach key open, got: {msg}"
         );
     }
 }

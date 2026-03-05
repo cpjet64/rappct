@@ -6,6 +6,10 @@ use crate::{AcError, Result};
 #[cfg(all(windows, feature = "net"))]
 use crate::ffi::mem::LocalAllocGuard;
 #[cfg(all(windows, feature = "net"))]
+use crate::ffi::sid::OwnedSid;
+#[cfg(all(windows, feature = "net"))]
+use std::cell::RefCell;
+#[cfg(all(windows, feature = "net"))]
 use std::collections::HashSet;
 
 #[cfg(all(windows, feature = "net"))]
@@ -60,6 +64,21 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
         };
         use windows::Win32::Security::SID_AND_ATTRIBUTES;
 
+        struct AppContainerArrayGuard(*mut INET_FIREWALL_APP_CONTAINER);
+
+        impl Drop for AppContainerArrayGuard {
+            fn drop(&mut self) {
+                if !self.0.is_null() {
+                    // SAFETY: Buffer is allocated by NetworkIsolationEnumAppContainers and must
+                    // be released via NetworkIsolationFreeAppContainers.
+                    unsafe {
+                        NetworkIsolationFreeAppContainers(self.0);
+                    }
+                    self.0 = std::ptr::null_mut();
+                }
+            }
+        }
+
         let mut count: u32 = 0;
         let mut arr: *mut INET_FIREWALL_APP_CONTAINER = std::ptr::null_mut();
         // SAFETY: Enumerates app containers; returns count and array to be freed via API.
@@ -74,11 +93,19 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
                 "NetworkIsolationEnumAppContainers failed: {err}"
             )));
         }
+        let arr_guard = AppContainerArrayGuard(arr);
 
-        let slice = if arr.is_null() {
-            &[][..]
+        let slice = if arr_guard.0.is_null() {
+            if count == 0 {
+                &[][..]
+            } else {
+                return Err(AcError::Win32(
+                    "NetworkIsolationEnumAppContainers returned null array with non-zero count"
+                        .to_string(),
+                ));
+            }
         } else {
-            std::slice::from_raw_parts(arr, count as usize)
+            std::slice::from_raw_parts(arr_guard.0, count as usize)
         };
         let mut out = Vec::with_capacity(slice.len());
         let mut sid_set: HashSet<String> = HashSet::with_capacity(slice.len());
@@ -87,9 +114,6 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
             let display = pwstr_to_string(item.displayName);
             sid_set.insert(sid_str.clone());
             out.push((AppContainerSid::from_sddl(sid_str), display));
-        }
-        if !arr.is_null() {
-            NetworkIsolationFreeAppContainers(arr);
         }
 
         let mut cfg_count: u32 = 0;
@@ -102,7 +126,14 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
                 "NetworkIsolationGetAppContainerConfig failed: {cfg_err}"
             )));
         }
-        if !cfg_arr.is_null() {
+        if cfg_arr.is_null() {
+            if cfg_count > 0 {
+                return Err(AcError::Win32(
+                    "NetworkIsolationGetAppContainerConfig returned null array with non-zero count"
+                        .to_string(),
+                ));
+            }
+        } else {
             let cfg_guard = LocalAllocGuard::<SID_AND_ATTRIBUTES>::from_raw(cfg_arr);
             let cfg_slice = std::slice::from_raw_parts(
                 cfg_guard.as_ptr() as *const SID_AND_ATTRIBUTES,
@@ -138,6 +169,11 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
 #[derive(Debug, Clone)]
 pub struct LoopbackAdd(pub AppContainerSid);
 
+#[cfg(all(windows, feature = "net"))]
+thread_local! {
+    static CONFIRMED_LOOPBACK_SIDS: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
+}
+
 /// Applies a loopback firewall exemption for the given AppContainer SID.
 /// Callers must acknowledge the operation with `LoopbackAdd::confirm_debug_only` first.
 ///
@@ -163,7 +199,9 @@ pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
     // SAFETY: Requires prior explicit confirmation; delegates to `set_loopback` with valid SID.
     unsafe {
         // Safety latch: require explicit confirm prior to call
-        if !CONFIRM_NEXT.swap(false, std::sync::atomic::Ordering::SeqCst) {
+        let is_confirmed = CONFIRMED_LOOPBACK_SIDS
+            .with(|confirmed| confirmed.borrow_mut().remove(req.0.as_string()));
+        if !is_confirmed {
             return Err(AcError::AccessDenied {
                 context: "loopback exemption requires confirm_debug_only()".into(),
                 source: Box::new(std::io::Error::new(
@@ -252,9 +290,6 @@ impl Drop for LoopbackExemptionGuard {
     }
 }
 
-#[cfg(all(windows, feature = "net"))]
-static CONFIRM_NEXT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
 impl LoopbackAdd {
     /// Confirms that the caller is intentionally requesting a loopback exemption.
     /// Without this acknowledgement `add_loopback_exemption` returns `AccessDenied`.
@@ -278,7 +313,9 @@ impl LoopbackAdd {
     pub fn confirm_debug_only(self) -> Self {
         #[cfg(all(windows, feature = "net"))]
         {
-            CONFIRM_NEXT.store(true, std::sync::atomic::Ordering::SeqCst);
+            CONFIRMED_LOOPBACK_SIDS.with(|confirmed| {
+                confirmed.borrow_mut().insert(self.0.as_string().to_owned());
+            });
         }
         self
     }
@@ -290,7 +327,7 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
         NetworkIsolationGetAppContainerConfig, NetworkIsolationSetAppContainerConfig,
     };
     use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
-    use windows::Win32::Security::{EqualSid, SID_AND_ATTRIBUTES};
+    use windows::Win32::Security::SID_AND_ATTRIBUTES;
     use windows::core::PCWSTR;
 
     let mut cur_count: u32 = 0;
@@ -303,10 +340,16 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
                 "NetworkIsolationGetAppContainerConfig failed: {err}"
             )));
         }
-        let current_guard: Option<LocalAllocGuard<SID_AND_ATTRIBUTES>> = if !cur_arr.is_null() {
-            Some(LocalAllocGuard::<SID_AND_ATTRIBUTES>::from_raw(cur_arr))
-        } else {
+        let current_guard: Option<LocalAllocGuard<SID_AND_ATTRIBUTES>> = if cur_arr.is_null() {
+            if cur_count > 0 {
+                return Err(AcError::Win32(
+                    "NetworkIsolationGetAppContainerConfig returned null array with non-zero count"
+                        .to_string(),
+                ));
+            }
             None
+        } else {
+            Some(LocalAllocGuard::<SID_AND_ATTRIBUTES>::from_raw(cur_arr))
         };
         let mut vec: Vec<SID_AND_ATTRIBUTES> = if let Some(ref guard) = current_guard {
             std::slice::from_raw_parts(
@@ -323,13 +366,16 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
         // SAFETY: Convert SDDL to a LocalAlloc-managed PSID; wrap with guard.
         ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
             .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e}")))?;
-        let psid_guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(psid_raw.0);
-        let target = PSID(psid_guard.as_ptr());
+        let owned_sid = OwnedSid::from_localfree_psid(psid_raw.0)?;
+        let target = owned_sid.as_psid();
+        let target_sddl = sid.as_string().to_owned();
+        let sid_matches =
+            |candidate: PSID| -> Result<bool> { Ok(psid_to_string(candidate)? == target_sddl) };
 
         if allow {
             let mut exists = false;
             for sa in &vec {
-                if EqualSid(sa.Sid, target).is_ok() {
+                if sid_matches(sa.Sid)? {
                     exists = true;
                     break;
                 }
@@ -341,7 +387,13 @@ unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
                 });
             }
         } else {
-            vec.retain(|sa| EqualSid(sa.Sid, target).is_err());
+            let mut filtered = Vec::with_capacity(vec.len());
+            for sa in vec.into_iter() {
+                if !sid_matches(sa.Sid)? {
+                    filtered.push(sa);
+                }
+            }
+            vec = filtered;
         }
 
         let err2 = NetworkIsolationSetAppContainerConfig(&vec);

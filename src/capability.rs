@@ -7,9 +7,9 @@
 //! `SECURITY_CAPABILITIES` structures at the FFI boundary.
 //! See: <https://learn.microsoft.com/windows/win32/secauthz/appcontainer-capabilities>
 
-use std::collections::BTreeMap;
 #[cfg(windows)]
 use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[cfg(windows)]
 use crate::ffi::mem::LocalAllocGuard;
@@ -61,6 +61,26 @@ impl CapabilityName {
         Self::InternetClient,
         Self::InternetClientServer,
         Self::PrivateNetworkClientServer,
+        Self::EnterpriseAuthentication,
+        Self::SharedUserCertificates,
+        Self::UserAccountInformation,
+        Self::DocumentsLibrary,
+        Self::PicturesLibrary,
+        Self::VideosLibrary,
+        Self::MusicLibrary,
+        Self::Appointments,
+        Self::Contacts,
+        Self::PhoneCall,
+        Self::VoipCall,
+        Self::Location,
+        Self::Microphone,
+        Self::Webcam,
+        Self::LowLevelDevices,
+        Self::HumanInterfaceDevice,
+        Self::InputInjectionBrokered,
+        Self::RemovableStorage,
+        Self::RegistryRead,
+        Self::LpacCom,
     ];
 
     pub const fn as_str(self) -> &'static str {
@@ -107,6 +127,26 @@ pub const WELL_KNOWN_CAPABILITY_NAMES: &[&str] = &[
     "internetClient",
     "internetClientServer",
     "privateNetworkClientServer",
+    "enterpriseAuthentication",
+    "sharedUserCertificates",
+    "userAccountInformation",
+    "documentsLibrary",
+    "picturesLibrary",
+    "videosLibrary",
+    "musicLibrary",
+    "appointments",
+    "contacts",
+    "phoneCall",
+    "voipCall",
+    "location",
+    "microphone",
+    "webcam",
+    "lowLevelDevices",
+    "humanInterfaceDevice",
+    "inputInjectionBrokered",
+    "removableStorage",
+    "registryRead",
+    "lpacCom",
 ];
 
 impl core::fmt::Display for CapabilityName {
@@ -259,7 +299,7 @@ impl Capability {
             ConvertStringSidToSidW(PCWSTR(wide.as_pcwstr().0), &mut psid)
                 .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e:?}")))?;
             // SAFETY: ConvertStringSidToSidW allocates via LocalAlloc; wrap in OwnedSid to release.
-            Ok(OwnedSid::from_localfree_psid(psid.0))
+            OwnedSid::from_localfree_psid(psid.0)
         }
     }
 
@@ -406,12 +446,14 @@ fn derive_single_capability_sids(name: &str) -> Result<Vec<SidAndAttributes>> {
             let suggestion: Option<&'static str> = suggest_capability_name(name);
             #[cfg(not(feature = "introspection"))]
             let suggestion: Option<&'static str> = None;
-            let name_with_hint = match suggestion {
-                Some(s) => format!("{name} (did you mean '{s}'?)"),
-                None => name.to_string(),
-            };
+            if !group_sids.is_null() {
+                let _ = LocalAllocGuard::<*mut std::ffi::c_void>::from_raw(group_sids);
+            }
+            if !cap_sids.is_null() {
+                let _ = LocalAllocGuard::<*mut std::ffi::c_void>::from_raw(cap_sids);
+            }
             return Err(AcError::UnknownCapability {
-                name: name_with_hint,
+                name: name.to_string(),
                 suggestion,
             });
         }
@@ -422,6 +464,22 @@ fn derive_single_capability_sids(name: &str) -> Result<Vec<SidAndAttributes>> {
             group_count,
             cap_count
         );
+        if group_count > 0 && group_sids.is_null() {
+            if !cap_sids.is_null() {
+                let _ = LocalAllocGuard::<*mut std::ffi::c_void>::from_raw(cap_sids);
+            }
+            return Err(AcError::Win32(format!(
+                "DeriveCapabilitySidsFromName returned null group SID array for '{name}' (count={group_count})"
+            )));
+        }
+        if cap_count > 0 && cap_sids.is_null() {
+            if !group_sids.is_null() {
+                let _ = LocalAllocGuard::<*mut std::ffi::c_void>::from_raw(group_sids);
+            }
+            return Err(AcError::Win32(format!(
+                "DeriveCapabilitySidsFromName returned null capability SID array for '{name}' (count={cap_count})"
+            )));
+        }
         // Convert capability group SIDs (ignored for SECURITY_CAPABILITIES; free them)
         for i in 0..group_count as isize {
             let sid_ptr: *mut std::ffi::c_void = *group_sids.offset(i);
@@ -430,23 +488,31 @@ fn derive_single_capability_sids(name: &str) -> Result<Vec<SidAndAttributes>> {
             }
         }
         // Convert capability SIDs
+        let mut conversion_error: Option<AcError> = None;
         for i in 0..cap_count as isize {
             let sid_ptr: *mut std::ffi::c_void = *cap_sids.offset(i);
             if !sid_ptr.is_null() {
                 let sid_guard = LocalAllocGuard::<std::ffi::c_void>::from_raw(sid_ptr);
                 let mut sddl = PWSTR::null();
-                if ConvertSidToStringSidW(
+                match ConvertSidToStringSidW(
                     windows::Win32::Security::PSID(sid_guard.as_ptr()),
                     &mut sddl,
-                )
-                .is_ok()
-                {
-                    let sddl_guard = LocalAllocGuard::<u16>::from_raw(sddl.0);
-                    let s = sddl_guard.to_string_lossy();
-                    out.push(SidAndAttributes {
-                        sid_sddl: s,
-                        attributes: SE_GROUP_ENABLED_CONST,
-                    });
+                ) {
+                    Ok(()) => {
+                        let sddl_guard = LocalAllocGuard::<u16>::from_raw(sddl.0);
+                        let s = sddl_guard.to_string_lossy();
+                        out.push(SidAndAttributes {
+                            sid_sddl: s,
+                            attributes: SE_GROUP_ENABLED_CONST,
+                        });
+                    }
+                    Err(e) => {
+                        if conversion_error.is_none() {
+                            conversion_error = Some(AcError::Win32(format!(
+                                "ConvertSidToStringSidW failed for capability '{name}': {e:?}"
+                            )));
+                        }
+                    }
                 }
             }
         }
@@ -456,6 +522,17 @@ fn derive_single_capability_sids(name: &str) -> Result<Vec<SidAndAttributes>> {
         }
         if !cap_sids.is_null() {
             let _ = LocalAllocGuard::<*mut std::ffi::c_void>::from_raw(cap_sids);
+        }
+
+        if let Some(err) = conversion_error {
+            return Err(err);
+        }
+        if out.len() != cap_count as usize {
+            return Err(AcError::Win32(format!(
+                "Derived {} capability SID(s) for '{name}' but converted {}",
+                cap_count,
+                out.len()
+            )));
         }
     }
     Ok(out)
@@ -541,6 +618,11 @@ impl SecurityCapabilitiesBuilder {
         self.caps_named.push("lpacCom".to_string());
         self
     }
+    /// Compatibility no-op to support older builder chains that called `.unwrap()`.
+    /// Returns `self` unchanged.
+    pub fn unwrap(self) -> Self {
+        self
+    }
     pub fn lpac(mut self, enabled: bool) -> Self {
         self.lpac = enabled;
         self
@@ -588,24 +670,18 @@ impl SecurityCapabilitiesBuilder {
         UseCaseCapabilities { caps_named, lpac }
     }
     pub fn build(self) -> Result<SecurityCapabilities> {
-        let caps = derive_named_capability_sids(
-            &self
-                .caps_named
-                .iter()
-                .map(|s| s.as_str())
-                .collect::<Vec<_>>(),
-        )?;
+        let mut seen = BTreeSet::new();
+        let deduped_caps: Vec<&str> = self
+            .caps_named
+            .iter()
+            .filter_map(|s| seen.insert(s.as_str()).then_some(s.as_str()))
+            .collect();
+        let caps = derive_named_capability_sids(&deduped_caps)?;
         Ok(SecurityCapabilities {
             package: self.package,
             caps,
             lpac: self.lpac,
         })
-    }
-
-    /// Compatibility no-op to support older tests that used `.unwrap()` in the builder chain.
-    /// Returns `self` unchanged.
-    pub fn unwrap(self) -> Self {
-        self
     }
 
     #[cfg(test)]
@@ -646,7 +722,10 @@ mod tests {
 
 #[cfg(test)]
 mod builder_tests {
-    use super::{KnownCapability, SecurityCapabilitiesBuilder, UseCase};
+    use super::{
+        ALL_CAPABILITY_NAMES, KnownCapability, SecurityCapabilitiesBuilder, UseCase,
+        WELL_KNOWN_CAPABILITY_NAMES,
+    };
     use crate::sid::AppContainerSid;
 
     fn sample_sid() -> AppContainerSid {
@@ -876,5 +955,21 @@ mod builder_tests {
         let built = builder.build().expect("build from preset");
         assert!(built.lpac);
         assert_eq!(built.caps.len(), 2);
+    }
+
+    #[test]
+    fn known_capabilities_all_and_well_known_names_stay_in_sync() {
+        assert_eq!(
+            ALL_CAPABILITY_NAMES.len(),
+            WELL_KNOWN_CAPABILITY_NAMES.len(),
+            "known capability names should be defined for every enum variant"
+        );
+
+        for name in WELL_KNOWN_CAPABILITY_NAMES {
+            assert!(
+                KnownCapability::from_name(name).is_some(),
+                "known capability constant missing lookup implementation: {name}"
+            );
+        }
     }
 }

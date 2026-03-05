@@ -30,7 +30,7 @@ use std::rc::Rc;
 
 // Use fully-qualified macros (tracing::trace!, etc.) to avoid unused import warnings
 #[cfg(windows)]
-use windows::Win32::Foundation::{CloseHandle, HANDLE};
+use windows::Win32::Foundation::HANDLE;
 #[cfg(windows)]
 use windows::Win32::Foundation::{HANDLE_FLAG_INHERIT, SetHandleInformation};
 #[cfg(windows)]
@@ -45,7 +45,7 @@ use windows::Win32::System::JobObjects::{
 };
 use windows::Win32::System::Threading::{
     CREATE_SUSPENDED, CREATE_UNICODE_ENVIRONMENT, CreateProcessW, EXTENDED_STARTUPINFO_PRESENT,
-    PROCESS_INFORMATION, STARTUPINFOEXW,
+    PROCESS_INFORMATION, STARTUPINFOEXW, WaitForInputIdle,
 };
 #[cfg(windows)]
 use windows::Win32::System::WindowsProgramming::PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT;
@@ -76,6 +76,8 @@ pub struct LaunchOptions {
     pub stdio: StdioConfig,
     pub suspended: bool,
     pub join_job: Option<JobLimits>,
+    /// Maximum wait for child startup to reach input-idle.
+    /// Ignored when `suspended` is `true`, because the child thread is not running yet.
     pub startup_timeout: Option<std::time::Duration>,
     /// Reserved for internal use; use `..Default::default()` when constructing.
     #[cfg(windows)]
@@ -105,8 +107,12 @@ impl Default for LaunchOptions {
         let cwd = Some(std::path::PathBuf::from("C:\\Windows\\System32"));
         #[cfg(not(target_os = "windows"))]
         let cwd = None;
+        #[cfg(target_os = "windows")]
+        let exe = std::path::PathBuf::from("C:\\Windows\\System32\\notepad.exe");
+        #[cfg(not(target_os = "windows"))]
+        let exe = std::path::PathBuf::new();
         Self {
-            exe: std::path::PathBuf::from("C:\\Windows\\System32\\notepad.exe"),
+            exe,
             cmdline: None,
             cwd,
             env: None,
@@ -292,16 +298,40 @@ pub fn merge_parent_env(mut custom: Vec<(OsString, OsString)>) -> Vec<(OsString,
         "TMP",
         "PATH",
     ];
-    custom.reserve(KEYS.len());
-    for key in KEYS {
-        if custom.iter().any(|(k, _)| k == key) {
-            continue;
+
+    fn key_matches(lhs: &OsString, rhs: &str) -> bool {
+        lhs.to_string_lossy().eq_ignore_ascii_case(rhs)
+    }
+
+    fn merge_env_entry(
+        merged: &mut Vec<(OsString, OsString)>,
+        key: OsString,
+        value: OsString,
+        overwrite: bool,
+    ) {
+        if let Some((existing_key, existing_value)) = merged
+            .iter_mut()
+            .find(|(k, _)| key_matches(k, key.to_string_lossy().as_ref()))
+        {
+            if overwrite {
+                *existing_key = key;
+                *existing_value = value;
+            }
+            return;
         }
+        merged.push((key, value));
+    }
+
+    let mut merged = Vec::with_capacity(custom.len() + KEYS.len());
+    for (key, value) in custom.drain(..) {
+        merge_env_entry(&mut merged, key, value, true);
+    }
+    for key in KEYS {
         if let Some(val) = std::env::var_os(key) {
-            custom.push((OsString::from(key), val));
+            merge_env_entry(&mut merged, OsString::from(key), val, false);
         }
     }
-    custom
+    merged
 }
 
 #[cfg(windows)]
@@ -357,8 +387,9 @@ impl LaunchAttributes {
         let mut lpac_policy = None;
         if lpac {
             lpac_policy = Some(Box::new(PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT));
-            let policy_ref = lpac_policy.as_ref().unwrap();
-            attr_list.set_all_app_packages_policy(policy_ref)?;
+            if let Some(policy_ref) = lpac_policy.as_ref() {
+                attr_list.set_all_app_packages_policy(policy_ref)?;
+            }
         }
 
         let handle_list = handles.to_vec();
@@ -400,6 +431,15 @@ impl StartUpInfoExGuard {
     fn info_mut(&mut self) -> &mut STARTUPINFOEXW {
         self.info.lpAttributeList = self.attrs.as_mut_ptr();
         &mut self.info
+    }
+}
+
+#[cfg(windows)]
+fn effective_startup_timeout(opts: &LaunchOptions) -> Option<std::time::Duration> {
+    if opts.suspended {
+        None
+    } else {
+        opts.startup_timeout
     }
 }
 
@@ -510,6 +550,7 @@ fn setup_stdio(
                 hint: "stdin",
                 source: Box::new(std::io::Error::last_os_error()),
             })?;
+            let stdin_owned = handles::from_win32(stdin_handle)?;
             // SAFETY: NUL device path is static and ACCESS flags are valid for read/write access.
             let stdout_handle = unsafe {
                 CreateFileW(
@@ -527,6 +568,7 @@ fn setup_stdio(
                 hint: "stdout",
                 source: Box::new(std::io::Error::last_os_error()),
             })?;
+            let stdout_owned = handles::from_win32(stdout_handle)?;
             // SAFETY: NUL device path is static and ACCESS flags are valid for read/write access.
             let stderr_handle = unsafe {
                 CreateFileW(
@@ -544,9 +586,6 @@ fn setup_stdio(
                 hint: "stderr",
                 source: Box::new(std::io::Error::last_os_error()),
             })?;
-
-            let stdin_owned = handles::from_win32(stdin_handle)?;
-            let stdout_owned = handles::from_win32(stdout_handle)?;
             let stderr_owned = handles::from_win32(stderr_handle)?;
 
             let raw_in = stdin_owned.as_win32();
@@ -585,9 +624,14 @@ fn setup_stdio(
                 let child = handles::from_win32(read_end)?;
                 let parent = handles::from_win32(write_end)?;
                 // SAFETY: Handles are valid; clearing inherit on the parent end is intentional.
-                let _ = unsafe {
+                unsafe {
                     SetHandleInformation(parent.as_win32(), HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0))
-                };
+                }
+                .map_err(|_| AcError::LaunchFailed {
+                    stage: "SetHandleInformation(stdin parent)",
+                    hint: "pipe",
+                    source: Box::new(std::io::Error::last_os_error()),
+                })?;
                 (child, parent)
             };
 
@@ -604,9 +648,14 @@ fn setup_stdio(
                 let parent = handles::from_win32(read_end)?;
                 let child = handles::from_win32(write_end)?;
                 // SAFETY: Handles are valid; clearing inherit on the parent end is intentional.
-                let _ = unsafe {
+                unsafe {
                     SetHandleInformation(parent.as_win32(), HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0))
-                };
+                }
+                .map_err(|_| AcError::LaunchFailed {
+                    stage: "SetHandleInformation(stdout parent)",
+                    hint: "pipe",
+                    source: Box::new(std::io::Error::last_os_error()),
+                })?;
                 (parent, child)
             };
 
@@ -623,9 +672,14 @@ fn setup_stdio(
                 let parent = handles::from_win32(read_end)?;
                 let child = handles::from_win32(write_end)?;
                 // SAFETY: Handles are valid; clearing inherit on the parent end is intentional.
-                let _ = unsafe {
+                unsafe {
                     SetHandleInformation(parent.as_win32(), HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0))
-                };
+                }
+                .map_err(|_| AcError::LaunchFailed {
+                    stage: "SetHandleInformation(stderr parent)",
+                    hint: "pipe",
+                    source: Box::new(std::io::Error::last_os_error()),
+                })?;
                 (parent, child)
             };
 
@@ -672,10 +726,10 @@ fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<Launc
 
     let force_env = std::env::var_os("RAPPCT_TEST_FORCE_ENV").is_some();
     let env_block = if let Some(env) = opts.env.as_ref() {
-        Some(make_wide_block(env))
+        Some(make_wide_block(env)?)
     } else if force_env {
         let all: Vec<(OsString, OsString)> = std::env::vars_os().collect();
-        Some(make_wide_block(&all))
+        Some(make_wide_block(&all)?)
     } else {
         None
     };
@@ -768,11 +822,18 @@ fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<Launc
 
     drop(inherit_list);
 
+    let thread_handle = handles::from_win32(pi.hThread)
+        .map_err(|_| AcError::Win32("invalid thread handle".into()))?;
+    let proc_handle = handles::from_win32(pi.hProcess)
+        .map_err(|_| AcError::Win32("invalid process handle".into()))?;
+
     let mut job_guard: Option<JobGuard> = None;
     if let Some(limits) = &opts.join_job {
         // SAFETY: `CreateJobObjectW` creates a valid job object handle for the current process.
-        let hjob = unsafe { CreateJobObjectW(None, PCWSTR::null()) }
+        let hjob_raw = unsafe { CreateJobObjectW(None, PCWSTR::null()) }
             .map_err(|e| AcError::Win32(format!("CreateJobObjectW failed: {e}")))?;
+        let hjob = handles::from_win32(hjob_raw)
+            .map_err(|_| AcError::Win32("invalid job handle".into()))?;
         if limits.memory_bytes.is_some() || limits.kill_on_job_close {
             let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION =
                 JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
@@ -786,7 +847,7 @@ fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<Launc
             // SAFETY: `hjob` is a live handle and `info` structure is fully initialized.
             unsafe {
                 SetInformationJobObject(
-                    hjob,
+                    hjob.as_win32(),
                     JobObjectExtendedLimitInformation,
                     &info as *const _ as *const _,
                     std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
@@ -810,7 +871,7 @@ fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<Launc
             // SAFETY: `hjob` is a live handle and `info` structure is fully initialized.
             unsafe {
                 SetInformationJobObject(
-                    hjob,
+                    hjob.as_win32(),
                     JobObjectCpuRateControlInformation,
                     &info as *const _ as *const _,
                     std::mem::size_of::<JOBOBJECT_CPU_RATE_CONTROL_INFORMATION>() as u32,
@@ -823,28 +884,67 @@ fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<Launc
             })?;
         }
         // SAFETY: Both `hjob` and `pi.hProcess` are valid live handles for this operation.
-        unsafe { AssignProcessToJobObject(hjob, pi.hProcess) }.map_err(|_| {
-            AcError::LaunchFailed {
+        unsafe { AssignProcessToJobObject(hjob.as_win32(), proc_handle.as_win32()) }.map_err(
+            |_| AcError::LaunchFailed {
                 stage: "AssignProcessToJobObject",
                 hint: "attach child",
                 source: Box::new(std::io::Error::last_os_error()),
-            }
-        })?;
+            },
+        )?;
         if limits.kill_on_job_close {
-            job_guard = Some(JobGuard(
-                handles::from_win32(hjob)
-                    .map_err(|_| AcError::Win32("invalid job handle".into()))?,
-            ));
-        } else {
-            // SAFETY: Job handle is not needed after successful assignment when kill-on-close disabled.
-            let _ = unsafe { CloseHandle(hjob) };
+            job_guard = Some(JobGuard(hjob));
         }
     }
 
-    // SAFETY: Closing primary thread handle after process creation is safe and expected.
-    let _ = unsafe { CloseHandle(pi.hThread) };
-    let proc_handle = handles::from_win32(pi.hProcess)
-        .map_err(|_| AcError::Win32("invalid process handle".into()))?;
+    drop(thread_handle);
+
+    if let Some(timeout) = effective_startup_timeout(opts) {
+        use windows::Win32::Foundation::{WAIT_FAILED, WAIT_OBJECT_0, WAIT_TIMEOUT};
+        use windows::Win32::System::Threading::{GetExitCodeProcess, WaitForSingleObject};
+
+        let ms = timeout.as_millis().min(u128::from(u32::MAX)) as u32;
+        // SAFETY: Process handle is live and owned by `proc_handle`; timeout conversion is bounded to u32.
+        let idle_wait = unsafe { WaitForInputIdle(proc_handle.as_win32(), ms) };
+        if idle_wait == WAIT_TIMEOUT.0 {
+            return Err(AcError::LaunchFailed {
+                stage: "startup_timeout",
+                hint: "child did not become input-idle in time",
+                source: Box::new(std::io::Error::new(
+                    std::io::ErrorKind::TimedOut,
+                    "WaitForInputIdle timeout",
+                )),
+            });
+        }
+        if idle_wait == WAIT_FAILED.0 {
+            // WAIT_FAILED is expected for non-GUI processes; probe process state to detect
+            // true startup failure while preserving existing console/service launch behavior.
+            // SAFETY: Zero-timeout probe on a live process handle.
+            let probe = unsafe { WaitForSingleObject(proc_handle.as_win32(), 0) };
+            if probe == WAIT_FAILED {
+                return Err(AcError::Win32(
+                    "WaitForSingleObject(startup probe) failed".into(),
+                ));
+            }
+            if probe == WAIT_OBJECT_0 {
+                let mut code = 0u32;
+                // SAFETY: Process handle is valid and out-parameter is initialized.
+                unsafe { GetExitCodeProcess(proc_handle.as_win32(), &mut code) }
+                    .map_err(|_| AcError::Win32("GetExitCodeProcess failed".into()))?;
+                return Err(AcError::LaunchFailed {
+                    stage: "startup_timeout",
+                    hint: "child exited before becoming input-idle",
+                    source: Box::new(std::io::Error::other(format!("exit code: {code}"))),
+                });
+            }
+            #[cfg(feature = "tracing")]
+            tracing::trace!(
+                "WaitForInputIdle returned WAIT_FAILED for non-GUI process; continuing"
+            );
+        }
+    } else if opts.suspended && opts.startup_timeout.is_some() {
+        #[cfg(feature = "tracing")]
+        tracing::trace!("startup_timeout ignored because launch is suspended");
+    }
 
     let StdioSetupResult {
         parent_stdin,
@@ -945,15 +1045,37 @@ mod tests {
     #[test]
     fn merge_parent_env_does_not_duplicate_existing_keys() {
         let out = merge_parent_env(vec![(
-            OsString::from("SystemRoot"),
+            OsString::from("systemroot"),
             OsString::from("X:\\Custom"),
         )]);
-        let matches = out.iter().filter(|(k, _)| k == "SystemRoot").count();
+        let matches = out
+            .iter()
+            .filter(|(k, _)| k.to_string_lossy().eq_ignore_ascii_case("SystemRoot"))
+            .count();
         assert_eq!(matches, 1, "SystemRoot should not be duplicated");
-        assert!(
-            out.iter()
-                .any(|(k, v)| k == "SystemRoot" && v == "X:\\Custom")
+        assert!(out.iter().any(
+            |(k, v)| k.to_string_lossy().eq_ignore_ascii_case("systemroot") && v == "X:\\Custom"
+        ));
+    }
+
+    #[test]
+    fn merge_parent_env_keeps_case_insensitive_last_writer_wins() {
+        let out = merge_parent_env(vec![
+            (OsString::from("RAPPCT_X"), OsString::from("1")),
+            (OsString::from("systemroot"), OsString::from("X:\\Lower")),
+            (OsString::from("SystemRoot"), OsString::from("Y:\\Upper")),
+        ]);
+        let matches = out
+            .iter()
+            .filter(|(k, _)| k.to_string_lossy().eq_ignore_ascii_case("SystemRoot"))
+            .count();
+        assert_eq!(
+            matches, 1,
+            "case-insensitive duplicates must collapse to one key"
         );
+        assert!(out.iter().any(
+            |(k, v)| k.to_string_lossy().eq_ignore_ascii_case("SystemRoot") && v == "Y:\\Upper"
+        ));
     }
 
     #[test]
@@ -1079,6 +1201,26 @@ mod tests {
             .expect("security caps");
         let opts = LaunchOptions::default().with_security_capabilities(caps);
         assert!(opts.extra.security_caps.is_some());
+    }
+
+    #[test]
+    fn effective_startup_timeout_skips_suspended_launches() {
+        let suspended = LaunchOptions {
+            suspended: true,
+            startup_timeout: Some(Duration::from_secs(5)),
+            ..Default::default()
+        };
+        let active = LaunchOptions {
+            suspended: false,
+            startup_timeout: Some(Duration::from_secs(5)),
+            ..Default::default()
+        };
+
+        assert!(super::effective_startup_timeout(&suspended).is_none());
+        assert_eq!(
+            super::effective_startup_timeout(&active),
+            Some(Duration::from_secs(5))
+        );
     }
 
     #[test]

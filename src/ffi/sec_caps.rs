@@ -82,12 +82,12 @@ mod tests {
             let s_app = crate::ffi::wstr::WideString::from_str("S-1-5-32-544");
             let mut app_sid = windows::Win32::Security::PSID::default();
             ConvertStringSidToSidW(PCWSTR(s_app.as_pcwstr().0), &mut app_sid).unwrap();
-            let app_owned = OwnedSid::from_localfree_psid(app_sid.0);
+            let app_owned = OwnedSid::from_localfree_psid(app_sid.0).expect("owned app SID");
 
             let s_cap = crate::ffi::wstr::WideString::from_str("S-1-15-3-1024-0-0-0-0");
             let mut cap_sid = windows::Win32::Security::PSID::default();
             ConvertStringSidToSidW(PCWSTR(s_cap.as_pcwstr().0), &mut cap_sid).unwrap();
-            let cap_owned = OwnedSid::from_localfree_psid(cap_sid.0);
+            let cap_owned = OwnedSid::from_localfree_psid(cap_sid.0).expect("owned cap SID");
 
             let sc = OwnedSecurityCapabilities::new(app_owned, [cap_owned]);
             let _p = sc.as_ptr();
@@ -101,7 +101,7 @@ mod tests {
             let s_app = crate::ffi::wstr::WideString::from_str("S-1-15-2-1");
             let mut app_sid = windows::Win32::Security::PSID::default();
             ConvertStringSidToSidW(PCWSTR(s_app.as_pcwstr().0), &mut app_sid).unwrap();
-            let app_owned = OwnedSid::from_localfree_psid(app_sid.0);
+            let app_owned = OwnedSid::from_localfree_psid(app_sid.0).expect("owned app SID");
 
             let sc = OwnedSecurityCapabilities::from_catalog(
                 app_owned,

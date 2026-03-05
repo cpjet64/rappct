@@ -1,5 +1,9 @@
 #![cfg(all(windows, feature = "net"))]
 
+#[path = "support/windows_test_utils.rs"]
+mod windows_test_utils;
+
+use crate::windows_test_utils::{LocalAlloc, LocalWideString};
 use rappct::{AppContainerProfile, net::LoopbackExemptionGuard};
 
 // Opt-in: this test mutates firewall config; set env var to run
@@ -34,33 +38,6 @@ fn loopback_config_contains<S: AsRef<str>>(sid_str: S) -> rappct::Result<bool> {
     use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
     use windows::Win32::Security::SID_AND_ATTRIBUTES;
     use windows::core::PWSTR;
-    #[link(name = "Kernel32")]
-    unsafe extern "system" {
-        fn LocalFree(h: isize) -> isize;
-    }
-    unsafe fn pwstr_to_string_and_free(ptr: PWSTR) -> String {
-        if ptr.is_null() {
-            return String::new();
-        }
-        let mut len = 0usize;
-        unsafe {
-            while *ptr.0.add(len) != 0 {
-                len += 1;
-            }
-        }
-        let s = unsafe { String::from_utf16_lossy(std::slice::from_raw_parts(ptr.0, len)) };
-        unsafe {
-            let _ = LocalFree(ptr.0 as isize);
-        }
-        s
-    }
-    unsafe fn local_free_ptr<T>(ptr: *mut T) {
-        if !ptr.is_null() {
-            unsafe {
-                let _ = LocalFree(ptr as isize);
-            }
-        }
-    }
     unsafe {
         let mut count: u32 = 0;
         let mut arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
@@ -70,10 +47,14 @@ fn loopback_config_contains<S: AsRef<str>>(sid_str: S) -> rappct::Result<bool> {
                 "NetworkIsolationGetAppContainerConfig failed: {err}"
             )));
         }
-        let slice = if arr.is_null() {
-            &[][..]
+        let guard = if arr.is_null() {
+            None
         } else {
-            std::slice::from_raw_parts(arr, count as usize)
+            Some(LocalAlloc::<SID_AND_ATTRIBUTES>::from_raw(arr))
+        };
+        let slice: &[SID_AND_ATTRIBUTES] = match &guard {
+            Some(local) => local.as_slice(count as usize),
+            None => &[],
         };
         let target = sid_str.as_ref();
         for sa in slice {
@@ -81,13 +62,10 @@ fn loopback_config_contains<S: AsRef<str>>(sid_str: S) -> rappct::Result<bool> {
             ConvertSidToStringSidW(sa.Sid, &mut raw).map_err(|e| {
                 rappct::AcError::Win32(format!("ConvertSidToStringSidW failed: {e}"))
             })?;
-            let s = pwstr_to_string_and_free(raw);
+            let s = LocalWideString::from_raw(raw).to_string_lossy();
             if s == target {
                 return Ok(true);
             }
-        }
-        if !arr.is_null() {
-            local_free_ptr(arr);
         }
         Ok(false)
     }

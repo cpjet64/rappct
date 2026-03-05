@@ -54,10 +54,12 @@ impl ProfileCleanupGuard {
         }
     }
 
-    fn profile(&self) -> &AppContainerProfile {
-        self.profile
-            .as_ref()
-            .expect("profile available during diagnostics demo")
+    fn profile(&self) -> rappct::Result<&AppContainerProfile> {
+        self.profile.as_ref().ok_or_else(|| {
+            rappct::AcError::Win32(
+                "diagnostics profile guard was consumed before profile access".into(),
+            )
+        })
     }
 }
 
@@ -333,7 +335,7 @@ fn demo_diagnostics_old() -> rappct::Result<()> {
             "Diagnostics Demo",
             None,
         )?);
-        let profile_sid = profile_guard.profile().sid.clone();
+        let profile_sid = profile_guard.profile()?.sid.clone();
 
         // Test 1: LPAC without common capabilities (should warn)
         println!("\n→ Test 1: LPAC without common capabilities");
