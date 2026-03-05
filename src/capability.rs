@@ -692,6 +692,107 @@ mod builder_tests {
     }
 
     #[test]
+    fn capability_variants_report_expected_names_and_display() {
+        let cases = [
+            (KnownCapability::InternetClient, "internetClient"),
+            (
+                KnownCapability::InternetClientServer,
+                "internetClientServer",
+            ),
+            (
+                KnownCapability::PrivateNetworkClientServer,
+                "privateNetworkClientServer",
+            ),
+            (
+                KnownCapability::EnterpriseAuthentication,
+                "enterpriseAuthentication",
+            ),
+            (
+                KnownCapability::SharedUserCertificates,
+                "sharedUserCertificates",
+            ),
+            (
+                KnownCapability::UserAccountInformation,
+                "userAccountInformation",
+            ),
+            (KnownCapability::DocumentsLibrary, "documentsLibrary"),
+            (KnownCapability::PicturesLibrary, "picturesLibrary"),
+            (KnownCapability::VideosLibrary, "videosLibrary"),
+            (KnownCapability::MusicLibrary, "musicLibrary"),
+            (KnownCapability::Appointments, "appointments"),
+            (KnownCapability::Contacts, "contacts"),
+            (KnownCapability::PhoneCall, "phoneCall"),
+            (KnownCapability::VoipCall, "voipCall"),
+            (KnownCapability::Location, "location"),
+            (KnownCapability::Microphone, "microphone"),
+            (KnownCapability::Webcam, "webcam"),
+            (KnownCapability::LowLevelDevices, "lowLevelDevices"),
+            (
+                KnownCapability::HumanInterfaceDevice,
+                "humanInterfaceDevice",
+            ),
+            (
+                KnownCapability::InputInjectionBrokered,
+                "inputInjectionBrokered",
+            ),
+            (KnownCapability::RemovableStorage, "removableStorage"),
+            (KnownCapability::RegistryRead, "registryRead"),
+            (KnownCapability::LpacCom, "lpacCom"),
+        ];
+
+        for (cap, expected) in cases {
+            assert_eq!(cap.as_str(), expected);
+            assert_eq!(cap.as_name(), expected);
+            assert_eq!(cap.to_string(), expected);
+        }
+
+        assert_eq!(
+            KnownCapability::from_name("internetClient"),
+            Some(KnownCapability::InternetClient)
+        );
+        assert_eq!(
+            KnownCapability::from_name("internetClientServer"),
+            Some(KnownCapability::InternetClientServer)
+        );
+        assert_eq!(
+            KnownCapability::from_name("privateNetworkClientServer"),
+            Some(KnownCapability::PrivateNetworkClientServer)
+        );
+    }
+
+    #[test]
+    fn with_named_empty_is_noop() {
+        let sid = sample_sid();
+        let builder = SecurityCapabilitiesBuilder::new(&sid)
+            .with_known(&[KnownCapability::InternetClient])
+            .with_named(&[]);
+
+        assert!(!builder.lpac_enabled_for_test());
+        let names: Vec<&str> = builder
+            .named_caps_for_test()
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        assert_eq!(names, vec!["internetClient"]);
+    }
+
+    #[test]
+    fn with_named_appends_verbatim_and_preserves_lpac_flag() {
+        let sid = sample_sid();
+        let builder = SecurityCapabilitiesBuilder::new(&sid)
+            .lpac(true)
+            .with_named(&["alpha", "beta", "alpha"]);
+
+        assert!(builder.lpac_enabled_for_test());
+        let names: Vec<&str> = builder
+            .named_caps_for_test()
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        assert_eq!(names, vec!["alpha", "beta", "alpha"]);
+    }
+
+    #[test]
     fn from_use_case_creates_expected_caps() {
         let secure = SecurityCapabilitiesBuilder::from_use_case(UseCase::SecureWebScraper);
         let names: Vec<&str> = secure
@@ -723,6 +824,47 @@ mod builder_tests {
                 "internetClientServer",
                 "userAccountInformation"
             ]
+        );
+    }
+
+    #[test]
+    fn additional_use_cases_set_expected_caps_and_flags() {
+        let isolated =
+            SecurityCapabilitiesBuilder::from_use_case(UseCase::IsolatedBuildEnvironment);
+        let isolated_names: Vec<&str> = isolated
+            .named_caps_for_test()
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        assert_eq!(isolated_names, vec!["registryRead", "lpacCom"]);
+        assert!(
+            isolated
+                .with_profile_sid(&sample_sid())
+                .lpac_enabled_for_test(),
+            "isolated build environment should enable LPAC"
+        );
+
+        let network = SecurityCapabilitiesBuilder::from_use_case(UseCase::NetworkConstrainedTool);
+        let network_names: Vec<&str> = network
+            .named_caps_for_test()
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        assert_eq!(network_names, vec!["privateNetworkClientServer"]);
+        assert!(
+            !network
+                .with_profile_sid(&sample_sid())
+                .lpac_enabled_for_test(),
+            "network-constrained tool should not force LPAC"
+        );
+
+        let custom = SecurityCapabilitiesBuilder::from_use_case(UseCase::Custom);
+        assert!(custom.named_caps_for_test().is_empty());
+        assert!(
+            !custom
+                .with_profile_sid(&sample_sid())
+                .lpac_enabled_for_test(),
+            "custom use case should remain non-LPAC by default"
         );
     }
 
