@@ -5,9 +5,7 @@ use rappct::*;
 use rappct::diag::{ConfigWarning, validate_configuration};
 
 #[cfg(windows)]
-use crate::windows_test_utils::LocalWideString;
-#[cfg(windows)]
-use std::sync::{Mutex, OnceLock};
+use crate::windows_test_utils::{LocalWideString, NamedMutexGuard, acquire_job_test_lock};
 
 #[cfg(windows)]
 use windows::Win32::Foundation::HANDLE;
@@ -37,14 +35,8 @@ fn cmd_exe() -> std::path::PathBuf {
 }
 
 #[cfg(windows)]
-static JOB_LAUNCH_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-
-#[cfg(windows)]
-fn job_launch_guard() -> std::sync::MutexGuard<'static, ()> {
-    JOB_LAUNCH_LOCK
-        .get_or_init(|| Mutex::new(()))
-        .lock()
-        .unwrap()
+fn job_launch_guard() -> NamedMutexGuard {
+    acquire_job_test_lock()
 }
 
 #[cfg(windows)]

@@ -1,5 +1,8 @@
 #![cfg(windows)]
 
+#[path = "support/windows_test_utils.rs"]
+mod windows_test_utils;
+
 use rappct::{
     AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder, launch::JobLimits,
     launch::LaunchOptions, launch::StdioConfig, launch::launch_in_container_with_io,
@@ -11,6 +14,7 @@ fn job_guard_kills_on_drop() {
     if std::env::var_os("RAPPCT_ALLOW_JOB_TESTS").is_none() {
         return;
     }
+    let _guard = windows_test_utils::acquire_job_test_lock();
     use std::path::PathBuf;
     use windows::Win32::Foundation::WAIT_OBJECT_0;
     use windows::Win32::System::Threading::WaitForSingleObject;

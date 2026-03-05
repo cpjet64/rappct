@@ -38,7 +38,7 @@ release-publish:
 release: release-gate-log release-publish
 
 ensure-clean-tree:
-    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& { $gitExe = (Get-Command git.exe -ErrorAction Stop).Source; $status = & $gitExe status --short; if ($LASTEXITCODE -ne 0) { throw \"git status --short failed with exit code $LASTEXITCODE\" }; if ($null -ne $status -and $status.Count -gt 0) { Write-Host '[release] Working tree is not clean.'; Write-Host $status; Write-Host '[release] Commit/stage changes before running clean-release targets (or use allow-dirty targets).'; exit 1 }; Write-Host '[release] Working tree is clean.' }"
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& { if (git status --short | Select-Object -First 1) { Write-Host '[release] Working tree is not clean.'; git status --short; Write-Host '[release] Commit/stage changes before running clean-release targets (or use allow-dirty targets).'; exit 1 }; Write-Host '[release] Working tree is clean.' }"
 
 # === Repo Hygiene ===
 hygiene:
@@ -70,7 +70,7 @@ security:
     python scripts/enforce_advisory_policy.py
 
 docs:
-    $env:RUSTFLAGS='-D warnings'; cargo doc --no-deps --all-features
+    cmd /c "set RUSTFLAGS=-D warnings && cargo doc --no-deps --all-features"
 
 bench:
     cargo bench --locked
