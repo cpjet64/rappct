@@ -5,8 +5,7 @@ use rappct::*;
 use rappct::diag::{ConfigWarning, validate_configuration};
 
 #[cfg(windows)]
-use crate::windows_test_utils::{LocalWideString, NamedMutexGuard, acquire_job_test_lock};
-
+use crate::windows_test_utils::LocalWideString;
 #[cfg(windows)]
 use windows::Win32::Foundation::HANDLE;
 #[cfg(windows)]
@@ -32,11 +31,6 @@ struct TokenAppContainerInformation {
 #[cfg(windows)]
 fn cmd_exe() -> std::path::PathBuf {
     std::path::PathBuf::from("C:/Windows/System32/cmd.exe")
-}
-
-#[cfg(windows)]
-fn job_launch_guard() -> NamedMutexGuard {
-    acquire_job_test_lock()
 }
 
 #[cfg(windows)]
@@ -332,7 +326,6 @@ fn launch_lpac_token_sets_flag_and_caps() {
 #[cfg(windows)]
 #[test]
 fn launch_ac_with_job_limits() {
-    let _guard = job_launch_guard();
     let name = format!("rappct.test.launch.job.{}", std::process::id());
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
@@ -368,7 +361,6 @@ fn launch_job_limits_reported_by_query() {
         QueryInformationJobObject,
     };
 
-    let _guard = job_launch_guard();
     let name = format!("rappct.test.launch.jobinfo.{}", std::process::id());
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)
@@ -462,7 +454,6 @@ fn launch_job_guard_drop_terminates_process() {
     use std::time::{Duration, Instant};
     use windows::Win32::Foundation::STILL_ACTIVE;
 
-    let _guard = job_launch_guard();
     let name = format!("rappct.test.launch.jobkill.{}", std::process::id());
     let prof = AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure");
     let caps = SecurityCapabilitiesBuilder::new(&prof.sid)

@@ -1,3 +1,0 @@
-#!/bin/sh
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-pwsh -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File "$SCRIPT_DIR/pre-commit.ps1"

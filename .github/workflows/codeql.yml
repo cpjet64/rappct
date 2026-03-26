@@ -1,60 +1,32 @@
-name: "CodeQL Advanced"
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  schedule:
-    - cron: '23 10 * * 6'
-
-jobs:
-  analyze-actions:
-    name: Analyze (actions)
-    runs-on: windows-latest
-    permissions:
-      security-events: write
-      packages: read
-      actions: read
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-      
-      - name: Initialize CodeQL (actions)
-        uses: github/codeql-action/init@v4
-        with:
-          languages: actions
-          build-mode: none
-      
-      - name: Perform CodeQL Analysis (actions)
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:actions"
-
-  analyze-rust-windows:
-    name: Analyze (rust - windows)
-    runs-on: windows-latest
-    permissions:
-      security-events: write
-      packages: read
-      actions: read
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-      
-      - name: Install Rust (stable)
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: Initialize CodeQL (rust)
-        uses: github/codeql-action/init@v4
-        with:
-          languages: rust
-          build-mode: none
-          queries: security-and-quality
-      
-      - name: Perform CodeQL Analysis (rust)
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:rust-windows"
+			<value0>
+																																<time>0.58899676375404519</time>
+																																<color>#ffffa900</color>
+																															</value0>
+																															<value1>
+																																<time>0.67313915857605156</time>
+																																<color>#00ffa900</color>
+																															</value1>
+																														</transitions>
+																													</base>
+																													<velocity>300</velocity>
+																													<tailLength>300</tailLength>
+																													<isDoublesided>false</isDoublesided>
+																													<angle>180</angle>
+																												</data>
+																											</ptr_wrapper>
+																										</lighting>
+																									</data>
+																								</ptr_wrapper>
+																							</value2>
+																							<value3>
+																								<polymorphic_id>3</polymorphic_id>
+																								<ptr_wrapper>
+																									<id>2147483946</id>
+																									<data>
+																										<base>
+																											<name>Crown 4</name>
+																											<keys size="dynamic">
+																												<value0>F5</value0>
+																												<value1>F9</value1>
+																												<value2>A</value2>
+																									
