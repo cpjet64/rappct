@@ -1,6 +1,6 @@
-# Release Checklist (Local-only publish flow)
+# Release Checklist (GitLab tag-driven publish flow)
 
-Goal: maintain a clean, deterministic, local-only crates.io release path for an already-published crate.
+Goal: maintain a clean, deterministic, GitLab tag-driven crates.io release path for an already-published crate, with a guarded local fallback.
 
 ## Current target
 - Crate: `rappct`
@@ -24,6 +24,9 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 ## Evidence checklist
 
 - [x] Confirm local `Cargo.toml`/`Cargo.lock` versions are synchronized for the release candidate.
+- [x] Confirm `scripts/verify-version-surfaces.cjs` validates all version surfaces and tag alignment.
+- [ ] Run `just bump-version-dry-run X.Y.Z` and confirm the changelog entry generated from commits since the previous tag is correct.
+- [ ] Run `just bump-version X.Y.Z` to commit, tag, and push the release trigger.
 - [x] Confirm local manifest uses explicit include policy for publish scope.
 - [x] Run `just package-list` and confirm tarball output is limited to include policy paths.
 - [x] Run `just publish-dry-run` and confirm lockfile + packaging checks remain green.
@@ -36,11 +39,13 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 
 ## Audit notes
 - GitHub-hosted publish workflows have been removed from release execution.
-- Real publish still requires:
-  - local confirmation in `scripts/release.ps1`
-  - clean working tree
-  - branch check (`main` only)
-  - explicit `PUBLISH` prompt
+- Real publish normally occurs in GitLab tag pipeline job `publish_crates_io`.
+- GitLab publish requires:
+  - tag `vX.Y.Z` matching `Cargo.toml`
+  - `CARGO_REGISTRY_TOKEN` in CI variables
+  - successful `verify_windows` and `package_crate` jobs
+  - successful GitLab release creation/update job
+- Local fallback still requires local confirmation in `scripts/release.ps1`, a clean `main` tree, and explicit `PUBLISH` prompt.
 - Strict evidence (`output/release-gate`) should be attached before final sign-off.
 
 ## Current blocker

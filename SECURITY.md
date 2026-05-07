@@ -21,7 +21,8 @@ This project intentionally preserves a strict local-first and self-hosted workfl
 - no required cloud/CDN runtime dependencies
 - mandatory local CI gates (`just ci-fast`, `just ci-deep`) before integration
 - dependency and advisory validation in the local/release gate (`cargo deny`, `cargo audit`, advisory policy script)
-- hosted GitHub Actions provide Windows matrix build/test/lint hygiene and CodeQL analysis, but publishing remains local-only
+- hosted GitHub Actions provide Windows matrix build/test/lint hygiene and CodeQL analysis
+- GitLab tag pipelines own release publishing and require explicit protected CI credentials
 - Windows boundary-sensitive functionality guarded by explicit checks and feature flags
 
 ## Hardening Notes for Contributors

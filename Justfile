@@ -15,6 +15,15 @@ ci-pre-commit: ci-fast
 release-version-check:
     powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& ./scripts/release_version_check.ps1 -Crate {{crate_name}}"
 
+verify-version:
+    node scripts/verify-version-surfaces.cjs
+
+bump-version version:
+    powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -File ./scripts/bump-version.ps1 -Version {{version}}
+
+bump-version-dry-run version:
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/bump-version.ps1 -Version {{version}} -DryRun
+
 package-list:
     cargo package --list --allow-dirty --locked
 
@@ -27,7 +36,7 @@ publish-dry-run:
 publish-dry-run-clean: ensure-clean-tree
     cargo publish --dry-run --locked
 
-release-gate: release-version-check ci-deep package-list-clean publish-dry-run-clean
+release-gate: verify-version release-version-check ci-deep package-list-clean publish-dry-run-clean
 
 release-gate-log:
     powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& ./scripts/release_gate.ps1 -Crate {{crate_name}}"
