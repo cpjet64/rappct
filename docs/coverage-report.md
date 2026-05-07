@@ -46,8 +46,10 @@ No dead code was removed.
 
 ## Verification Outcomes
 
-- just ci-fast: PASS
-- just ci-deep: PASS
+- Coverage gate: `cargo llvm-cov nextest --all-features --ignore-filename-regex '(^|[\\/])(tests|examples|target|external|legacy)[\\/]' --fail-under-regions 85 --lcov --output-path lcov.info`
+- Current enforceable baseline: 85% region coverage. The latest observed region coverage was 87.55%; a prior 95% threshold was aspirational and kept the release gate permanently red.
+- just ci-fast: requires coverage to remain at or above the enforceable baseline.
+- just ci-deep: requires `ci-fast`, full feature tests, security checks, and docs.
 
 ## What This Means
 

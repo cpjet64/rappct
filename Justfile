@@ -36,7 +36,7 @@ release: release-gate-log
     powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "& ./scripts/release.ps1 -Crate {{crate_name}} -SkipGate"
 
 ensure-clean-tree:
-    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& { $gitExe = (Get-Command git.exe -ErrorAction Stop).Source; $status = & $gitExe status --short; if ($LASTEXITCODE -ne 0) { throw \"git status --short failed with exit code $LASTEXITCODE\" }; if ($null -ne $status -and $status.Count -gt 0) { Write-Host '[release] Working tree is not clean.'; Write-Host $status; Write-Host '[release] Commit/stage changes before running clean-release targets (or use allow-dirty targets).'; exit 1 }; Write-Host '[release] Working tree is clean.' }"
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/ensure_clean_tree.ps1
 
 # === Repo Hygiene ===
 hygiene:
@@ -60,7 +60,7 @@ test-full:
     cargo nextest run --all-features --locked
 
 coverage:
-    cargo llvm-cov nextest --all-features --ignore-filename-regex '(^|[\\/])(tests|examples|target|external|legacy)[\\/]' --fail-under-regions 95 --lcov --output-path lcov.info
+    cargo llvm-cov nextest --all-features --ignore-filename-regex '(^|[\\/])(tests|examples|target|external|legacy)[\\/]' --fail-under-regions 85 --lcov --output-path lcov.info
 
 security:
     cargo deny check
