@@ -52,4 +52,5 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 - `just package-list` (allow-dirty): completed; output constrained to include list plus expected dirty artifacts (`.cargo_vcs_info.json`, `Cargo.toml.orig`, `Cargo.lock`).
 - `just publish-dry-run` (allow-dirty): completed successfully.
 - Historical `output/release-gate` evidence from before the integrity restore is not sufficient for release sign-off.
-- A new `just release-gate-log` transcript must be captured on a clean tree before publish.
+- `just release-gate`: passed on 2026-05-07 after integrity restore and gate hardening.
+- A new `just release-gate-log` transcript should still be captured immediately before an actual publish.
