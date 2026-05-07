@@ -611,7 +611,7 @@ impl SecurityCapabilitiesBuilder {
         self.caps_named.extend(names.iter().map(|s| s.to_string()));
         self
     }
-    /// Opinionated minimal LPAC defaults (skeleton). Add "registryRead", "lpacCom".
+    /// Opinionated minimal LPAC defaults: `registryRead` and `lpacCom`.
     pub fn with_lpac_defaults(mut self) -> Self {
         self.lpac = true;
         self.caps_named.push("registryRead".to_string());

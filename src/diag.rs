@@ -1,4 +1,4 @@
-//! Diagnostics and configuration validation (skeleton). Feature: `introspection`
+//! Diagnostics and configuration validation. Feature: `introspection`.
 
 use crate::capability::{SecurityCapabilities, derive_named_capability_sids};
 use crate::launch::LaunchOptions;

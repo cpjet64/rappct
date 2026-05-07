@@ -1,4 +1,4 @@
-//! Network isolation helpers (skeleton). Feature: `net`
+//! Network isolation helpers. Feature: `net`.
 
 use crate::sid::AppContainerSid;
 use crate::{AcError, Result};

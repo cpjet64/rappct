@@ -1,6 +1,7 @@
-//! AppContainer profile management (skeleton).
-//! - Create/open/delete
-//! - Resolve folder and named-object paths
+//! AppContainer profile management.
+//!
+//! Provides create/open/delete lifecycle helpers, deterministic SID derivation,
+//! profile folder resolution, and named-object namespace discovery.
 
 #[cfg(windows)]
 use crate::ffi::{mem::LocalAllocGuard, sid::OwnedSid, wstr::WideString};

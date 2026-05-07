@@ -5,10 +5,10 @@ Goal: maintain a clean, deterministic, local-only crates.io release path for an 
 ## Current target
 - Crate: `rappct`
 - Planned version: `0.13.10`
-- Target status: manifest and lockfile are aligned, package allow-list is explicit, and clean-tree-only strict commands are still blocked by current uncommitted workspace state.
+- Target status: manifest and lockfile are aligned, package allow-list is explicit, and release remains blocked until a fresh clean-tree gate transcript is captured after the repository integrity restore.
 
 ## Crates.io baseline
-- `crates.io` latest published non-prerelease version checked via API: `0.13.3` (verified 2026-03-04).
+- `crates.io` latest published non-prerelease version checked via `just release-version-check`: `0.13.3` (verified 2026-05-07).
 - Local version is greater than the published baseline and satisfies precondition for next publish.
 
 ## Packaging evidence
@@ -27,7 +27,7 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 - [x] Confirm local manifest uses explicit include policy for publish scope.
 - [x] Run `just package-list` and confirm tarball output is limited to include policy paths.
 - [x] Run `just publish-dry-run` and confirm lockfile + packaging checks remain green.
-- [x] Run `just release-version-check` after version bump (pass: `0.13.10 > 0.13.3`).
+- [x] Run `just release-version-check` after version bump (pass: `0.13.10 > 0.13.3`, verified 2026-05-07).
 - [ ] Run `just package-list-clean` (requires clean working tree).
 - [ ] Run `just publish-dry-run-clean` (requires clean working tree).
 - [ ] Run `just release-gate` after clean-tree gates are runnable.
@@ -51,4 +51,5 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 - `just release-version-check`: passed (`0.13.10 > 0.13.3`).
 - `just package-list` (allow-dirty): completed; output constrained to include list plus expected dirty artifacts (`.cargo_vcs_info.json`, `Cargo.toml.orig`, `Cargo.lock`).
 - `just publish-dry-run` (allow-dirty): completed successfully.
-- `release-gate-log` transcript currently referenced from prior full run: `output/release-gate/release-gate-2026-03-04_18-24-41.log`.
+- Historical `output/release-gate` evidence from before the integrity restore is not sufficient for release sign-off.
+- A new `just release-gate-log` transcript must be captured on a clean tree before publish.

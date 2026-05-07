@@ -1,4 +1,4 @@
-//! AppContainer SID wrappers (skeleton). In v0.2 this will own PSIDs properly.
+//! AppContainer SID string wrappers and validation helpers.
 
 use crate::{AcError, Result};
 

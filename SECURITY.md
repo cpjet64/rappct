@@ -20,7 +20,8 @@ Do not disclose exploit details publicly until a fix is available.
 This project intentionally preserves a strict local-first and self-hosted workflow:
 - no required cloud/CDN runtime dependencies
 - mandatory local CI gates (`just ci-fast`, `just ci-deep`) before integration
-- dependency and advisory validation in CI (`cargo deny`, `cargo audit`, advisory policy script)
+- dependency and advisory validation in the local/release gate (`cargo deny`, `cargo audit`, advisory policy script)
+- hosted GitHub Actions provide Windows matrix build/test/lint hygiene and CodeQL analysis, but publishing remains local-only
 - Windows boundary-sensitive functionality guarded by explicit checks and feature flags
 
 ## Hardening Notes for Contributors

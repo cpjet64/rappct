@@ -27,15 +27,13 @@ publish-dry-run:
 publish-dry-run-clean: ensure-clean-tree
     cargo publish --dry-run --locked
 
-release-gate: release-version-check ci-fast package-list-clean publish-dry-run-clean
+release-gate: release-version-check ci-deep package-list-clean publish-dry-run-clean
 
 release-gate-log:
     powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& ./scripts/release_gate.ps1 -Crate {{crate_name}}"
 
-release-publish:
-    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& ./scripts/release.ps1 -Crate {{crate_name}} -SkipGate"
-
-release: release-gate-log release-publish
+release: release-gate-log
+    powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "& ./scripts/release.ps1 -Crate {{crate_name}} -SkipGate"
 
 ensure-clean-tree:
     powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& { $gitExe = (Get-Command git.exe -ErrorAction Stop).Source; $status = & $gitExe status --short; if ($LASTEXITCODE -ne 0) { throw \"git status --short failed with exit code $LASTEXITCODE\" }; if ($null -ne $status -and $status.Count -gt 0) { Write-Host '[release] Working tree is not clean.'; Write-Host $status; Write-Host '[release] Commit/stage changes before running clean-release targets (or use allow-dirty targets).'; exit 1 }; Write-Host '[release] Working tree is clean.' }"
@@ -46,7 +44,7 @@ hygiene:
 
 # === Rust Recipes ===
 fmt:
-    cargo fmt --check
+    cargo fmt --all -- --check
 
 lint:
     cargo clippy --all-targets --all-features -- -D warnings
@@ -71,6 +69,7 @@ security:
 
 docs:
     $env:RUSTFLAGS='-D warnings'; cargo doc --no-deps --all-features
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& { if (-not (Get-Command mdbook -ErrorAction SilentlyContinue)) { Write-Error 'mdbook is required for the docs gate. Install with: cargo install mdbook --locked'; exit 1 }; mdbook build docs --dest-dir book }"
 
 bench:
     cargo bench --locked

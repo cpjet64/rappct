@@ -63,6 +63,11 @@ jobs:
         if: ${{ matrix.rust == 'stable' && matrix.features == '' }}
         run: cargo fmt --all -- --check
 
+      - name: Repository hygiene
+        if: ${{ matrix.rust == 'stable' && matrix.features == '' }}
+        shell: pwsh
+        run: ./scripts/hygiene.ps1
+
       - name: Test (${{ matrix.features }} | ${{ matrix.rust }})
         shell: bash
         run: |
@@ -77,9 +82,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.features }}" == "" ]]; then
-            cargo tree -d || true
+            cargo tree -d
           else
-            cargo tree -d --features "${{ matrix.features }}" || true
+            cargo tree -d --features "${{ matrix.features }}"
           fi
 
       - name: Clippy (${{ matrix.features }} | ${{ matrix.rust }})

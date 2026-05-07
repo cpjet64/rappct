@@ -28,7 +28,7 @@ mdbook --version
 
 ## Exact Regeneration Commands
 
-Run from repository root (`C:\Dev\repos\active\rappct`):
+Run from the repository root:
 
 ```powershell
 # 1) Rust API docs (all features, no dependency docs)
@@ -71,8 +71,7 @@ cargo test --all-targets
 - `just package-list-clean` - runs `cargo package --list --locked` with a clean-tree precheck.
 - `just publish-dry-run` - runs `cargo publish --dry-run --allow-dirty --locked` for ad-hoc checks.
 - `just publish-dry-run-clean` - runs `cargo publish --dry-run --locked` on a clean working tree.
-- `just release-gate` - runs full release gate (version check + `ci-fast` + package listing + dry-run).
-- `just release-publish` - runs local preflight and real publish command (single interactive confirmation required in scripts).
+- `just release-gate` - runs full release gate (version check + `ci-deep` + package listing + dry-run).
 - `just release-gate-log` - executes `release_gate` with full transcript to:
   - `output/release-gate/release-gate-YYYY-MM-DD_HH-mm-ss.log`
   - `git branch -a`
@@ -90,4 +89,3 @@ cargo test --all-targets
 - `cargo doc` uses local crate sources and feature flags from `Cargo.toml`.
 - `mdbook build docs --dest-dir book` requires `docs/book.toml` and `docs/SUMMARY.md`.
 - Keep links in [index.md](./index.md) synchronized if output paths change.
-

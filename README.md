@@ -20,9 +20,8 @@ This repository now uses a local-only release flow. Publish payload is controlle
 The release chain is:
 
 - `just release-version-check` verifies crate version is greater than the published crate on crates.io.
-- `just release-gate` runs formatting/lints/tests, packaging list, and dry-run checks on a **clean working tree**.
+- `just release-gate` runs the full local quality/security/docs gate, packaging list, and dry-run checks on a **clean working tree**.
 - `just release-gate-log` runs the full gate with a timestamped transcript in `output/release-gate`.
 - `just release` runs the full gate and then prompts for explicit publish confirmation.
 
 Do not run `cargo publish` directly outside this flow.
-

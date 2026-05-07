@@ -1,4 +1,4 @@
-//! Token introspection (skeleton).
+//! Token introspection for AppContainer and LPAC process tokens.
 
 #[cfg(windows)]
 use crate::ffi::mem::LocalAllocGuard;

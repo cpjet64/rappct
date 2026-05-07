@@ -36,7 +36,7 @@ serde = ["dep:serde"]
 
 [dependencies]
 thiserror = "2.0.18"
-# Suggestion helper for capability names (optional; not used yet in skeleton)
+# Suggestion helper for capability names (optional; used by introspection diagnostics)
 strsim = { version = "0.11.1", optional = true }
 tracing = { version = "0.1.44", optional = true }
 serde = { version = "1.0.228", features = ["derive"], optional = true }

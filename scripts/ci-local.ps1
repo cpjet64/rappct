@@ -72,11 +72,11 @@ $hasBeta = rustup toolchain list | Select-String '^beta'
 if ($hasBeta) {
   foreach ($f in $features) {
     if ($f -eq "") {
-      Write-Host "[ci-local] test (beta, no features)"; cargo +beta test --all-targets; if ($LASTEXITCODE -ne 0) { Write-Warning "[ci-local] beta test failed (no features)" }
-      Write-Host "[ci-local] clippy (beta, no features)"; cargo +beta clippy --all-targets -- -D warnings; if ($LASTEXITCODE -ne 0) { Write-Warning "[ci-local] beta clippy failed (no features)" }
+      Write-Host "[ci-local] test (beta, no features)"; Invoke-Checked -Label "test (beta, no features)" -Action { cargo +beta test --all-targets }
+      Write-Host "[ci-local] clippy (beta, no features)"; Invoke-Checked -Label "clippy (beta, no features)" -Action { cargo +beta clippy --all-targets -- -D warnings }
     } else {
-      Write-Host "[ci-local] test (beta, features: $f)"; cargo +beta test --all-targets --features "$f"; if ($LASTEXITCODE -ne 0) { Write-Warning "[ci-local] beta test failed (features: $f)" }
-      Write-Host "[ci-local] clippy (beta, features: $f)"; cargo +beta clippy --all-targets --features "$f" -- -D warnings; if ($LASTEXITCODE -ne 0) { Write-Warning "[ci-local] beta clippy failed (features: $f)" }
+      Write-Host "[ci-local] test (beta, features: $f)"; Invoke-Checked -Label "test (beta, features: $f)" -Action { cargo +beta test --all-targets --features "$f" }
+      Write-Host "[ci-local] clippy (beta, features: $f)"; Invoke-Checked -Label "clippy (beta, features: $f)" -Action { cargo +beta clippy --all-targets --features "$f" -- -D warnings }
     }
   }
 } else {
@@ -90,11 +90,11 @@ $hasNightly = rustup toolchain list | Select-String '^nightly'
 if ($hasNightly) {
   foreach ($f in $features) {
     if ($f -eq "") {
-      Write-Host "[ci-local] test (nightly, no features)"; cargo +nightly test --all-targets; if ($LASTEXITCODE -ne 0) { Write-Warning "[ci-local] nightly test failed (no features)" }
-      Write-Host "[ci-local] clippy (nightly, no features)"; cargo +nightly clippy --all-targets -- -D warnings; if ($LASTEXITCODE -ne 0) { Write-Warning "[ci-local] nightly clippy failed (no features)" }
+      Write-Host "[ci-local] test (nightly, no features)"; Invoke-Checked -Label "test (nightly, no features)" -Action { cargo +nightly test --all-targets }
+      Write-Host "[ci-local] clippy (nightly, no features)"; Invoke-Checked -Label "clippy (nightly, no features)" -Action { cargo +nightly clippy --all-targets -- -D warnings }
     } else {
-      Write-Host "[ci-local] test (nightly, features: $f)"; cargo +nightly test --all-targets --features "$f"; if ($LASTEXITCODE -ne 0) { Write-Warning "[ci-local] nightly test failed (features: $f)" }
-      Write-Host "[ci-local] clippy (nightly, features: $f)"; cargo +nightly clippy --all-targets --features "$f" -- -D warnings; if ($LASTEXITCODE -ne 0) { Write-Warning "[ci-local] nightly clippy failed (features: $f)" }
+      Write-Host "[ci-local] test (nightly, features: $f)"; Invoke-Checked -Label "test (nightly, features: $f)" -Action { cargo +nightly test --all-targets --features "$f" }
+      Write-Host "[ci-local] clippy (nightly, features: $f)"; Invoke-Checked -Label "clippy (nightly, features: $f)" -Action { cargo +nightly clippy --all-targets --features "$f" -- -D warnings }
     }
   }
 } else {
