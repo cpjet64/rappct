@@ -30,6 +30,7 @@ verify_windows:
   script:
     - powershell -NoProfile -ExecutionPolicy Bypass -Command "node scripts/verify-version-surfaces.cjs"
     - powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Command cargo-audit -ErrorAction SilentlyContinue)) { cargo install cargo-audit --locked }"
+    - powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Command mdbook -ErrorAction SilentlyContinue)) { cargo install mdbook --locked }"
     - powershell -NoProfile -ExecutionPolicy Bypass -Command "just ci-deep"
 
 package_crate:
