@@ -5,7 +5,7 @@ This page defines exact commands to regenerate project documentation for `rappct
 ## Navigation
 
 - [Documentation Index](./index.md)
-- [Docs README](./README.md)
+- [Documentation Overview](./overview.md)
 - [Module Index](./modules/index.md)
 
 ## Prerequisites

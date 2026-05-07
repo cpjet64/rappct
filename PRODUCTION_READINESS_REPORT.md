@@ -112,6 +112,5 @@ Passed:
 
 ## Known Residual Notes
 
-- mdBook 0.5.2 still warns that `docs/README.md` and `docs/index.md` both exist. The build passes and output is generated, but the documentation tree should eventually choose one canonical root-page pattern to remove the warning.
 - Coverage remains below the previous 95% aspiration, mainly in Windows FFI-heavy `net`, `token`, `profile`, and `launch` paths. The enforced threshold is now truthful at 85%, with current observed region coverage at 87.55%.
 - Publishing is intentionally not performed automatically. Real publish still requires `just release`, a clean `main` checkout, valid crates.io credentials, and typing `PUBLISH`.

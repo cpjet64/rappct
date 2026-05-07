@@ -4,7 +4,7 @@ This index is the canonical entry point for local project documentation.
 
 ## Navigation
 
-- [Docs README](./README.md)
+- [Documentation Overview](./overview.md)
 - [Tooling and Regeneration](./TOOLING.md)
 - [Module Index](./modules/index.md)
 

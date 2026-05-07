@@ -1,7 +1,7 @@
 # Summary
 
 - [Documentation Index](index.md)
-- [Docs README](README.md)
+- [Documentation Overview](overview.md)
 - [Tooling and Regeneration](TOOLING.md)
 - [Module Index](modules/index.md)
   - [Profile Module](modules/profile.md)

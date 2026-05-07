@@ -32,4 +32,4 @@ Generated output locations after running the commands above:
 - rustdoc: `target/doc/rappct/index.html`
 - mdBook: `docs/book/index.html`
 
-Use [TOOLING.md](./TOOLING.md) for prerequisites, exact regeneration commands, and troubleshooting.
+Use [Tooling and Regeneration](./TOOLING.md) for prerequisites, exact regeneration commands, and troubleshooting.
