@@ -29,6 +29,7 @@ verify_windows:
     - if: $CI_COMMIT_BRANCH
   script:
     - powershell -NoProfile -ExecutionPolicy Bypass -Command "node scripts/verify-version-surfaces.cjs"
+    - powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Command cargo-audit -ErrorAction SilentlyContinue)) { cargo install cargo-audit --locked }"
     - powershell -NoProfile -ExecutionPolicy Bypass -Command "just ci-deep"
 
 package_crate:
