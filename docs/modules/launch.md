@@ -1,20 +1,44 @@
-												<value14>Led_Cmd_Led26</value14>
-																												<value15>Led_Cmd_Led32</value15>
-																												<value16>Led_Cmd_Led34</value16>
-																												<value17>Led_Cmd_Led35</value17>
-																												<value18>Led_Cmd_Led36</value18>
-																												<value19>Led_Cmd_Led37</value19>
-																												<value20>Led_Cmd_Led38</value20>
-																												<value21>Led_Cmd_Led39</value21>
-																												<value22>Led_Cmd_Led40</value22>
-																												<value23>Led_Cmd_Led41</value23>
-																												<value24>Led_Cmd_Led42</value24>
-																												<value25>Led_Cmd_Led43</value25>
-																												<value26>Led_Cmd_Led47</value26>
-																												<value27>Led_Cmd_Led48</value27>
-																												<value28>Led_Cmd_Led53</value28>
-																												<value29>Led_Cmd_Led54</value29>
-																												<value30>Led_Cmd_Led60</value30>
-																												<value31>Led_Cmd_Led66</value31>
-																												<value32>Led_Cmd_Led68</value32>
-																												<value33
+# Launch Module (`src/launch/mod.rs`)
+
+## Purpose
+
+Launches child processes inside AppContainer/LPAC security boundaries with configurable stdio, environment, and optional job object limits.
+
+## Key Types and Functions
+
+- `LaunchOptions`
+- `StdioConfig`
+- `JobLimits`
+- `Launched`
+- `LaunchedIo` (Windows)
+- `launch_in_container(...)`
+- `launch_in_container_with_io(...)` (Windows)
+
+## Responsibilities
+
+- Build `STARTUPINFOEX` security attributes for containerized process creation.
+- Manage handle inheritance and stdio pipeline behavior.
+- Optionally attach job-object constraints and kill-on-close semantics.
+
+## Typical Flow
+
+```rust
+use rappct::{launch_in_container, LaunchOptions, StdioConfig};
+
+fn run(sec: &rappct::SecurityCapabilities) -> rappct::Result<u32> {
+    let opts = LaunchOptions {
+        exe: "C:/Windows/System32/cmd.exe".into(),
+        cmdline: Some(" /C echo rappct".into()),
+        stdio: StdioConfig::Null,
+        ..Default::default()
+    };
+    let child = launch_in_container(sec, &opts)?;
+    Ok(child.pid)
+}
+```
+
+## Related Docs
+
+- [Capability Module](./capability.md)
+- [ACL Module](./acl.md)
+- [Rustdoc: launch module](../../target/doc/rappct/launch/index.html)

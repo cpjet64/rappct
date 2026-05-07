@@ -4,6 +4,13 @@ Write-Host "=== Repo Hygiene Check ==="
 
 $errors = 0
 $trackedFiles = git ls-files
+$binaryExtensions = @('.png', '.jpg', '.jpeg', '.gif', '.pdf', '.zip', '.jar', '.ico', '.bin', '.exe', '.dll', '.pdb', '.obj', '.lib', '.wasm')
+
+function Test-IsBinaryByExtension {
+    param([string]$Path)
+    $ext = [System.IO.Path]::GetExtension($Path).ToLowerInvariant()
+    return $ext -in $binaryExtensions
+}
 
 Write-Host -NoNewline "Large files (>10MB): "
 $largeFiles = @()
@@ -27,12 +34,31 @@ if ($largeFiles.Count -eq 0) {
     $errors++
 }
 
+Write-Host -NoNewline "Tracked text file NUL bytes: "
+$nulFiles = @()
+foreach ($file in $trackedFiles) {
+    if (-not (Test-Path $file)) { continue }
+    if (Test-IsBinaryByExtension $file) { continue }
+
+    $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $file))
+    if ([Array]::IndexOf($bytes, [byte]0) -ge 0) {
+        $nulFiles += $file
+    }
+}
+
+if ($nulFiles.Count -eq 0) {
+    Write-Host "PASS"
+} else {
+    Write-Host "FAIL"
+    $nulFiles | ForEach-Object { Write-Host "  $_" }
+    $errors++
+}
+
 Write-Host -NoNewline "Merge conflict markers: "
 $conflictFound = $false
 foreach ($file in $trackedFiles) {
     if (-not (Test-Path $file)) { continue }
-    $ext = [System.IO.Path]::GetExtension($file).ToLowerInvariant()
-    if ($ext -in @('.png', '.jpg', '.jpeg', '.gif', '.pdf', '.zip', '.jar', '.ico', '.bin')) {
+    if (Test-IsBinaryByExtension $file) {
         continue
     }
     $content = Get-Content -Path $file -Raw -ErrorAction SilentlyContinue

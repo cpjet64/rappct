@@ -199,4 +199,92 @@ Our examples now use a **"before/after" approach** to clearly demonstrate AppCon
 - Complete registry access
 
 **❌ APPCONTAINER (Isolated Processes):**
-- DNS resolution fails (even with network capabilities) - **                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+- DNS resolution fails (even with network capabilities) - **This demonstrates isolation working correctly**
+- File access denied (unless explicitly granted via ACLs) - **Security boundary in action**
+- Limited executable access - **Path restrictions for security**
+- HTTP works (when InternetClient granted) - **Controlled network access**
+- PowerShell ETW errors in LPAC - **Enhanced isolation functioning**
+
+ℹ️ **Key Insight**: When you see failures in AppContainer but success in normal processes, this means the security isolation is working correctly!
+
+## Development Tips
+
+### Adding New Examples
+1. Follow the existing pattern: clear explanations + expected results
+2. Use `cwd: Some(PathBuf::from("C:\\Windows\\System32"))` for working directory
+3. Add error handling with helpful guidance
+4. Include cleanup code for profiles and temp files
+5. Use the `net` feature for automatic firewall configuration
+
+### Testing Your Code
+```rust
+// Enable net feature for automatic firewall management
+#[cfg(feature = "net")]
+use rappct::net::{add_loopback_exemption, remove_loopback_exemption, LoopbackAdd};
+
+// Always set a working directory
+let opts = LaunchOptions {
+    exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
+    cwd: Some(PathBuf::from("C:\\Windows\\System32")), // Important!
+    cmdline: Some("your command".to_string()),
+    ..Default::default()
+};
+
+// Set up firewall exemption for network features
+#[cfg(feature = "net")]
+{
+    add_loopback_exemption(LoopbackAdd(profile.sid.clone()).confirm_debug_only())?;
+}
+
+// Handle errors gracefully
+match launch_in_container(&caps, &opts) {
+    Ok(child) => println!("✓ Success: PID {}", child.pid),
+    Err(e) => {
+        println!("✗ Failed: {}", e);
+        println!("→ Check Administrator privileges and system requirements");
+    }
+}
+
+// Clean up firewall exemption
+#[cfg(feature = "net")]
+{
+    remove_loopback_exemption(&profile.sid).ok();
+}
+```
+
+### Production Considerations
+- Always run with appropriate error handling
+- Test on target Windows versions (especially for LPAC)
+- Consider network firewall requirements
+- Plan for antivirus software interactions
+- Test with corporate group policies if applicable
+
+## Security Model Understanding
+
+### AppContainer Isolation
+- **Default**: Complete isolation - no network, files, registry
+- **Capabilities**: Explicit permissions only (principle of least privilege)
+- **ACLs**: File system access requires explicit ACL grants
+- **Network**: Internet access requires explicit capability grants
+
+### LPAC (Low Privilege AppContainer)
+- **Enhanced isolation** beyond regular AppContainer
+- **Limited registry access** (read-only to specific keys)
+- **COM access** to approved objects only
+- **Recommended** for security-sensitive applications
+
+### Job Objects
+- **Resource limits**: Memory, CPU, process count
+- **Process lifecycle**: Can kill entire job tree
+- **Monitoring**: Resource usage tracking
+- **Recommended** for resource-constrained environments
+
+## Need Help?
+
+1. **Start with `rappct_demo.rs`** for basic functionality
+2. **Check Administrator privileges** if you see launch failures
+3. **Review Windows version requirements** for LPAC features
+4. **Use `network_demo.rs`** for network troubleshooting
+5. **Refer to individual example source code** for implementation details
+
+Each example is designed to be educational and includes extensive comments explaining both the code and the expected Windows security behavior.

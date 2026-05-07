@@ -193,4 +193,73 @@ feature is not compiled in.
   standard firewall policy.
 - When something fails due to missing capabilities or OS prerequisites, rappct surfaces detailed error messages instead
   of falling back silently. Use `supports_lpac()` to guard LPAC-specific code paths.
-  For tests/CI, you can set `RAPPCT_TEST_LPAC_STATUS=ok|unsuppor                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+  For tests/CI, you can set `RAPPCT_TEST_LPAC_STATUS=ok|unsupported` to force detection.
+
+See also: docs/capabilities.md for common capability SIDs and starter sets.
+
+## Repository Layout
+
+- `src/` — core library modules (capabilities, launch, ACLs, diagnostics).
+- `examples/` — runnable samples such as `acrun` for quick CLI exploration.
+- `tests/` — integration tests covering launch/ACL/token behaviours on Windows.
+- `docs/` — capability catalog and engineering notes (including FFI ownership ADR).
+
+## Cross-platform Behavior
+
+On non-Windows hosts, platform-specific operations return `UnsupportedPlatform`; this is intentional and documented in the library’s compatibility path.
+
+## Development Workflow
+
+For the complete process (branching, CI matrix, and releases), see WORKFLOW.md.
+
+```powershell
+cargo fmt
+cargo clippy --all-targets --all-features
+cargo test --all-targets --all-features
+```
+
+Run Windows-specific scenarios in an elevated PowerShell session when the tests require loopback exemptions or ACL
+adjustments.
+
+### Local Test Toggles
+
+These environment variables help diagnose local environment quirks during AppContainer launches. They are intended for local testing only and are not required on CI.
+
+- `RAPPCT_TEST_FORCE_ENV=1`
+  - Passes an explicit, Unicode environment block to `CreateProcessW` built from the current process environment (sorted case-insensitively).
+  - Use if you see Win32 error 203 (environment option not found) on your machine.
+
+- `RAPPCT_TEST_NO_CWD=1`
+  - Skips passing an explicit current directory to `CreateProcessW`.
+  - Use to rule out cwd issues on machines with unusual default directories.
+
+- `RAPPCT_DEBUG_LAUNCH=1`
+  - Prints verbose `CreateProcessW` diagnostics (flags, env bytes, HRESULT) to stderr during tests.
+
+Examples:
+
+```powershell
+$env:RAPPCT_TEST_FORCE_ENV='1'
+$env:RAPPCT_TEST_NO_CWD='1'
+$env:RAPPCT_DEBUG_LAUNCH='1'
+cargo test --test windows_launch -- --nocapture
+```
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Open an issue using the provided template before starting major work.
+2. Discuss API-affecting changes early to avoid churn.
+3. Include tests and documentation updates alongside code changes.
+4. Run the checks listed in the PR template before submitting.
+
+See `CONTRIBUTING.md` for style and review guidelines.
+
+## Security
+
+Please report vulnerabilities privately through the [GitHub Security Advisory workflow](https://github.com/cpjet64/rappct/security/policy).
+
+## License
+
+This project is licensed under the [MIT license](LICENSE).
