@@ -64,6 +64,31 @@ function Publish-PackageFile {
     }
 }
 
+function Get-ChangelogEntry {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$Version
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "CHANGELOG.md is missing: $Path"
+    }
+
+    $content = Get-Content -LiteralPath $Path -Raw
+    $escapedVersion = [regex]::Escape($Version)
+    $pattern = "(?ms)^##\s+(?:\[$escapedVersion\](?:\([^)]+\))?|$escapedVersion)(?:\s+[^\r\n]*)?\r?\n.*?(?=^##\s+|\z)"
+    $match = [regex]::Match($content, $pattern)
+    if (-not $match.Success) {
+        throw "CHANGELOG.md does not contain a release entry for version $Version."
+    }
+
+    $entry = $match.Value.Trim()
+    if ([string]::IsNullOrWhiteSpace($entry)) {
+        throw "CHANGELOG.md release entry for version $Version is empty."
+    }
+    return $entry
+}
+
 $jobToken = Get-RequiredEnv "CI_JOB_TOKEN"
 $projectId = Get-RequiredEnv "CI_PROJECT_ID"
 $apiBaseUrl = Get-RequiredEnv "CI_API_V4_URL"
@@ -90,7 +115,7 @@ Publish-PackageFile -Uri $cratePackageUrl -Path $cratePath
 
 $encodedTag = [System.Uri]::EscapeDataString($tagName)
 $releaseName = "rappct $tagName"
-$releaseDescription = "Rust crate release for rappct $tagName. Published to crates.io by the tagged GitLab pipeline. See CHANGELOG.md for commit-derived changes."
+$releaseDescription = Get-ChangelogEntry -Path (Join-Path $projectDir "CHANGELOG.md") -Version $version
 $releaseApi = "$apiBaseUrl/projects/$projectId/releases/$encodedTag"
 $releasesApi = "$apiBaseUrl/projects/$projectId/releases"
 $releaseLinks = @(
