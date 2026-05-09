@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust: [ stable, "1.88.0", "1.89.0", "1.90.0", "1.91.0", "1.92.0", "1.93.0", beta, nightly ]
+        rust: [ stable, "1.88.0", "1.89.0", "1.90.0", "1.91.0", "1.92.0", "1.93.0", "1.94.0", "1.95.0", beta, nightly ]
         features: ["", "introspection", "net", "introspection,net"]
     env:
       RUST_BACKTRACE: 1

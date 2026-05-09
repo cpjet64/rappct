@@ -248,7 +248,7 @@ Local governance commands:
 - Local matrix helper: `scripts/ci-local.ps1` (stable + MSRV toolchains and feature combinations).
 
 Hosted CI governance differences:
-- `.github/workflows/ci.yml` runs on `windows-latest` with Rust matrix (`stable`, `1.88.0`..`1.93.0`, `beta`, `nightly`) and feature matrix (`""`, `introspection`, `net`, `introspection,net`).
+- `.github/workflows/ci.yml` runs on `windows-latest` with Rust matrix (`stable`, `1.88.0`..`1.95.0`, `beta`, `nightly`) and feature matrix (`""`, `introspection`, `net`, `introspection,net`).
 - Hosted CI enforces fmt/clippy/tests/cargo tree duplicate check but does not run the full local deep stack (`cargo deny`, `cargo audit`, advisory policy script, docs, coverage) in that same workflow.
 - `.github/workflows/codeql.yml` adds GitHub CodeQL analysis (actions + rust categories).
 - `.github/workflows/release.yml` is not used; release publishing is owned by GitLab tag pipelines, with `just release-gate-log` and `just release` retained as guarded local fallback tooling.

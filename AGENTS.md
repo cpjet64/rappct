@@ -17,7 +17,7 @@ This repository includes Git hooks and helper scripts to make this easy:
 
 - Enable hooks locally: `git config core.hooksPath .githooks`
 - Pre-commit runs fmt, clippy, and tests for the current toolchain.
-- Pre-push runs the full local CI script (stable + MSRV 1.88.0–1.93.0 across feature matrix):
+- Pre-push runs the full local CI script (stable + MSRV 1.88.0–1.95.0 across feature matrix):
   - PowerShell: `scripts/ci-local.ps1`
 
 Bypassing hooks (`--no-verify`) is discouraged and should only be used for emergencies.
@@ -45,7 +45,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 rappct is a Rust toolkit for working with Windows AppContainer (AC) and Low Privilege AppContainer (LPAC) security boundaries. It wraps Windows APIs to enable creating, managing, and launching AppContainer-aware workloads with minimal boilerplate.
 
 **Platform**: Windows-only (non-Windows hosts return `UnsupportedPlatform`)
-**MSRV**: Rust 1.90 (stable)
+**MSRV**: Rust 1.88 (stable)
 **Edition**: 2024
 
 ## Build & Development Commands

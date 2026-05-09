@@ -2,6 +2,16 @@
 
 Created: `2026-02-26T01:52:38Z`
 
+## 2026-05-08 Modernization Pass
+
+| Step | Status | Notes |
+|---|---|---|
+| Stack Detection | Complete | Rust crate with Cargo manifest/lockfile, Justfile gates, GitLab CI, GitHub Actions/CodeQL, mdBook docs, and PowerShell/Node release scripts. |
+| Baseline Validation | Complete | `just ci-fast` passed before dependency changes. |
+| Compatible Updates | Complete | Planned direct dev-dependency updates: `clap 4.5.60 -> 4.6.1`, `tempfile 3.26.0 -> 3.27.0`; lockfile refreshed with `cargo update`. |
+| Toolchain Update | Complete | Local pinned toolchain moved from `1.93.1` to `1.95.0`; MSRV remains `1.88`. |
+| Matrix Alignment | Complete | Local/GitHub Rust matrix documentation extended from `1.88.0`..`1.93.0` to `1.88.0`..`1.95.0`. |
+
 | Step | Status | Notes |
 |---|---|---|
 
