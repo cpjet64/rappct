@@ -29,9 +29,7 @@ verify_windows:
     - if: $CI_COMMIT_BRANCH
   script:
     - powershell -NoProfile -ExecutionPolicy Bypass -Command "node scripts/verify-version-surfaces.cjs"
-    - powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Command cargo-audit -ErrorAction SilentlyContinue)) { cargo install cargo-audit --locked }"
-    - powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Command mdbook -ErrorAction SilentlyContinue)) { cargo install mdbook --locked }"
-    - powershell -NoProfile -ExecutionPolicy Bypass -Command "just ci-deep"
+    - powershell -NoProfile -ExecutionPolicy Bypass -Command "if ($env:CI_COMMIT_TAG) { if (-not (Get-Command cargo-audit -ErrorAction SilentlyContinue)) { cargo install cargo-audit --locked }; if (-not (Get-Command mdbook -ErrorAction SilentlyContinue)) { cargo install mdbook --locked }; just ci-deep } else { just ci-remote-fast }"
 
 package_crate:
   stage: package

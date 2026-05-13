@@ -11,6 +11,9 @@ ci-deep: ci-fast test-full coverage security docs
 
 ci-pre-commit: ci-fast
 
+# Remote branch/MR gate: excludes local-only fmt, duplicate coverage, docs, and security scans.
+ci-remote-fast: hygiene lint-remote build test-full
+
 # === Release flow ===
 release-version-check:
     powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& ./scripts/release_version_check.ps1 -Crate {{crate_name}}"
@@ -58,6 +61,9 @@ fmt:
 lint:
     cargo clippy --all-targets --all-features -- -D warnings
     cargo machete
+
+lint-remote:
+    cargo clippy --all-targets --all-features -- -D warnings
 
 build:
     cargo build --all-targets --all-features --locked
