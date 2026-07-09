@@ -18,6 +18,18 @@ variables:
   RUST_BACKTRACE: "1"
   CARGO_INCREMENTAL: "0"
   CARGO_TERM_COLOR: "never"
+  CARGO_HOME: ".cargo-home"
+
+cache:
+  key:
+    prefix: "$CI_PROJECT_PATH_SLUG-deps-v1-$CI_RUNNER_EXECUTABLE_ARCH"
+    files:
+      - Cargo.lock
+      - Cargo.toml
+  paths:
+    - .cargo-home/git/
+    - .cargo-home/registry/
+  policy: pull-push
 
 verify_windows:
   stage: verify
