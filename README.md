@@ -212,4 +212,4 @@ Dieses Repository wurde um `UseCase::McpServerSandbox` erweitert – ein LPAC-Si
 
 This is a fork of [cpjet64/rappct](https://github.com/cpjet64/rappct), maintained by [@Veyilla](https://github.com/Veyilla).
 Extended with `UseCase::McpServerSandbox` — an LPAC sandbox preset for MCP server processes.
-</details>\n
+</details>
