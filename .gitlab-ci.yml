@@ -1,8 +1,13 @@
 workflow:
   rules:
-    - if: $CI_COMMIT_TAG
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED == "true"'
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH'
+    - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "schedule") && $CI_COMMIT_BRANCH'
     - when: never
 
 stages:
@@ -19,6 +24,7 @@ variables:
   CARGO_INCREMENTAL: "0"
   CARGO_TERM_COLOR: "never"
   CARGO_HOME: ".cargo-home"
+  RUSTFLAGS: "-D warnings"
 
 cache:
   key:
@@ -31,59 +37,132 @@ cache:
     - .cargo-home/registry/
   policy: pull-push
 
+.ordinary_verify:
+  stage: verify
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+.protected_tag:
+  tags:
+    - windows-protected
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED == "true"'
+
+verify_debian:
+  extends: .ordinary_verify
+  tags:
+    - debian-unprotected
+  timeout: 45 minutes
+  script:
+    - sh scripts/ci-gitlab-unix.sh
+
+verify_macos:
+  extends: .ordinary_verify
+  tags:
+    - macos-unprotected
+  timeout: 45 minutes
+  script:
+    - sh scripts/ci-gitlab-unix.sh
+
 verify_windows:
+  extends: .ordinary_verify
   stage: verify
   tags:
-    - windows
-  rules:
-    - if: $CI_COMMIT_TAG
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH
+    - windows-unprotected
+  timeout: 60 minutes
+  parallel:
+    matrix:
+      - RUST_TOOLCHAIN:
+          - stable
+          - "1.88.0"
+          - "1.89.0"
+          - "1.90.0"
+          - "1.91.0"
+          - "1.92.0"
+          - "1.93.0"
+          - "1.94.0"
+          - "1.95.0"
+        RAPPCT_FEATURES:
+          - none
+          - introspection
+          - net
+          - introspection,net
   script:
-    - powershell -NoProfile -ExecutionPolicy Bypass -Command "node scripts/verify-version-surfaces.cjs"
-    - powershell -NoProfile -ExecutionPolicy Bypass -Command "if (`$env:CI_COMMIT_TAG) { if (-not (Get-Command cargo-audit -ErrorAction SilentlyContinue)) { cargo install cargo-audit --locked }; if (-not (Get-Command mdbook -ErrorAction SilentlyContinue)) { cargo install mdbook --locked }; just ci-deep } else { just ci-remote-fast }"
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/ci-gitlab-windows.ps1 -RustToolchain "$env:RUST_TOOLCHAIN" -FeatureSet "$env:RAPPCT_FEATURES"
+
+verify_windows_advisory:
+  extends: .ordinary_verify
+  tags:
+    - windows-unprotected
+  timeout: 60 minutes
+  allow_failure: true
+  parallel:
+    matrix:
+      - RUST_TOOLCHAIN:
+          - beta
+          - nightly
+        RAPPCT_FEATURES:
+          - none
+          - introspection
+          - net
+          - introspection,net
+  script:
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/ci-gitlab-windows.ps1 -RustToolchain "$env:RUST_TOOLCHAIN" -FeatureSet "$env:RAPPCT_FEATURES"
+
+verify_supply_chain:
+  extends: .ordinary_verify
+  tags:
+    - windows-unprotected
+  timeout: 45 minutes
+  script:
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/ci-gitlab-supply-chain.ps1
+
+verify_release_windows:
+  extends: .protected_tag
+  stage: verify
+  timeout: 90 minutes
+  script:
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-project-temp.ps1 -Scope gitlab-release-version node scripts/verify-version-surfaces.cjs
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-project-temp.ps1 -Scope gitlab-release-crates-version just release-version-check
+    - just ci-deep
 
 package_crate:
+  extends: .protected_tag
   stage: package
-  tags:
-    - windows
   needs:
-    - job: verify_windows
+    - job: verify_release_windows
       artifacts: false
-  rules:
-    - if: $CI_COMMIT_TAG
   script:
-    - powershell -NoProfile -ExecutionPolicy Bypass -Command "node scripts/verify-version-surfaces.cjs"
-    - powershell -NoProfile -ExecutionPolicy Bypass -Command "cargo package --locked"
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-project-temp.ps1 -Scope gitlab-package-version node scripts/verify-version-surfaces.cjs
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-project-temp.ps1 -Scope gitlab-package cargo package --locked
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/package-release-evidence.ps1 -PackageDir target/package
   artifacts:
     name: "rappct-$CI_COMMIT_TAG-crate"
     expire_in: 14 days
     paths:
       - target/package/*.crate
+      - target/package/*.crate.sha256
+      - target/package/cargo-metadata.json
 
 publish_crates_io:
+  extends: .protected_tag
   stage: publish
-  tags:
-    - windows
   needs:
     - job: package_crate
       artifacts: true
-  rules:
-    - if: $CI_COMMIT_TAG
   script:
-    - powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not $env:CARGO_REGISTRY_TOKEN) { throw 'CARGO_REGISTRY_TOKEN is required for crates.io publish.' }"
-    - powershell -NoProfile -ExecutionPolicy Bypass -Command "cargo publish --locked --token $env:CARGO_REGISTRY_TOKEN"
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "if (-not $env:CARGO_REGISTRY_TOKEN) { throw 'CARGO_REGISTRY_TOKEN is required for crates.io publish.' }"
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-project-temp.ps1 -Scope gitlab-publish cargo publish --locked
 
 publish_gitlab_release:
+  extends: .protected_tag
   stage: release
-  tags:
-    - windows
   needs:
     - job: package_crate
       artifacts: true
     - job: publish_crates_io
       artifacts: false
-  rules:
-    - if: $CI_COMMIT_TAG
   script:
-    - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-gitlab-release.ps1
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/publish-gitlab-release.ps1

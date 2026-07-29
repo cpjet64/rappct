@@ -9,20 +9,20 @@
 //! Demo 4 (Network Capabilities) redirects PowerShell output to temporary files
 //! to avoid Error 0x5 "Access is denied" when accessing the console output buffer.
 //! AppContainers restrict console buffer access for security. The pattern used:
-//! 1. Grant ACL access to temp directory for the AppContainer profile
-//! 2. Redirect PowerShell output: `Out-File -FilePath '{temp_file}' -Encoding ASCII`
-//! 3. Read back with cmd: `type "{temp_file}"`
-//! 4. Auto-cleanup: `del "{temp_file}" 2>nul`
+//! 1. Create a unique task directory below this worktree's `.tmp/`
+//! 2. Grant ACL access only to that directory for the AppContainer profile
+//! 3. Redirect PowerShell output: `Out-File -FilePath '{temp_file}' -Encoding ASCII`
+//! 4. Read back with cmd: `type "{temp_file}"`
+//! 5. Clean up the exact task directory
 
 use rappct::{
     AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
-    acl::{AccessMask, ResourcePath, grant_to_package},
-    launch::{JobLimits, LaunchOptions, StdioConfig},
+    launch::{JobLimits, LaunchOptions},
     launch_in_container, supports_lpac,
     token::query_current_process_token,
 };
 use std::{
-    env, fs,
+    fs,
     io::{self, Write},
     path::PathBuf,
     thread,
@@ -30,12 +30,51 @@ use std::{
 };
 
 #[cfg(windows)]
-use rappct::launch::launch_in_container_with_io;
+use rappct::launch::{StdioConfig, launch_in_container_with_io};
 
 #[cfg(windows)]
 use std::io::{BufRead, BufReader};
 
 type DemoEntry = (&'static str, fn() -> rappct::Result<()>);
+
+#[path = "comprehensive_demo/file_acls.rs"]
+mod file_acls;
+#[path = "comprehensive_demo/network.rs"]
+mod network;
+#[path = "comprehensive_demo/web_scraper.rs"]
+mod web_scraper;
+
+fn repo_local_tempdir(scope: &str) -> rappct::Result<tempfile::TempDir> {
+    let scratch_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join(".tmp")
+        .join("examples")
+        .join(scope);
+    fs::create_dir_all(&scratch_root).map_err(|error| {
+        rappct::AcError::Win32(format!(
+            "Failed to create repository-local scratch {}: {error}",
+            scratch_root.display()
+        ))
+    })?;
+    tempfile::Builder::new()
+        .prefix("run-")
+        .tempdir_in(&scratch_root)
+        .map_err(|error| {
+            rappct::AcError::Win32(format!(
+                "Failed to create repository-local task directory in {}: {error}",
+                scratch_root.display()
+            ))
+        })
+}
+
+fn cleanup_repo_local_tempdir(scratch: tempfile::TempDir) -> rappct::Result<()> {
+    let path = scratch.path().to_path_buf();
+    scratch.close().map_err(|error| {
+        rappct::AcError::Win32(format!(
+            "Failed to clean repository-local task directory {}: {error}",
+            path.display()
+        ))
+    })
+}
 
 /// Helper function to pause and wait for user input
 fn pause_for_demo(msg: &str) {
@@ -156,249 +195,6 @@ fn demo_basic_launch() -> rappct::Result<()> {
     Ok(())
 }
 
-/// Demo 4: Network Capabilities
-/// Shows how to grant network access
-fn demo_network_capabilities() -> rappct::Result<()> {
-    println!(
-        "Expected: InternetClient => HTTP works, DNS may fail; Client/Server => can listen; PrivateNetwork => LAN allowed."
-    );
-    println!("\n╔════════════════════════════════════════════════╗");
-    println!("║      DEMO 4: Network Capabilities              ║");
-    println!("╚════════════════════════════════════════════════╝");
-
-    let profile = AppContainerProfile::ensure(
-        "rappct.demo.network",
-        "Network Demo",
-        Some("Network capability demonstration"),
-    )?;
-
-    // Grant ACL access to temp directory for PowerShell output files
-    let temp_dir = env::temp_dir();
-    grant_to_package(
-        ResourcePath::Directory(temp_dir.clone()),
-        &profile.sid,
-        AccessMask::GENERIC_ALL, // GENERIC_ALL - full access to write temp files
-    )?;
-
-    // Example 1: Internet Client only
-    println!("\n→ Example 1: Internet Client capability");
-    println!("  Allows: Outbound internet connections");
-    println!("  Denies: Server operations, LAN access");
-
-    let client_caps = SecurityCapabilitiesBuilder::new(&profile.sid)
-        .with_known(&[KnownCapability::InternetClient])
-        .build()?;
-
-    // Create temp file for PowerShell output (avoids console buffer errors in AppContainer)
-    let http_out1 = temp_dir.join(format!("rappct_http_client_{}.txt", std::process::id()));
-
-    let client_opts = LaunchOptions {
-        exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        // PowerShell output redirected to file to avoid console buffer access errors
-        cmdline: Some(format!(
-            "/C echo [NET-CLIENT] Testing Internet Client && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){{ try {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && ping -n 2 8.8.8.8 && timeout /T 2 /NOBREAK >nul",
-            http_out1.display(),
-            http_out1.display(),
-            http_out1.display(),
-            http_out1.display()
-        )),
-        ..Default::default()
-    };
-
-    let child1 = launch_in_container(&client_caps, &client_opts)?;
-    println!("✓ Launched with PID: {}", child1.pid);
-    thread::sleep(Duration::from_secs(5));
-
-    // Example 2: Client/Server capabilities
-    println!("\n→ Example 2: Internet Client/Server capability");
-    println!("  Allows: Internet connections + listening on ports");
-
-    let server_caps = SecurityCapabilitiesBuilder::new(&profile.sid)
-        .with_known(&[KnownCapability::InternetClientServer])
-        .build()?;
-
-    // Create temp file for PowerShell output (avoids console buffer errors in AppContainer)
-    let http_out2 = temp_dir.join(format!("rappct_http_server_{}.txt", std::process::id()));
-
-    let server_opts = LaunchOptions {
-        exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        // PowerShell output redirected to file to avoid console buffer access errors
-        cmdline: Some(format!(
-            "/C echo [NET-SERVER] Can act as both client and server && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; $proxy=$env:HTTPS_PROXY; if(-not $proxy){{ $proxy=$env:HTTP_PROXY }}; foreach($u in $urls){{ try {{ if($proxy){{ $r=Invoke-WebRequest -Uri $u -Proxy $proxy -UseBasicParsing -TimeoutSec 5 }} else {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5 }}; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && netstat -an | findstr LISTENING && timeout /T 2 /NOBREAK >nul",
-            http_out2.display(),
-            http_out2.display(),
-            http_out2.display(),
-            http_out2.display()
-        )),
-        ..Default::default()
-    };
-
-    let child2 = launch_in_container(&server_caps, &server_opts)?;
-    println!("✓ Launched with PID: {}", child2.pid);
-    thread::sleep(Duration::from_secs(3));
-
-    // Example 3: Private network access
-    println!("\n→ Example 3: Private Network Client/Server");
-    println!("  Allows: LAN/domain network access");
-
-    let private_caps = SecurityCapabilitiesBuilder::new(&profile.sid)
-        .with_known(&[KnownCapability::PrivateNetworkClientServer])
-        .build()?;
-
-    // Create temp file for PowerShell output (avoids console buffer errors in AppContainer)
-    let http_out3 = temp_dir.join(format!("rappct_http_private_{}.txt", std::process::id()));
-
-    let private_opts = LaunchOptions {
-        exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        // PowerShell output redirected to file to avoid console buffer access errors
-        cmdline: Some(format!(
-            "/C echo [NET-PRIVATE] Access to private networks && powershell -Command \"$urls=@('http://example.com','http://www.msftconnecttest.com/connecttest.txt'); $code=''; foreach($u in $urls){{ try {{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -TimeoutSec 5; if($r.StatusCode){{ $code=$r.StatusCode; break }} }} catch {{}} }}; if($code){{ $code | Out-File -FilePath '{}' -Encoding ASCII }} else {{ 'HTTP failed' | Out-File -FilePath '{}' -Encoding ASCII }}\" && type \"{}\" 2>nul || echo HTTP failed && del \"{}\" 2>nul && timeout /T 2 /NOBREAK >nul",
-            http_out3.display(),
-            http_out3.display(),
-            http_out3.display(),
-            http_out3.display()
-        )),
-        ..Default::default()
-    };
-
-    let child3 = launch_in_container(&private_caps, &private_opts)?;
-    println!("✓ Launched with PID: {}", child3.pid);
-    thread::sleep(Duration::from_secs(3));
-
-    profile.delete()?;
-    Ok(())
-}
-
-/// Demo 5: File System ACLs
-/// Shows how to grant file/directory access to containers
-fn demo_file_acls() -> rappct::Result<()> {
-    println!("Expected: Allowed file readable; denied file fails from AppContainer.");
-    println!("\n╔════════════════════════════════════════════════╗");
-    println!("║        DEMO 5: File System ACLs                ║");
-    println!("╚════════════════════════════════════════════════╝");
-
-    let profile = AppContainerProfile::ensure(
-        "rappct.demo.acl",
-        "ACL Demo",
-        Some("File system ACL demonstration"),
-    )?;
-
-    // Create test directory structure
-    let demo_dir = env::temp_dir().join("rappct_acl_demo");
-    let allowed_dir = demo_dir.join("allowed");
-    let denied_dir = demo_dir.join("denied");
-
-    fs::create_dir_all(&allowed_dir).map_err(|e| {
-        rappct::AcError::Win32(format!(
-            "Failed to create dir {}: {}",
-            allowed_dir.display(),
-            e
-        ))
-    })?;
-    fs::create_dir_all(&denied_dir).map_err(|e| {
-        rappct::AcError::Win32(format!(
-            "Failed to create dir {}: {}",
-            denied_dir.display(),
-            e
-        ))
-    })?;
-
-    let allowed_file = allowed_dir.join("readable.txt");
-    let denied_file = denied_dir.join("secret.txt");
-
-    fs::write(&allowed_file, "This file is accessible from AppContainer!").map_err(|e| {
-        rappct::AcError::Win32(format!(
-            "Failed to write test file {}: {}",
-            allowed_file.display(),
-            e
-        ))
-    })?;
-    fs::write(
-        &denied_file,
-        "This file is NOT accessible from AppContainer!",
-    )
-    .map_err(|e| {
-        rappct::AcError::Win32(format!(
-            "Failed to write test file {}: {}",
-            denied_file.display(),
-            e
-        ))
-    })?;
-
-    println!("\n→ Created test structure:");
-    println!("  • {}", demo_dir.display());
-    println!("    ├── allowed/");
-    println!("    │   └── readable.txt (will grant access)");
-    println!("    └── denied/");
-    println!("        └── secret.txt (no access)");
-
-    println!("\n→ First, testing normal (non-AppContainer) file access:");
-    use std::process::Command;
-    let test_cmd = format!(
-        "type \"{}\" && type \"{}\"",
-        allowed_file.display(),
-        denied_file.display()
-    );
-    match Command::new("cmd").arg("/C").arg(&test_cmd).output() {
-        Ok(output) => {
-            let result = String::from_utf8_lossy(&output.stdout);
-            if result.contains("This file is accessible") {
-                println!("✓ Normal process: Can read files (no restrictions)");
-            } else {
-                println!("⚠ Normal process: Unexpected file access behavior");
-            }
-        }
-        Err(e) => println!("⚠ Normal process file test error: {e}"),
-    }
-    println!("\n→ Now comparing with AppContainer restrictions:");
-
-    // Grant access to specific file and directory
-    println!("\n→ Granting AppContainer access to allowed directory...");
-    println!("  This modifies Windows ACLs to allow the AppContainer SID to access specific files");
-
-    // Grant full access to the allowed directory and its contents
-    grant_to_package(
-        ResourcePath::Directory(allowed_dir.clone()),
-        &profile.sid,
-        AccessMask::GENERIC_ALL, // GENERIC_ALL - full access
-    )?;
-
-    grant_to_package(
-        ResourcePath::File(allowed_file.clone()),
-        &profile.sid,
-        AccessMask::GENERIC_ALL, // GENERIC_ALL - full access
-    )?;
-    println!("✓ ACLs applied - AppContainer can now access the allowed directory");
-
-    // Launch process to test access
-    println!("\n→ Testing file access from AppContainer...");
-    println!("  Expected: Can read allowed file, cannot read denied file");
-    let caps = SecurityCapabilitiesBuilder::new(&profile.sid).build()?;
-
-    let test_script = format!(
-        r#"/C echo [ACL-TEST] Testing file access... && echo [ACL-TEST] Reading allowed file: && type "{}" && echo. && echo [ACL-TEST] Trying denied file (should fail): && type "{}" 2>nul || echo [ACL-TEST] Access denied as expected && timeout /T 3 /NOBREAK >nul"#,
-        allowed_file.display(),
-        denied_file.display()
-    );
-
-    let opts = LaunchOptions {
-        exe: PathBuf::from("C:\\Windows\\System32\\cmd.exe"),
-        cmdline: Some(test_script),
-        ..Default::default()
-    };
-
-    let child = launch_in_container(&caps, &opts)?;
-    println!("✓ Test process PID: {}", child.pid);
-
-    thread::sleep(Duration::from_secs(4));
-
-    // Cleanup
-    fs::remove_dir_all(&demo_dir).ok();
-    profile.delete()?;
-
-    Ok(())
-}
-
 /// Demo 6: LPAC (Low Privilege AppContainer)
 /// Shows LPAC mode with enhanced but still restricted capabilities
 fn demo_lpac() -> rappct::Result<()> {
@@ -411,7 +207,7 @@ fn demo_lpac() -> rappct::Result<()> {
     if supports_lpac().is_err() {
         println!("\n⚠ LPAC not supported on this system");
         println!("  Requires Windows 10 version 1703 or later");
-        println!("  💡 You can test LPAC features by setting RAPPCT_TEST_LPAC_STATUS=ok");
+        println!("  💡 CI-only override support requires the private _test_helpers feature");
         return Ok(());
     }
 
@@ -554,150 +350,6 @@ fn demo_io_redirection() -> rappct::Result<()> {
     Err(rappct::AcError::UnsupportedPlatform)
 }
 
-/// Demo 9: Comprehensive Example
-/// Combines multiple features in a realistic scenario
-fn demo_comprehensive() -> rappct::Result<()> {
-    println!(
-        "Expected: Sandboxed PowerShell can fetch HTTP, write file within granted directory, respect job limits."
-    );
-    println!("\n╔════════════════════════════════════════════════╗");
-    println!("║     DEMO 9: Comprehensive Example              ║");
-    println!("║     (Secure Web Scraper Sandbox)               ║");
-    println!("╚════════════════════════════════════════════════╝");
-
-    println!("\nScenario: Sandboxed PowerShell script that:");
-    println!("  • Downloads content from the internet");
-    println!("  • Saves to a specific allowed directory");
-    println!("  • Has memory and CPU limits");
-    println!("  • Runs in LPAC mode for enhanced but limited access");
-
-    // Setup profile
-    let profile = AppContainerProfile::ensure(
-        "rappct.demo.webscraper",
-        "Web Scraper Sandbox",
-        Some("Secure web scraper with limited permissions"),
-    )?;
-
-    // Setup allowed directory
-    let work_dir = env::temp_dir().join("rappct_scraper_sandbox");
-    fs::create_dir_all(&work_dir).map_err(|e| rappct::AcError::Win32(e.to_string()))?;
-
-    println!("\n→ Setting up sandbox environment...");
-    println!("  • Work directory: {}", work_dir.display());
-
-    // Grant ACL permissions
-    grant_to_package(
-        ResourcePath::Directory(work_dir.clone()),
-        &profile.sid,
-        AccessMask::GENERIC_ALL, // GENERIC_ALL for the work directory
-    )?;
-    println!("  ✓ File system ACLs configured");
-
-    // Build capabilities
-    let mut caps_builder = SecurityCapabilitiesBuilder::new(&profile.sid).with_known(&[
-        KnownCapability::InternetClient, // Can download from internet
-    ]);
-
-    // Add LPAC if supported
-    if supports_lpac().is_ok() {
-        caps_builder = caps_builder.with_lpac_defaults();
-        println!("  ✓ LPAC mode enabled");
-    }
-
-    let caps = caps_builder.build()?;
-    println!("  ✓ Capabilities configured");
-
-    // Create PowerShell script
-    let script = r#"param($WorkDir)
-
-Write-Host 'Sandboxed Web Scraper Started' -ForegroundColor Green
-Write-Host "Working directory: $WorkDir"
-Write-Host ''
-
-try {
-    Write-Host 'Downloading example content...'
-    $url = 'http://example.com'
-    $response = Invoke-WebRequest -Uri $url -UseBasicParsing
-
-    $outputFile = Join-Path $WorkDir 'downloaded_content.html'
-    $response.Content | Out-File -FilePath $outputFile
-
-    Write-Host "Content saved to: $outputFile" -ForegroundColor Green
-    Write-Host "File size: $((Get-Item $outputFile).Length) bytes"
-} catch {
-    Write-Host "Download failed: $_" -ForegroundColor Red
-}
-
-Write-Host ''
-Write-Host 'Sandbox restrictions in effect:' -ForegroundColor Yellow
-Write-Host '  - Network: Internet client only'
-Write-Host '  - File access: Limited to work directory'
-Write-Host '  - Memory: Max 100MB'
-Write-Host '  - CPU: Max 50%'
-"#;
-
-    let script_file = work_dir.join("scraper.ps1");
-    fs::write(&script_file, script).map_err(|e| {
-        rappct::AcError::Win32(format!(
-            "Failed to write PowerShell script {}: {}",
-            script_file.display(),
-            e
-        ))
-    })?;
-
-    // Launch sandboxed PowerShell
-    println!("\n→ Launching sandboxed PowerShell scraper...");
-    println!("  Resource limits:");
-    println!("    • Memory: 100 MB max");
-    println!("    • CPU: 50% max");
-
-    let work_dir_arg = format!("{}", work_dir.display()).replace('\'', "''");
-
-    let opts = LaunchOptions {
-        exe: PathBuf::from("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"),
-        cmdline: Some(format!(
-            "-NoProfile -ExecutionPolicy Bypass -File \"{}\" -WorkDir '{}'",
-            script_file.display(),
-            work_dir_arg
-        )),
-        cwd: Some(work_dir.clone()),
-        stdio: StdioConfig::Inherit,
-        join_job: Some(JobLimits {
-            memory_bytes: Some(100 * 1024 * 1024), // 100 MB
-            cpu_rate_percent: Some(50),            // 50% CPU
-            kill_on_job_close: true,
-        }),
-        ..Default::default()
-    };
-
-    let child = launch_in_container(&caps, &opts)?;
-    println!("✓ Sandboxed process launched with PID: {}", child.pid);
-
-    println!("\n→ Waiting for completion...");
-    thread::sleep(Duration::from_secs(8));
-
-    // Check results
-    let output_file = work_dir.join("downloaded_content.html");
-    if output_file.exists() {
-        let content =
-            fs::read_to_string(&output_file).map_err(|e| rappct::AcError::Win32(e.to_string()))?;
-        println!("\n✓ Successfully downloaded content");
-        println!("  File size: {} bytes", content.len());
-        println!(
-            "  First 100 chars: {}...",
-            &content[..content.len().min(100)]
-        );
-    }
-
-    // Cleanup
-    println!("\n→ Cleaning up...");
-    fs::remove_dir_all(&work_dir).ok();
-    profile.delete()?;
-    println!("✓ Sandbox environment cleaned");
-
-    Ok(())
-}
-
 /// Main entry point - runs all demos
 fn main() -> rappct::Result<()> {
     println!("╔════════════════════════════════════════════════════════════════╗");
@@ -721,12 +373,12 @@ fn main() -> rappct::Result<()> {
         ("Profile Management", demo_profile_management),
         ("Token Introspection", demo_token_introspection),
         ("Basic Container Launch", demo_basic_launch),
-        ("Network Capabilities", demo_network_capabilities),
-        ("File System ACLs", demo_file_acls),
+        ("Network Capabilities", network::demo_network_capabilities),
+        ("File System ACLs", file_acls::demo_file_acls),
         ("LPAC Mode", demo_lpac),
         ("Job Objects & Resource Limits", demo_job_limits),
         ("Process I/O Redirection", demo_io_redirection),
-        ("Comprehensive Example", demo_comprehensive),
+        ("Comprehensive Example", web_scraper::demo_comprehensive),
     ];
 
     for (name, demo_fn) in demos {

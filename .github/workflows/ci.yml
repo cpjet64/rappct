@@ -68,30 +68,34 @@ jobs:
         shell: pwsh
         run: ./scripts/hygiene.ps1
 
+      - name: Code size guard
+        if: ${{ matrix.rust == 'stable' && matrix.features == '' }}
+        run: python scripts/check_code_size.py
+
       - name: Test (${{ matrix.features }} | ${{ matrix.rust }})
-        shell: bash
+        shell: pwsh
         run: |
-          if [[ "${{ matrix.features }}" == "" ]]; then
-            cargo test --all-targets
-          else
-            cargo test --all-targets --features "${{ matrix.features }}"
-          fi
+          if ("${{ matrix.features }}" -eq "") {
+            cargo test --all-targets --locked --features _test_helpers
+          } else {
+            cargo test --all-targets --locked --features "${{ matrix.features }},_test_helpers"
+          }
 
       - name: Dependency Duplicates (cargo tree -d)
         if: ${{ matrix.rust == 'stable' }}
         shell: bash
         run: |
           if [[ "${{ matrix.features }}" == "" ]]; then
-            cargo tree -d
+            cargo tree -d --locked
           else
-            cargo tree -d --features "${{ matrix.features }}"
+            cargo tree -d --locked --features "${{ matrix.features }}"
           fi
 
       - name: Clippy (${{ matrix.features }} | ${{ matrix.rust }})
-        shell: bash
+        shell: pwsh
         run: |
-          if [[ "${{ matrix.features }}" == "" ]]; then
-            cargo clippy --all-targets -- -D warnings
-          else
-            cargo clippy --all-targets --features "${{ matrix.features }}" -- -D warnings
-          fi
+          if ("${{ matrix.features }}" -eq "") {
+            cargo clippy --all-targets --locked --features _test_helpers -- -D warnings
+          } else {
+            cargo clippy --all-targets --locked --features "${{ matrix.features }},_test_helpers" -- -D warnings
+          }

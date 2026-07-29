@@ -33,13 +33,14 @@ net = ["windows/Win32_NetworkManagement_WindowsFirewall"]
 introspection = ["dep:strsim"]
 tracing = ["dep:tracing"]
 serde = ["dep:serde"]
+_test_helpers = []
 
 [dependencies]
-thiserror = "2.0.18"
+thiserror = "2.0.19"
 # Suggestion helper for capability names (optional; used by introspection diagnostics)
 strsim = { version = "0.11.1", optional = true }
 tracing = { version = "0.1.44", optional = true }
-serde = { version = "1.0.228", features = ["derive"], optional = true }
+serde = { version = "1.0.229", features = ["derive"], optional = true }
 
 # Windows APIs are only needed/built on Windows hosts.
 [target.'cfg(windows)'.dependencies]
@@ -60,10 +61,15 @@ windows = { version = "0.62.2", features = [
 ] }
 
 [dev-dependencies]
-clap = { version = "4.6.1", features = ["derive"] }
-serde_json = "1.0.149"
+clap = { version = "4.6.4", features = ["derive"] }
+serde_json = "1.0.151"
 tempfile = "3.27.0"
 
 [lib]
 name = "rappct"
 path = "src/lib.rs"
+
+[[test]]
+name = "cap_smoke"
+path = "tests/cap_smoke.rs"
+required-features = ["_test_helpers"]

@@ -113,6 +113,7 @@ Public items:
 - `Launched { pid }`
 - `launch_in_container(&SecurityCapabilities, &LaunchOptions)`
 - `merge_parent_env(Vec<(OsString, OsString)>)`
+- `LaunchOptions::try_with_handle_list(...)` / `try_with_stdio_inherit(...)` duplicate borrowed handles for child inheritance and return errors on duplication failure.
 - `launch_in_container_with_io(...)` (available from module on all platforms; returns unsupported on non-Windows)
 - `LaunchedIo::wait(timeout)` and `JobGuard::as_handle()` (Windows)
 - `JobObjectDropGuard` (Windows)
@@ -259,7 +260,8 @@ Public items:
 - `LoopbackAdd(AppContainerSid)` + `confirm_debug_only()`
 - `add_loopback_exemption(LoopbackAdd)`
 - `remove_loopback_exemption(&AppContainerSid)`
-- `LoopbackExemptionGuard::new(&AppContainerSid)` and `disable()`
+- `LoopbackExemptionGuard::new_confirmed(LoopbackAdd)` and `close()` / `disable()`
+- `LoopbackExemptionGuard::new(&AppContainerSid)` preserves the old constructor shape but fails unless the debug latch is explicitly confirmed through `new_confirmed`.
 
 Typical safe sequence:
 
@@ -298,4 +300,4 @@ Behavior:
 
 - Windows: checks OS build via `RtlGetVersion` and requires build `>= 15063`.
 - Non-Windows: returns `AcError::UnsupportedPlatform`.
-- Test override: environment variable `RAPPCT_TEST_LPAC_STATUS=ok|unsupported`.
+- Test override: when the private `_test_helpers` feature is enabled, `RAPPCT_TEST_LPAC_STATUS=ok|unsupported` can force detection for CI/test scenarios.

@@ -92,6 +92,7 @@ pub(crate) fn duplicate_handle(handle: BorrowedHandle<'_>, inherit: bool) -> Res
     unsafe { Handle::from_raw(duplicated.0 as *mut _) }
 }
 
+#[cfg(test)]
 pub(crate) fn duplicate_from_raw(handle: RawHandle, inherit: bool) -> Result<Handle> {
     if handle.is_null() {
         return Err(AcError::Win32("invalid null handle".into()));
@@ -116,6 +117,18 @@ mod tests {
     use std::os::windows::io::AsRawHandle;
     use windows::Win32::Foundation::WAIT_OBJECT_0;
     use windows::Win32::System::Threading::{CreateEventW, SetEvent, WaitForSingleObject};
+
+    fn repo_local_tempdir(prefix: &str) -> tempfile::TempDir {
+        let scratch_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join(".tmp")
+            .join("tests")
+            .join("ffi-handles");
+        std::fs::create_dir_all(&scratch_root).expect("create repository-local test scratch root");
+        tempfile::Builder::new()
+            .prefix(prefix)
+            .tempdir_in(&scratch_root)
+            .expect("create repository-local test scratch directory")
+    }
 
     #[test]
     fn handle_wraps_event_and_closes() {
@@ -155,10 +168,8 @@ mod tests {
 
     #[test]
     fn duplicate_handle_round_trip_to_file() {
-        let path = std::env::temp_dir().join(format!(
-            "rappct-duplicate-handle-{}.txt",
-            std::process::id()
-        ));
+        let scratch = repo_local_tempdir("duplicate-handle-");
+        let path = scratch.path().join("fixture.txt");
         std::fs::write(&path, b"dup-handle").expect("write fixture");
         let file = std::fs::File::open(&path).expect("open fixture");
 
@@ -173,7 +184,5 @@ mod tests {
             .read_to_end(&mut out)
             .expect("read duplicated handle");
         assert_eq!(out, b"dup-handle");
-
-        let _ = std::fs::remove_file(path);
     }
 }

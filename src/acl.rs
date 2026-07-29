@@ -1,9 +1,12 @@
 //! ACL helpers for files/directories and registry keys (DACL grant).
 
-#[cfg(windows)]
-use crate::ffi::mem::LocalAllocGuard;
+use crate::Result;
 use crate::sid::AppContainerSid;
-use crate::{AcError, Result};
+
+#[cfg(windows)]
+mod grant;
+#[cfg(test)]
+mod tests;
 
 /// ACE inheritance flags for directory ACL grants.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -17,7 +20,7 @@ impl AceInheritance {
     pub const SUB_CONTAINERS_ONLY: Self = Self(0x2);
     /// Inherited by child objects only (`OBJECT_INHERIT_ACE`).
     pub const OBJECTS_ONLY: Self = Self(0x1);
-    /// No inheritance — ACE applies only to the directory itself.
+    /// No inheritance. The ACE applies only to the directory itself.
     pub const NONE: Self = Self(0x0);
 }
 
@@ -53,10 +56,10 @@ impl AccessMask {
     pub const FILE_GENERIC_WRITE: Self =
         Self(windows::Win32::Storage::FileSystem::FILE_GENERIC_WRITE.0);
 
-    /// FILE_GENERIC_READ (non-Windows fallback value)
+    /// FILE_GENERIC_READ (non-Windows fallback value).
     #[cfg(not(windows))]
     pub const FILE_GENERIC_READ: Self = Self(0x0001_20089);
-    /// FILE_GENERIC_WRITE (non-Windows fallback value)
+    /// FILE_GENERIC_WRITE (non-Windows fallback value).
     #[cfg(not(windows))]
     pub const FILE_GENERIC_WRITE: Self = Self(0x0001_20116);
 }
@@ -69,13 +72,12 @@ pub fn grant_to_package(
     access: AccessMask,
 ) -> Result<()> {
     #[cfg(windows)]
-    // SAFETY: Calls platform ACL helper; pointer and lifetime contracts are encapsulated in `grant_sid_access`.
-    unsafe {
-        grant_sid_access(target, sid.as_string(), access.0)
+    {
+        grant::grant_sid_access(target, sid.as_string(), access.0)
     }
     #[cfg(not(windows))]
     {
-        Err(AcError::UnsupportedPlatform)
+        Err(crate::AcError::UnsupportedPlatform)
     }
 }
 
@@ -87,471 +89,11 @@ pub fn grant_to_capability(
     access: AccessMask,
 ) -> Result<()> {
     #[cfg(windows)]
-    // SAFETY: Calls platform ACL helper; pointer and lifetime contracts are encapsulated in `grant_sid_access`.
-    unsafe {
-        grant_sid_access(target, cap_sid_sddl, access.0)
+    {
+        grant::grant_sid_access(target, cap_sid_sddl, access.0)
     }
     #[cfg(not(windows))]
     {
-        Err(AcError::UnsupportedPlatform)
-    }
-}
-
-#[cfg(windows)]
-#[allow(unsafe_op_in_unsafe_fn)]
-unsafe fn grant_sid_access(target: ResourcePath, sid_sddl: &str, access: u32) -> Result<()> {
-    use windows::Win32::Foundation::HANDLE;
-    use windows::Win32::Security::Authorization::{
-        ConvertStringSidToSidW, EXPLICIT_ACCESS_W, GetNamedSecurityInfoW, GetSecurityInfo,
-        SE_FILE_OBJECT, SE_REGISTRY_KEY, SetEntriesInAclW, SetNamedSecurityInfoW, SetSecurityInfo,
-        TRUSTEE_FORM, TRUSTEE_IS_SID, TRUSTEE_IS_WELL_KNOWN_GROUP, TRUSTEE_TYPE, TRUSTEE_W,
-    };
-    use windows::Win32::Security::{ACE_FLAGS, ACL, DACL_SECURITY_INFORMATION};
-    use windows::Win32::System::Registry::{
-        HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WRITE, RegCloseKey,
-        RegOpenKeyExW,
-    };
-    use windows::core::{PCWSTR, PWSTR};
-
-    // Pre-check: verify the target resource exists before attempting the ACL grant.
-    match &target {
-        ResourcePath::File(path) => {
-            if !path.is_file() {
-                let hint = if path.exists() {
-                    "expected a file path; use ResourcePath::Directory for directories"
-                } else {
-                    "create the file before calling grant_to_package()"
-                };
-                return Err(AcError::ResourceNotFound {
-                    path: path.display().to_string(),
-                    hint,
-                });
-            }
-        }
-        ResourcePath::Directory(path) | ResourcePath::DirectoryCustom(path, _) => {
-            if !path.is_dir() {
-                return Err(AcError::ResourceNotFound {
-                    path: path.display().to_string(),
-                    hint: "create the directory before calling grant_to_package()",
-                });
-            }
-        }
-        ResourcePath::RegistryKey(_) => {
-            // Registry key existence is validated by RegOpenKeyExW below.
-        }
-    }
-
-    // Convert SDDL to PSID
-    let wide: Vec<u16> = crate::ffi::wstr::to_utf16(sid_sddl);
-    let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
-    // SAFETY: `wide` is a valid, NUL-terminated UTF-16 string; `psid` receives a LocalAlloc SID.
-    if unsafe { ConvertStringSidToSidW(PCWSTR(wide.as_ptr()), &mut psid) }.is_err() {
-        return Err(AcError::Win32("ConvertStringSidToSidW failed".into()));
-    }
-    // SAFETY: The SID pointer is LocalAlloc-managed; guard ensures single free.
-    let psid_guard = unsafe { LocalAllocGuard::from_raw(psid.0) };
-    let trustee_psid = windows::Win32::Security::PSID(psid_guard.as_ptr());
-
-    // Build trustee and explicit access
-    let mut trustee: TRUSTEE_W = std::mem::zeroed();
-    trustee.TrusteeForm = TRUSTEE_FORM(TRUSTEE_IS_SID.0);
-    trustee.TrusteeType = TRUSTEE_TYPE(TRUSTEE_IS_WELL_KNOWN_GROUP.0);
-    trustee.ptstrName = PWSTR(trustee_psid.0 as *mut _);
-
-    let mut ea: EXPLICIT_ACCESS_W = std::mem::zeroed();
-    ea.grfAccessPermissions = access;
-    ea.grfAccessMode = windows::Win32::Security::Authorization::GRANT_ACCESS;
-    ea.Trustee = trustee;
-
-    match target {
-        ResourcePath::File(path) => {
-            ea.grfInheritance = ACE_FLAGS(AceInheritance::NONE.0);
-            let path_w: Vec<u16> = crate::ffi::wstr::to_utf16_os(path.as_os_str());
-            let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
-            let mut p_dacl: *mut ACL = std::ptr::null_mut();
-            // SAFETY: Query file security info; the OS returns DACL/SD pointers we consume immediately.
-            let st = unsafe {
-                GetNamedSecurityInfoW(
-                    PCWSTR(path_w.as_ptr()),
-                    SE_FILE_OBJECT,
-                    DACL_SECURITY_INFORMATION,
-                    None,
-                    None,
-                    Some(&mut p_dacl),
-                    None,
-                    &mut p_sd,
-                )
-            };
-            if st.0 != 0 {
-                return Err(AcError::Win32(format!(
-                    "GetNamedSecurityInfoW failed: {st:?}"
-                )));
-            }
-            // SAFETY: Wrap the LocalAlloc security descriptor so it is released exactly once.
-            let _sd_guard = unsafe { LocalAllocGuard::from_raw(p_sd.0) };
-            let mut new_dacl: *mut ACL = std::ptr::null_mut();
-            let entries = [ea];
-            // SAFETY: Build a new ACL from the existing pointers; API allocates via LocalAlloc.
-            let st2 = unsafe {
-                SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
-            };
-            if st2.0 != 0 {
-                return Err(AcError::Win32(format!("SetEntriesInAclW failed: {st2:?}")));
-            }
-            // SAFETY: `new_dacl` is LocalAlloc-managed; pass a valid pointer/type to SetNamedSecurityInfoW.
-            let new_dacl_guard = unsafe { LocalAllocGuard::from_raw(new_dacl) };
-            // SAFETY: Apply the new DACL using valid pointers/object type.
-            let st3 = unsafe {
-                SetNamedSecurityInfoW(
-                    PCWSTR(path_w.as_ptr()),
-                    SE_FILE_OBJECT,
-                    DACL_SECURITY_INFORMATION,
-                    None,
-                    None,
-                    Some(new_dacl_guard.as_ptr() as *const ACL),
-                    None,
-                )
-            };
-            if st3.0 != 0 {
-                // This is a hard OS-path failure branch: in normal test environments with valid
-                // temp files/directories and caller-owned ACL mutation rights, SetNamedSecurityInfoW
-                // succeeds. Forcing this path requires privilege revocation races, object handle
-                // invalidation, or low-level Win32 fault injection that we do not perform in CI.
-                // We validate the surrounding behavior via success-path integration tests and
-                // explicit negative-input tests for unsupported roots/invalid SIDs/nonexistent paths.
-                return Err(AcError::Win32(format!(
-                    "SetNamedSecurityInfoW failed: {st3:?}"
-                )));
-            }
-            Ok(())
-        }
-        ResourcePath::Directory(ref path) | ResourcePath::DirectoryCustom(ref path, _) => {
-            let inheritance = match target {
-                ResourcePath::DirectoryCustom(_, flags) => flags.0,
-                _ => AceInheritance::SUB_CONTAINERS_AND_OBJECTS.0,
-            };
-            ea.grfInheritance = ACE_FLAGS(inheritance);
-            let path_w: Vec<u16> = crate::ffi::wstr::to_utf16_os(path.as_os_str());
-            let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
-            let mut p_dacl: *mut ACL = std::ptr::null_mut();
-            // SAFETY: Query directory security info; Win32 returns DACL/SD pointers used immediately.
-            let st = unsafe {
-                GetNamedSecurityInfoW(
-                    PCWSTR(path_w.as_ptr()),
-                    SE_FILE_OBJECT,
-                    DACL_SECURITY_INFORMATION,
-                    None,
-                    None,
-                    Some(&mut p_dacl),
-                    None,
-                    &mut p_sd,
-                )
-            };
-            if st.0 != 0 {
-                return Err(AcError::Win32(format!(
-                    "GetNamedSecurityInfoW failed: {st:?}"
-                )));
-            }
-            // SAFETY: Wrap the LocalAlloc security descriptor so it is freed exactly once.
-            let _sd_guard = unsafe { LocalAllocGuard::from_raw(p_sd.0) };
-            let mut new_dacl: *mut ACL = std::ptr::null_mut();
-            let entries = [ea];
-            // SAFETY: Build a new ACL from the existing pointers; API allocates via LocalAlloc.
-            let st2 = unsafe {
-                SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
-            };
-            if st2.0 != 0 {
-                return Err(AcError::Win32(format!("SetEntriesInAclW failed: {st2:?}")));
-            }
-            // SAFETY: Guard new DACL; apply to directory.
-            let new_dacl_guard = unsafe { LocalAllocGuard::from_raw(new_dacl) };
-            // SAFETY: Apply the new DACL using valid pointers/object type.
-            let st3 = unsafe {
-                SetNamedSecurityInfoW(
-                    PCWSTR(path_w.as_ptr()),
-                    SE_FILE_OBJECT,
-                    DACL_SECURITY_INFORMATION,
-                    None,
-                    None,
-                    Some(new_dacl_guard.as_ptr() as *const ACL),
-                    None,
-                )
-            };
-            if st3.0 != 0 {
-                return Err(AcError::Win32(format!(
-                    "SetNamedSecurityInfoW failed: {st3:?}"
-                )));
-            }
-            Ok(())
-        }
-        ResourcePath::RegistryKey(spec) => {
-            // Parse root and subkey
-            fn parse_root(spec: &str) -> Option<(HKEY, Vec<u16>)> {
-                const HKCU_PREFIX: &str = "HKCU\\";
-                const HKEY_CURRENT_USER_PREFIX: &str = "HKEY_CURRENT_USER\\";
-                const HKLM_PREFIX: &str = "HKLM\\";
-                const HKEY_LOCAL_MACHINE_PREFIX: &str = "HKEY_LOCAL_MACHINE\\";
-
-                let up = spec.to_ascii_uppercase();
-                let (root, rest) = if up.starts_with(HKCU_PREFIX) {
-                    (HKEY_CURRENT_USER, &spec[HKCU_PREFIX.len()..])
-                } else if up.starts_with(HKEY_CURRENT_USER_PREFIX) {
-                    (HKEY_CURRENT_USER, &spec[HKEY_CURRENT_USER_PREFIX.len()..])
-                } else if up.starts_with(HKLM_PREFIX) {
-                    (HKEY_LOCAL_MACHINE, &spec[HKLM_PREFIX.len()..])
-                } else if up.starts_with(HKEY_LOCAL_MACHINE_PREFIX) {
-                    (HKEY_LOCAL_MACHINE, &spec[HKEY_LOCAL_MACHINE_PREFIX.len()..])
-                } else {
-                    return None;
-                };
-                let w: Vec<u16> = crate::ffi::wstr::to_utf16(rest);
-                Some((root, w))
-            }
-            let Some((root, subkey_w)) = parse_root(&spec) else {
-                return Err(AcError::Win32(
-                    "Unsupported registry root (use HKCU or HKLM)".into(),
-                ));
-            };
-            let mut hkey = HKEY(std::ptr::null_mut());
-            // SAFETY: Open the registry key under the parsed root with read/write access.
-            let st = unsafe {
-                RegOpenKeyExW(
-                    root,
-                    PCWSTR(subkey_w.as_ptr()),
-                    Some(0),
-                    KEY_READ | KEY_WRITE,
-                    &mut hkey,
-                )
-            };
-            if st.0 != 0 {
-                return Err(AcError::Win32(format!("RegOpenKeyExW failed: {st:?}")));
-            }
-
-            let mut p_sd = windows::Win32::Security::PSECURITY_DESCRIPTOR(std::ptr::null_mut());
-            let mut p_dacl: *mut ACL = std::ptr::null_mut();
-            // SAFETY: Query security info for registry key; retrieve DACL and security descriptor.
-            let st2 = unsafe {
-                GetSecurityInfo(
-                    HANDLE(hkey.0),
-                    SE_REGISTRY_KEY,
-                    DACL_SECURITY_INFORMATION,
-                    None,
-                    None,
-                    Some(&mut p_dacl),
-                    None,
-                    Some(&mut p_sd),
-                )
-            };
-            if st2.0 != 0 {
-                let _ = RegCloseKey(hkey);
-                return Err(AcError::Win32(format!(
-                    "GetSecurityInfo(reg) failed: {st2:?}"
-                )));
-            }
-            // SAFETY: Guard the security descriptor allocation to ensure it is freed.
-            let _sd_guard = unsafe { crate::ffi::mem::LocalAllocGuard::from_raw(p_sd.0) };
-            let mut new_dacl: *mut ACL = std::ptr::null_mut();
-            let entries = [ea];
-            // SAFETY: Build a new DACL for the registry key as with files.
-            let st3 = unsafe {
-                SetEntriesInAclW(Some(&entries), Some(p_dacl as *const ACL), &mut new_dacl)
-            };
-            if st3.0 != 0 {
-                let _ = RegCloseKey(hkey);
-                return Err(AcError::Win32(format!(
-                    "SetEntriesInAclW(reg) failed: {st3:?}"
-                )));
-            }
-            // SAFETY: Apply the new DACL to the registry key; pass valid pointers.
-            let new_dacl_guard = unsafe { crate::ffi::mem::LocalAllocGuard::from_raw(new_dacl) };
-            // SAFETY: Apply new DACL to registry key; pass valid pointers.
-            let st4 = unsafe {
-                SetSecurityInfo(
-                    HANDLE(hkey.0),
-                    SE_REGISTRY_KEY,
-                    DACL_SECURITY_INFORMATION,
-                    None,
-                    None,
-                    Some(new_dacl_guard.as_ptr() as *const ACL),
-                    None,
-                )
-            };
-            // SAFETY: Close the opened registry key handle.
-            let _ = unsafe { RegCloseKey(hkey) };
-            if st4.0 != 0 {
-                return Err(AcError::Win32(format!(
-                    "SetSecurityInfo(reg) failed: {st4:?}"
-                )));
-            }
-            Ok(())
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{AccessMask, AceInheritance};
-
-    #[test]
-    fn constants_are_consistent() {
-        assert_eq!(AccessMask::GENERIC_ALL.0, 0x001F_01FF);
-        #[cfg(windows)]
-        {
-            use windows::Win32::Storage::FileSystem::{FILE_GENERIC_READ, FILE_GENERIC_WRITE};
-            assert_eq!(AccessMask::FILE_GENERIC_READ.0, FILE_GENERIC_READ.0);
-            assert_eq!(AccessMask::FILE_GENERIC_WRITE.0, FILE_GENERIC_WRITE.0);
-        }
-    }
-
-    #[test]
-    fn ace_inheritance_constants_match_win32_values() {
-        // OBJECT_INHERIT_ACE = 0x1, CONTAINER_INHERIT_ACE = 0x2
-        assert_eq!(AceInheritance::NONE.0, 0x0);
-        assert_eq!(AceInheritance::OBJECTS_ONLY.0, 0x1);
-        assert_eq!(AceInheritance::SUB_CONTAINERS_ONLY.0, 0x2);
-        assert_eq!(AceInheritance::SUB_CONTAINERS_AND_OBJECTS.0, 0x3);
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn grant_rejects_nonexistent_file() {
-        use super::{AccessMask, ResourcePath, grant_to_package};
-        use crate::sid::AppContainerSid;
-        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
-        let path = std::path::PathBuf::from("C:\\__rappct_nonexistent_file_test__");
-        let err =
-            grant_to_package(ResourcePath::File(path), &sid, AccessMask::GENERIC_ALL).unwrap_err();
-        let msg = err.to_string();
-        assert!(msg.contains("Resource not found"), "got: {msg}");
-        assert!(msg.contains("create the file"), "got: {msg}");
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn grant_rejects_nonexistent_directory() {
-        use super::{AccessMask, ResourcePath, grant_to_package};
-        use crate::sid::AppContainerSid;
-        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
-        let path = std::path::PathBuf::from("C:\\__rappct_nonexistent_dir_test__");
-        let err = grant_to_package(ResourcePath::Directory(path), &sid, AccessMask::GENERIC_ALL)
-            .unwrap_err();
-        let msg = err.to_string();
-        assert!(msg.contains("Resource not found"), "got: {msg}");
-        assert!(msg.contains("create the directory"), "got: {msg}");
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn grant_rejects_unsupported_registry_root() {
-        use super::{AccessMask, ResourcePath, grant_to_package};
-        use crate::sid::AppContainerSid;
-        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
-        let err = grant_to_package(
-            ResourcePath::RegistryKey("HKCR\\Software".into()),
-            &sid,
-            AccessMask::GENERIC_ALL,
-        )
-        .unwrap_err();
-        let msg = err.to_string();
-        assert!(
-            msg.contains("Unsupported registry root"),
-            "expected unsupported root error, got: {msg}"
-        );
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn grant_rejects_invalid_sddl() {
-        use super::{AccessMask, ResourcePath, grant_to_package};
-        use crate::sid::AppContainerSid;
-        // from_sddl allows anything; the Win32 API rejects it
-        let sid = AppContainerSid::from_sddl("not-a-valid-sid");
-        let path = std::env::temp_dir();
-        let err = grant_to_package(ResourcePath::Directory(path), &sid, AccessMask::GENERIC_ALL)
-            .unwrap_err();
-        let msg = err.to_string();
-        assert!(
-            msg.contains("ConvertStringSidToSidW"),
-            "expected SID conversion failure, got: {msg}"
-        );
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn grant_rejects_nonexistent_registry_key() {
-        use super::{AccessMask, ResourcePath, grant_to_package};
-        use crate::sid::AppContainerSid;
-        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
-        let err = grant_to_package(
-            ResourcePath::RegistryKey("HKCU\\Software\\__rappct_nonexistent_key_test__".into()),
-            &sid,
-            AccessMask::GENERIC_ALL,
-        )
-        .unwrap_err();
-        let msg = err.to_string();
-        assert!(
-            msg.contains("RegOpenKeyExW"),
-            "expected registry open failure, got: {msg}"
-        );
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn grant_to_capability_rejects_invalid_sddl() {
-        use super::{AccessMask, ResourcePath, grant_to_capability};
-        let path = std::env::temp_dir();
-        let err = grant_to_capability(
-            ResourcePath::Directory(path),
-            "not-a-valid-capability-sid",
-            AccessMask::GENERIC_ALL,
-        )
-        .unwrap_err();
-        let msg = err.to_string();
-        assert!(
-            msg.contains("ConvertStringSidToSidW"),
-            "expected SID conversion failure, got: {msg}"
-        );
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn grant_rejects_nonexistent_registry_key_with_full_root_name() {
-        use super::{AccessMask, ResourcePath, grant_to_package};
-        use crate::sid::AppContainerSid;
-        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
-        let err = grant_to_package(
-            ResourcePath::RegistryKey(
-                "HKEY_CURRENT_USER\\Software\\__rappct_nonexistent_key_test_full__".into(),
-            ),
-            &sid,
-            AccessMask::GENERIC_ALL,
-        )
-        .unwrap_err();
-        let msg = err.to_string();
-        assert!(
-            msg.contains("RegOpenKeyExW"),
-            "expected registry open failure, got: {msg}"
-        );
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn grant_rejects_nonexistent_registry_key_with_lowercase_root_prefix() {
-        use super::{AccessMask, ResourcePath, grant_to_package};
-        use crate::sid::AppContainerSid;
-        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
-        let err = grant_to_package(
-            ResourcePath::RegistryKey(
-                "hkcu\\software\\__rappct_nonexistent_key_test_lowercase__".into(),
-            ),
-            &sid,
-            AccessMask::GENERIC_ALL,
-        )
-        .unwrap_err();
-        let msg = err.to_string();
-        assert!(
-            msg.contains("RegOpenKeyExW"),
-            "expected lowercase variant to be parsed and reach key open, got: {msg}"
-        );
+        Err(crate::AcError::UnsupportedPlatform)
     }
 }

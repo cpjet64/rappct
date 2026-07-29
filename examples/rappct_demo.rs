@@ -43,15 +43,41 @@ use std::io::Read;
 use std::io::Write;
 use std::net::TcpListener;
 use std::path::PathBuf;
+use std::time::Duration;
 
 fn main() -> rappct::Result<()> {
+    print_intro();
+    let profile = create_demo_profile()?;
+    demo_zero_capability_launch(&profile)?;
+    demo_http_without_network(&profile)?;
+    demo_host_network_baseline();
+    let port = start_local_http_server()?;
+    let network_caps = build_network_caps(&profile)?;
+    demo_loopback_without_exemption(&network_caps, port)?;
+
+    #[cfg(all(windows, feature = "net"))]
+    let firewall_guard = demo_loopback_with_exemption(&profile, &network_caps, port)?;
+    #[cfg(not(all(windows, feature = "net")))]
+    demo_loopback_with_exemption(&profile, &network_caps, port)?;
+
+    demo_outbound_internet(&network_caps)?;
+    print_cleanup_header();
+
+    #[cfg(all(windows, feature = "net"))]
+    cleanup_firewall_guard(firewall_guard);
+
+    cleanup_profile_and_print_summary(profile)
+}
+
+fn print_intro() {
     println!("rappct - Windows AppContainer Demo");
     println!("===================================\n");
 
     println!("This demo shows how to sandbox processes using Windows AppContainer technology.");
     println!("AppContainers enforce security at the OS level - similar to Linux containers.\n");
+}
 
-    // 1. Create a profile
+fn create_demo_profile() -> rappct::Result<AppContainerProfile> {
     println!("STEP 1: Creating AppContainer Profile");
     println!("--------------------------------------");
     println!("A profile defines a security boundary. Windows assigns each one a unique SID");
@@ -62,8 +88,10 @@ fn main() -> rappct::Result<()> {
     println!("✓ Created profile: {}", profile.name);
     println!("  SID: {}", profile.sid.as_string());
     println!("  (This SID identifies our sandbox and governs all access checks)\n");
+    Ok(profile)
+}
 
-    // 2. Launch isolated process (no capabilities)
+fn demo_zero_capability_launch(profile: &AppContainerProfile) -> rappct::Result<()> {
     println!("STEP 2: Launching Process with Zero Capabilities");
     println!("-------------------------------------------------");
     println!("Launching with NO capabilities = maximum isolation.");
@@ -79,9 +107,11 @@ fn main() -> rappct::Result<()> {
     println!("✓ Sandboxed process launched (PID: {})", isolated_child.pid);
     println!("  If it printed messages, the sandbox is working!\n");
 
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    std::thread::sleep(Duration::from_secs(1));
+    Ok(())
+}
 
-    // 3. Test outbound HTTP without network capability (should fail)
+fn demo_http_without_network(_profile: &AppContainerProfile) -> rappct::Result<()> {
     println!("STEP 3: Outbound HTTP Without Network Capability");
     println!("-------------------------------------------------");
     println!("Testing outbound HTTP from AppContainer with NO network capabilities.");
@@ -89,7 +119,7 @@ fn main() -> rappct::Result<()> {
 
     #[cfg(windows)]
     {
-        let no_net_caps = SecurityCapabilitiesBuilder::new(&profile.sid).build()?;
+        let no_net_caps = SecurityCapabilitiesBuilder::new(&_profile.sid).build()?;
         let no_net_curl = LaunchOptions {
             exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
             cmdline: Some(" -s -I -f -m 5 http://example.com".to_string()),
@@ -98,12 +128,7 @@ fn main() -> rappct::Result<()> {
             ..Default::default()
         };
         println!("→ Trying HTTP request without InternetClient capability...");
-        let mut child = launch_in_container_with_io(&no_net_caps, &no_net_curl)?;
-        let mut out = String::new();
-        if let Some(mut s) = child.stdout.take() {
-            let _ = s.read_to_string(&mut out);
-        }
-        let code = child.wait(Some(std::time::Duration::from_secs(6)))?;
+        let (code, out) = launch_capture(&no_net_caps, &no_net_curl, Duration::from_secs(6))?;
         if code == 0 {
             println!("✗ Unexpected! HTTP succeeded without network capability. Output:\n{out}");
         } else {
@@ -115,14 +140,15 @@ fn main() -> rappct::Result<()> {
         println!("⚠ Skipped on non-Windows platform");
     }
 
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    std::thread::sleep(Duration::from_secs(1));
+    Ok(())
+}
 
-    // 4. First show normal network access for comparison
+fn demo_host_network_baseline() {
     println!("\nSTEP 4A: Baseline - Network Access Without Sandbox");
     println!("---------------------------------------------------");
     println!("First, let's test HTTP from the host (unsandboxed) as a baseline.\n");
 
-    // Quick test of normal network access using curl
     use std::process::Command;
     match Command::new(r"C:\Windows\System32\curl.exe")
         .args(["-s", "-I", "-f", "-m", "5", "http://example.com"])
@@ -151,7 +177,9 @@ fn main() -> rappct::Result<()> {
         }
         Err(e) => println!("✗ Network test error: {e}"),
     }
+}
 
+fn start_local_http_server() -> rappct::Result<u16> {
     println!("\nSTEP 4B: Sandboxed Localhost Access");
     println!("------------------------------------");
     println!("Starting a local HTTP server, then trying to reach it from inside the sandbox.");
@@ -184,13 +212,21 @@ fn main() -> rappct::Result<()> {
             }
         }
     });
+    Ok(port)
+}
 
-    // Build capabilities with InternetClient; loopback is controlled by firewall exemption.
-    let network_caps = SecurityCapabilitiesBuilder::new(&profile.sid)
+fn build_network_caps(
+    profile: &AppContainerProfile,
+) -> rappct::Result<rappct::SecurityCapabilities> {
+    SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
-        .build()?;
+        .build()
+}
 
-    // Attempt localhost without loopback exemption – expect failure.
+fn demo_loopback_without_exemption(
+    network_caps: &rappct::SecurityCapabilities,
+    port: u16,
+) -> rappct::Result<()> {
     let curl_no_loopback = LaunchOptions {
         exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
         cmdline: Some(format!(" -s -I -m 3 http://127.0.0.1:{port}")),
@@ -201,12 +237,7 @@ fn main() -> rappct::Result<()> {
     println!("→ Testing http://127.0.0.1:{port} WITHOUT loopback exemption...");
     #[cfg(windows)]
     {
-        let mut child = launch_in_container_with_io(&network_caps, &curl_no_loopback)?;
-        let mut out = String::new();
-        if let Some(mut s) = child.stdout.take() {
-            let _ = s.read_to_string(&mut out);
-        }
-        let code = child.wait(Some(std::time::Duration::from_secs(4)))?;
+        let (code, out) = launch_capture(network_caps, &curl_no_loopback, Duration::from_secs(4))?;
         if code == 0 {
             println!("✗ Unexpected! Localhost succeeded without exemption. Output:\n{out}");
         } else {
@@ -217,55 +248,63 @@ fn main() -> rappct::Result<()> {
     }
     #[cfg(not(windows))]
     {
-        let _ = launch_in_container(&network_caps, &curl_no_loopback)?;
-        std::thread::sleep(std::time::Duration::from_secs(2));
+        let _ = launch_in_container(network_caps, &curl_no_loopback)?;
+        std::thread::sleep(Duration::from_secs(2));
+    }
+    Ok(())
+}
+
+#[cfg(all(windows, feature = "net"))]
+fn demo_loopback_with_exemption(
+    profile: &AppContainerProfile,
+    network_caps: &rappct::SecurityCapabilities,
+    port: u16,
+) -> rappct::Result<Option<FirewallGuard>> {
+    println!("\n→ Adding firewall exemption to allow loopback for this container...");
+    if let Err(e) = add_loopback_exemption(LoopbackAdd(profile.sid.clone()).confirm_debug_only()) {
+        println!("✗ Exemption failed: {e} (continuing anyway)");
+        return Ok(None);
     }
 
-    #[cfg(all(windows, feature = "net"))]
-    let mut firewall_guard: Option<FirewallGuard> = None;
+    let guard = FirewallGuard::new(profile.sid.clone(), "✓ Firewall loopback exemption removed");
+    std::thread::sleep(Duration::from_millis(1000));
+    try_loopback_with_exemption(network_caps, port)?;
+    Ok(Some(guard))
+}
 
-    #[cfg(all(windows, feature = "net"))]
-    {
-        println!("\n→ Adding firewall exemption to allow loopback for this container...");
-        if let Err(e) =
-            add_loopback_exemption(LoopbackAdd(profile.sid.clone()).confirm_debug_only())
-        {
-            println!("✗ Exemption failed: {e} (continuing anyway)");
-        } else {
-            firewall_guard = Some(FirewallGuard::new(
-                profile.sid.clone(),
-                "✓ Firewall loopback exemption removed",
-            ));
-            // Give the firewall exemption a moment to propagate
-            std::thread::sleep(std::time::Duration::from_millis(1000));
-            // Try localhost again – expect success (HTTP headers).
-            let curl_with_loopback = LaunchOptions {
-                exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
-                cmdline: Some(format!(" -s -I -m 5 http://127.0.0.1:{port}")),
-                cwd: Some(PathBuf::from("C:\\Windows\\System32")),
-                stdio: rappct::launch::StdioConfig::Pipe,
-                ..Default::default()
-            };
-            println!("→ Testing http://127.0.0.1:{port} WITH loopback exemption...");
-            let mut child = launch_in_container_with_io(&network_caps, &curl_with_loopback)?;
-            let mut out = String::new();
-            if let Some(mut s) = child.stdout.take() {
-                let _ = s.read_to_string(&mut out);
-            }
-            let code = child.wait(Some(std::time::Duration::from_secs(5)))?;
-            if code == 0 {
-                println!("✓ Success! (exit 0). Headers:\n{out}");
-            } else {
-                println!("✗ Still failed (exit {code}). Output:\n{out}");
-            }
-        }
+#[cfg(all(windows, feature = "net"))]
+fn try_loopback_with_exemption(
+    network_caps: &rappct::SecurityCapabilities,
+    port: u16,
+) -> rappct::Result<()> {
+    let curl_with_loopback = LaunchOptions {
+        exe: PathBuf::from("C:\\Windows\\System32\\curl.exe"),
+        cmdline: Some(format!(" -s -I -m 5 http://127.0.0.1:{port}")),
+        cwd: Some(PathBuf::from("C:\\Windows\\System32")),
+        stdio: rappct::launch::StdioConfig::Pipe,
+        ..Default::default()
+    };
+    println!("→ Testing http://127.0.0.1:{port} WITH loopback exemption...");
+    let (code, out) = launch_capture(network_caps, &curl_with_loopback, Duration::from_secs(5))?;
+    if code == 0 {
+        println!("✓ Success! (exit 0). Headers:\n{out}");
+    } else {
+        println!("✗ Still failed (exit {code}). Output:\n{out}");
     }
+    Ok(())
+}
 
-    #[cfg(not(all(windows, feature = "net")))]
-    {
-        println!("\n  (Run with --features net to test loopback exemption)");
-    }
+#[cfg(not(all(windows, feature = "net")))]
+fn demo_loopback_with_exemption(
+    _profile: &AppContainerProfile,
+    _network_caps: &rappct::SecurityCapabilities,
+    _port: u16,
+) -> rappct::Result<()> {
+    println!("\n  (Run with --features net to test loopback exemption)");
+    Ok(())
+}
 
+fn demo_outbound_internet(network_caps: &rappct::SecurityCapabilities) -> rappct::Result<()> {
     println!("\nSTEP 4C: Sandboxed Outbound Internet Access");
     println!("--------------------------------------------");
     println!("Now testing outbound HTTP with InternetClient. No firewall exemption needed.");
@@ -278,12 +317,7 @@ fn main() -> rappct::Result<()> {
     };
     #[cfg(windows)]
     {
-        let mut child = launch_in_container_with_io(&network_caps, &internet_curl)?;
-        let mut out = String::new();
-        if let Some(mut s) = child.stdout.take() {
-            let _ = s.read_to_string(&mut out);
-        }
-        let code = child.wait(Some(std::time::Duration::from_secs(6)))?;
+        let (code, out) = launch_capture(network_caps, &internet_curl, Duration::from_secs(6))?;
         if code == 0 {
             println!("✓ Outbound HTTP succeeded from sandbox (exit 0). Headers:\n{out}");
         } else {
@@ -292,20 +326,39 @@ fn main() -> rappct::Result<()> {
     }
     #[cfg(not(windows))]
     {
-        let _ = launch_in_container(&network_caps, &internet_curl)?;
-        std::thread::sleep(std::time::Duration::from_secs(2));
+        let _ = launch_in_container(network_caps, &internet_curl)?;
+        std::thread::sleep(Duration::from_secs(2));
     }
+    Ok(())
+}
 
-    // Cleanup
+#[cfg(windows)]
+fn launch_capture(
+    caps: &rappct::SecurityCapabilities,
+    opts: &LaunchOptions,
+    timeout: Duration,
+) -> rappct::Result<(u32, String)> {
+    let mut child = launch_in_container_with_io(caps, opts)?;
+    let mut out = String::new();
+    if let Some(mut s) = child.stdout.take() {
+        let _ = s.read_to_string(&mut out);
+    }
+    let code = child.wait(Some(timeout))?;
+    Ok((code, out))
+}
+
+#[cfg(all(windows, feature = "net"))]
+fn cleanup_firewall_guard(guard: Option<FirewallGuard>) {
+    let _firewall_guard = guard;
+}
+
+fn print_cleanup_header() {
     println!("\nSTEP 5: Cleanup");
     println!("---------------");
     println!("Removing firewall exemptions and deleting the AppContainer profile.");
+}
 
-    #[cfg(all(windows, feature = "net"))]
-    {
-        let _firewall_guard = firewall_guard; // auto-clean on drop
-    }
-
+fn cleanup_profile_and_print_summary(profile: AppContainerProfile) -> rappct::Result<()> {
     let profile_name = profile.name.clone();
     profile.delete()?;
     println!("✓ Profile '{profile_name}' deleted successfully");

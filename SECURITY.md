@@ -21,8 +21,9 @@ This project intentionally preserves a strict local-first and self-hosted workfl
 - no required cloud/CDN runtime dependencies
 - mandatory local CI gates (`just ci-fast`, `just ci-deep`) before integration
 - dependency and advisory validation in the local/release gate (`cargo deny`, `cargo audit`, advisory policy script)
-- hosted GitHub Actions provide Windows matrix build/test/lint hygiene and CodeQL analysis
-- GitLab tag pipelines own release publishing and require explicit protected CI credentials
+- GitLab is the primary hosted CI provider: branch and merge-request pipelines run blocking Debian, macOS, and Windows matrix checks on explicit unprotected runner boundaries
+- hosted GitHub Actions retain Windows matrix and CodeQL mirror/fallback coverage until an exact-SHA GitLab parity pipeline is green and verified
+- protected GitLab tag pipelines own release publishing on the Windows protected runner boundary and require protected CI credentials
 - Windows boundary-sensitive functionality guarded by explicit checks and feature flags
 
 ## Hardening Notes for Contributors

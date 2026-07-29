@@ -23,9 +23,9 @@ Key APIs:
 - `list_appcontainers()`
 - `add_loopback_exemption(...)`
 - `remove_loopback_exemption(...)`
-- `LoopbackExemptionGuard`
+- `LoopbackExemptionGuard::new_confirmed(...)`
 
-Use only in development/debug workflows. Loopback exemption changes host firewall policy.
+Use only in development/debug workflows. Loopback exemption changes host firewall policy, and every add path requires `LoopbackAdd(...).confirm_debug_only()` before mutation.
 
 ## Related Docs
 

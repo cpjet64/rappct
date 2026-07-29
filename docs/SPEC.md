@@ -8,7 +8,7 @@ Current crate metadata and compatibility:
 - Edition: Rust 2024
 - `rust-version`: `1.88`
 - Platform behavior: public APIs compile cross-platform, but runtime operations that require Windows return `AcError::UnsupportedPlatform` on non-Windows hosts.
-- LPAC gate: `supports_lpac()` requires Windows 10 build 15063+ (1703) unless test override `RAPPCT_TEST_LPAC_STATUS=ok|unsupported` is set.
+- LPAC gate: `supports_lpac()` requires Windows 10 build 15063+ (1703). CI/test builds that enable the private `_test_helpers` feature may force detection with `RAPPCT_TEST_LPAC_STATUS=ok|unsupported`.
 
 Feature flags:
 - `net`: enables firewall/network-isolation integration (`src/net.rs`) including appcontainer enumeration and loopback exemption APIs.
@@ -63,7 +63,7 @@ flowchart TD
 ### `src/lib.rs`
 - Defines module boundaries and feature gating.
 - Re-exports primary types/functions for consumers.
-- Implements `supports_lpac()` with `RtlGetVersion` and test override env var.
+- Implements `supports_lpac()` with `RtlGetVersion` and a `_test_helpers`-gated test override env var.
 
 ### `src/profile.rs`
 - `AppContainerProfile::ensure/open/delete` for profile lifecycle.
@@ -108,7 +108,7 @@ flowchart TD
   - `add_loopback_exemption`
   - `remove_loopback_exemption`
   - `LoopbackExemptionGuard` (RAII add/remove)
-- Explicit safety latch: `LoopbackAdd(...).confirm_debug_only()` required before add.
+- Explicit safety latch: `LoopbackAdd(...).confirm_debug_only()` required before add or RAII guard creation via `LoopbackExemptionGuard::new_confirmed(...)`.
 
 ### `src/diag.rs` (`feature = "introspection"`)
 - `validate_configuration` emits `ConfigWarning` values for:
@@ -228,7 +228,7 @@ Reliability:
 - Environment replacement hazards are mitigated by `merge_parent_env` guidance and helper API.
 
 Quality governance:
-- Local mandatory checks include format, lint, tests, and (for deep runs) security/docs/coverage paths.
+- Local mandatory checks include size, format, lint, tests, and (for deep runs) security/docs/coverage paths.
 - CI additionally validates across feature matrix and multiple toolchains.
 - Tests include opt-in ignored cases for globally mutating operations (loopback/job semantics).
 
@@ -243,15 +243,22 @@ Windows-first local setup:
 3. Run tests: `cargo test --all-targets` and feature variants as needed.
 
 Local governance commands:
-- `just ci-fast`: pre-commit oriented gate (`hygiene`, `fmt`, `lint`, `build`, `test-quick`, `coverage`).
+- `just ci-fast`: pre-commit oriented gate (`hygiene`, `size`, `fmt`, `lint`, `build`, `test-quick`, `coverage`).
 - `just ci-deep`: pre-push/full gate (`ci-fast` + full tests, security checks, docs).
 - Local matrix helper: `scripts/ci-local.ps1` (stable + MSRV toolchains and feature combinations).
 
 Hosted CI governance differences:
 - `.github/workflows/ci.yml` runs on `windows-latest` with Rust matrix (`stable`, `1.88.0`..`1.95.0`, `beta`, `nightly`) and feature matrix (`""`, `introspection`, `net`, `introspection,net`).
-- Hosted GitLab branch/MR CI runs the lightweight `just ci-remote-fast` gate; full docs, coverage, and security scans remain local/pre-push and tag-release gates via `just ci-deep`.
+- GitLab branch/MR CI runs blocking Debian and macOS all-target/all-feature checks plus a Windows stable/MSRV feature matrix; beta and nightly Windows jobs are advisory.
+- GitLab jobs use explicit unprotected runner boundaries. Packaging and
+  supply-chain helpers use repository-local temporary directories when safe;
+  Windows AppContainer test jobs preserve the host process `TEMP`/`TMP`
+  contract and rely on test-owned `.tmp/` scratch for file-backed cases.
+  Runners must be provisioned with the required toolchains before assignment;
+  jobs do not install host toolchains.
 - `.github/workflows/codeql.yml` adds GitHub CodeQL analysis (actions + rust categories).
-- `.github/workflows/release.yml` is not used; release publishing is owned by GitLab tag pipelines, with `just release-gate-log` and `just release` retained as guarded local fallback tooling.
+- GitHub CI and CodeQL remain active as mirror/fallback coverage until an exact-SHA GitLab parity pipeline is green and verified.
+- `.github/workflows/release.yml` is not used; release publishing is owned by protected GitLab tag pipelines on the Windows protected runner boundary, with `just release-gate-log` and `just release` retained as guarded local fallback tooling.
 
 Operational notes:
 - Loopback exemption tests and some job/process behavior tests are opt-in via env vars (`RAPPCT_ALLOW_NET_TESTS`, `RAPPCT_ALLOW_JOB_TESTS`, `RAPPCT_ITESTS`).

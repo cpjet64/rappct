@@ -2,6 +2,18 @@
 
 Created: `2026-02-26T01:52:38Z`
 
+## 2026-07-29 Modernization Sweep
+
+| Step | Status | Notes |
+|---|---|---|
+| Stack Detection | Complete | Rust 2024 library crate with Cargo lockfile, Justfile gates, GitLab primary CI, GitHub mirror CI/CodeQL, mdBook docs, PowerShell/Node release tooling. |
+| Compatible Direct Updates | Applied | `clap 4.6.1 -> 4.6.4`, `serde 1.0.228 -> 1.0.229`, `serde_json 1.0.149 -> 1.0.151`, `thiserror 2.0.18 -> 2.0.19`; lockfile refreshed with `cargo update`. |
+| Major Upgrade Review | Complete | No direct major upgrades were available for the current dependency set. `windows 0.62.2`, `tempfile 3.27.0`, `strsim 0.11.1`, and `tracing 0.1.44` remained current. |
+| Unused Dependency Check | Complete | `cargo machete` reported no unused direct dependencies. |
+| Duplicate Dependency Check | Complete | `cargo tree -d --locked` reported no duplicate crate versions in the default target graph. |
+| Advisory Review | Action Required | `cargo audit` exited successfully but reported warning `RUSTSEC-2026-0190` for `anyhow 1.0.102` through a target-specific WASI dev-dependency path. No baseline exception was added; reassess when upstream `tempfile/getrandom/wasip3` graph changes. |
+| Release Evidence | Hardened | GitLab package jobs now emit crate SHA-256 files and `cargo-metadata.json` alongside the `.crate` artifact. |
+
 ## 2026-05-08 Modernization Pass
 
 | Step | Status | Notes |

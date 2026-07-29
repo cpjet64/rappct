@@ -1,0 +1,32 @@
+#!/bin/bash
+# pre-push: full local CI matrix
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+LOCAL_RUNNER="$REPO_ROOT/scripts/with-project-temp.ps1"
+
+if command -v pwsh >/dev/null 2>&1; then
+    PS_CMD="pwsh"
+else
+    PS_CMD="powershell.exe"
+fi
+
+run_local() {
+    "$PS_CMD" -NoProfile -File "$LOCAL_RUNNER" -Scope pre-push "$@"
+}
+
+echo "=== pre-push: full local CI ==="
+if [ -f "$REPO_ROOT/scripts/ci-local.ps1" ]; then
+    "$PS_CMD" -NoProfile -File "$REPO_ROOT/scripts/ci-local.ps1"
+else
+    # Fallback: same checks as pre-commit for minimal coverage
+    run_local cargo fmt --all :: --check
+    run_local cargo clippy --all-targets --all-features --locked :: -D warnings
+    run_local cargo test --all-targets --locked --features _test_helpers
+    run_local cargo test --all-targets --locked --features "_test_helpers,introspection"
+    run_local cargo test --all-targets --locked --features "_test_helpers,net"
+    run_local cargo test --all-targets --locked --features "_test_helpers,introspection,net"
+fi
+
+echo "=== pre-push OK ==="

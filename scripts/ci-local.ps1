@@ -1,104 +1,194 @@
-#requires -Version 7
 $ErrorActionPreference = 'Stop'
-# Use PowerShell's built-in read-only $IsWindows automatic variable
-if (-not $IsWindows) {
-  Write-Error "[ci-local] Windows-only checks. Detected non-Windows environment. Aborting."; exit 1
-}
+
+$repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$minimumFreeBytes = 5GB
+$features = @('', 'introspection', 'net', 'introspection,net')
+$msrvList = @('1.88.0', '1.89.0', '1.90.0', '1.91.0', '1.92.0', '1.93.0', '1.94.0', '1.95.0')
 
 function Invoke-Checked {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Label,
-    [Parameter(Mandatory = $true)]
-    [scriptblock]$Action
-  )
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Label,
 
-  & $Action
-  if ($LASTEXITCODE -ne 0) {
-    throw "[ci-local] $Label failed with exit code $LASTEXITCODE"
-  }
-}
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$Action
+    )
 
-$features = @("", "introspection", "net", "introspection,net")
-$env:RUST_BACKTRACE = "1"
-$env:RUSTFLAGS = "-D warnings"
-
-Write-Host "[ci-local] fmt (stable, workspace)"
-# rustfmt and clippy must be pre-installed. Do NOT run 'rustup component add'
-# during builds — it mutates the shared RUSTUP_HOME and causes contention
-# when multiple repos build concurrently.
-# To provision: rustup component add rustfmt clippy
-Invoke-Checked -Label "fmt (stable, workspace)" -Action { cargo fmt --all -- --check }
-
-Write-Host "[ci-local] clippy check"
-
-foreach ($f in $features) {
-  if ($f -eq "") {
-    Write-Host "[ci-local] test (stable, no features)"; Invoke-Checked -Label "test (stable, no features)" -Action { cargo test --all-targets }
-    Write-Host "[ci-local] clippy (stable, no features)"; Invoke-Checked -Label "clippy (stable, no features)" -Action { cargo clippy --all-targets -- -D warnings }
-    Invoke-Checked -Label "duplicate dependency check (stable, no features)" -Action { cargo tree -d | Out-Null }
-  } else {
-    Write-Host "[ci-local] test (stable, features: $f)"; Invoke-Checked -Label "test (stable, features: $f)" -Action { cargo test --all-targets --features "$f" }
-    Write-Host "[ci-local] clippy (stable, features: $f)"; Invoke-Checked -Label "clippy (stable, features: $f)" -Action { cargo clippy --all-targets --features "$f" -- -D warnings }
-    Invoke-Checked -Label "duplicate dependency check (stable, features: $f)" -Action { cargo tree -d --features "$f" | Out-Null }
-  }
-}
-
-$msrvList = @("1.88.0", "1.89.0", "1.90.0", "1.91.0", "1.92.0", "1.93.0", "1.94.0", "1.95.0")
-
-foreach ($msrv in $msrvList) {
-  Write-Host "[ci-local] toolchain $msrv"
-  # Toolchain must be pre-installed. Do NOT install during builds.
-  # To provision: rustup toolchain install $msrv && rustup component add clippy --toolchain $msrv
-  if (-not (rustup toolchain list | Select-String "^$msrv")) {
-    Write-Warning "[ci-local] toolchain $msrv not installed, skipping"; continue
-  }
-
-  foreach ($f in $features) {
-    if ($f -eq "") {
-      Write-Host "[ci-local] test ($msrv, no features)"; Invoke-Checked -Label "test ($msrv, no features)" -Action { cargo +$msrv test --all-targets }
-      Write-Host "[ci-local] clippy ($msrv, no features)"; Invoke-Checked -Label "clippy ($msrv, no features)" -Action { cargo +$msrv clippy --all-targets -- -D warnings }
-    } else {
-      Write-Host "[ci-local] test ($msrv, features: $f)"; Invoke-Checked -Label "test ($msrv, features: $f)" -Action { cargo +$msrv test --all-targets --features "$f" }
-      Write-Host "[ci-local] clippy ($msrv, features: $f)"; Invoke-Checked -Label "clippy ($msrv, features: $f)" -Action { cargo +$msrv clippy --all-targets --features "$f" -- -D warnings }
+    & $Action
+    if ($LASTEXITCODE -ne 0) {
+        throw "[ci-local] $Label failed with exit code $LASTEXITCODE"
     }
-  }
 }
 
-Write-Host "[ci-local] beta toolchain"
-# Toolchain must be pre-installed. To provision: rustup toolchain install beta && rustup component add clippy --toolchain beta
-$hasBeta = rustup toolchain list | Select-String '^beta'
+function Invoke-CargoChecked {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Label,
 
-if ($hasBeta) {
-  foreach ($f in $features) {
-    if ($f -eq "") {
-      Write-Host "[ci-local] test (beta, no features)"; Invoke-Checked -Label "test (beta, no features)" -Action { cargo +beta test --all-targets }
-      Write-Host "[ci-local] clippy (beta, no features)"; Invoke-Checked -Label "clippy (beta, no features)" -Action { cargo +beta clippy --all-targets -- -D warnings }
-    } else {
-      Write-Host "[ci-local] test (beta, features: $f)"; Invoke-Checked -Label "test (beta, features: $f)" -Action { cargo +beta test --all-targets --features "$f" }
-      Write-Host "[ci-local] clippy (beta, features: $f)"; Invoke-Checked -Label "clippy (beta, features: $f)" -Action { cargo +beta clippy --all-targets --features "$f" -- -D warnings }
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Toolchain,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    $cargoArgs = @()
+    if ($Toolchain -ne 'stable') {
+        $cargoArgs += "+$Toolchain"
     }
-  }
-} else {
-  Write-Warning "[ci-local] beta toolchain not installed, skipping. To provision: rustup toolchain install beta && rustup component add clippy --toolchain beta"
-}
+    $cargoArgs += $Arguments
 
-Write-Host "[ci-local] nightly toolchain"
-# Toolchain must be pre-installed. To provision: rustup toolchain install nightly && rustup component add clippy --toolchain nightly
-$hasNightly = rustup toolchain list | Select-String '^nightly'
-
-if ($hasNightly) {
-  foreach ($f in $features) {
-    if ($f -eq "") {
-      Write-Host "[ci-local] test (nightly, no features)"; Invoke-Checked -Label "test (nightly, no features)" -Action { cargo +nightly test --all-targets }
-      Write-Host "[ci-local] clippy (nightly, no features)"; Invoke-Checked -Label "clippy (nightly, no features)" -Action { cargo +nightly clippy --all-targets -- -D warnings }
-    } else {
-      Write-Host "[ci-local] test (nightly, features: $f)"; Invoke-Checked -Label "test (nightly, features: $f)" -Action { cargo +nightly test --all-targets --features "$f" }
-      Write-Host "[ci-local] clippy (nightly, features: $f)"; Invoke-Checked -Label "clippy (nightly, features: $f)" -Action { cargo +nightly clippy --all-targets --features "$f" -- -D warnings }
+    cargo @cargoArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "[ci-local] $Label failed with exit code $LASTEXITCODE"
     }
-  }
-} else {
-  Write-Warning "[ci-local] nightly toolchain not installed, skipping. To provision: rustup toolchain install nightly && rustup component add clippy --toolchain nightly"
 }
 
-Write-Host "[ci-local] OK"
+function Assert-WindowsHost {
+    if ([Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
+        Write-Error '[ci-local] Windows-only checks. Detected non-Windows environment. Aborting.'
+        exit 1
+    }
+}
+
+function Assert-FreeSpace {
+    $driveRoot = [System.IO.Path]::GetPathRoot($repoRoot)
+    $driveInfo = [System.IO.DriveInfo]::new($driveRoot)
+    if (-not $driveInfo.IsReady) {
+        throw "[ci-local] Repository volume is not ready: $driveRoot"
+    }
+    if ($driveInfo.AvailableFreeSpace -ge $minimumFreeBytes) {
+        return
+    }
+
+    throw (
+        "[ci-local] Insufficient free space on {0}: {1:N0} bytes available; " +
+        "{2:N0} bytes required. Free space before running local CI."
+    ) -f $driveRoot, $driveInfo.AvailableFreeSpace, $minimumFreeBytes
+}
+
+function Get-TestFeatures {
+    param([Parameter(Mandatory = $true)][AllowEmptyString()][string]$Feature)
+
+    if ($Feature -eq '') {
+        return '_test_helpers'
+    }
+    return "$Feature,_test_helpers"
+}
+
+function Get-FeatureLabel {
+    param([Parameter(Mandatory = $true)][AllowEmptyString()][string]$Feature)
+
+    if ($Feature -eq '') {
+        return 'no product features'
+    }
+    return "features: $Feature"
+}
+
+function Test-RustToolchainInstalled {
+    param([Parameter(Mandatory = $true)][string]$Toolchain)
+
+    $escapedToolchain = [regex]::Escape($Toolchain)
+    return [bool](rustup toolchain list --verbose | Select-String "^$escapedToolchain(-|\s)")
+}
+
+function Invoke-FormatAndStaticChecks {
+    Write-Host '[ci-local] hygiene'
+    Invoke-Checked -Label 'hygiene' -Action { & (Join-Path $PSScriptRoot 'hygiene.ps1') }
+
+    Write-Host '[ci-local] fmt (stable, workspace)'
+    # rustfmt and stable clippy must be pre-installed. Do not mutate shared RUSTUP_HOME during builds.
+    Invoke-Checked -Label 'fmt (stable, workspace)' -Action { cargo fmt --all -- --check }
+
+    Write-Host '[ci-local] code size'
+    Invoke-Checked -Label 'code size' -Action { python (Join-Path $PSScriptRoot 'check_code_size.py') }
+}
+
+function Invoke-RustFeatureGate {
+    param(
+        [Parameter(Mandatory = $true)][string]$Toolchain,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Feature,
+        [switch]$CheckDependencies
+    )
+
+    $featureLabel = Get-FeatureLabel -Feature $Feature
+    $testFeatures = Get-TestFeatures -Feature $Feature
+
+    Write-Host "[ci-local] test ($Toolchain, $featureLabel)"
+    Invoke-CargoChecked `
+        -Label "test ($Toolchain, $featureLabel)" `
+        -Toolchain $Toolchain `
+        -Arguments @('test', '--all-targets', '--locked', '--features', $testFeatures)
+
+    Write-Host "[ci-local] clippy ($Toolchain, $featureLabel)"
+    if ($Toolchain -eq 'stable') {
+        Invoke-CargoChecked `
+            -Label "clippy ($Toolchain, $featureLabel)" `
+            -Toolchain $Toolchain `
+            -Arguments @('clippy', '--all-targets', '--locked', '--features', $testFeatures, '--', '-D', 'warnings')
+    } else {
+        Write-Host "[ci-local] clippy ($Toolchain, $featureLabel) skipped; stable clippy is the lint gate"
+    }
+
+    if ($CheckDependencies) {
+        $treeArgs = @('tree', '-d', '--locked')
+        if ($Feature -ne '') { $treeArgs += @('--features', $Feature) }
+        Invoke-CargoChecked `
+            -Label "duplicate dependency check ($Toolchain, $featureLabel)" `
+            -Toolchain $Toolchain `
+            -Arguments $treeArgs
+    }
+}
+
+function Invoke-FeatureMatrix {
+    param(
+        [Parameter(Mandatory = $true)][string]$Toolchain,
+        [switch]$CheckDependencies
+    )
+
+    foreach ($feature in $features) {
+        Invoke-RustFeatureGate `
+            -Toolchain $Toolchain `
+            -Feature $feature `
+            -CheckDependencies:$CheckDependencies
+    }
+}
+
+function Invoke-MsrvMatrix {
+    foreach ($msrv in $msrvList) {
+        Write-Host "[ci-local] toolchain $msrv"
+        # Toolchains must be pre-installed. To provision: rustup toolchain install <version>.
+        if (-not (Test-RustToolchainInstalled -Toolchain $msrv)) {
+            throw "[ci-local] required MSRV toolchain $msrv is not installed. Provision it with: rustup toolchain install $msrv"
+        }
+        Invoke-FeatureMatrix -Toolchain $msrv
+    }
+}
+
+function Invoke-OptionalToolchainMatrix {
+    foreach ($toolchain in @('beta', 'nightly')) {
+        Write-Host "[ci-local] $toolchain toolchain"
+        if (-not (Test-RustToolchainInstalled -Toolchain $toolchain)) {
+            Write-Warning "[ci-local] $toolchain toolchain not installed, skipping"
+            continue
+        }
+        Invoke-FeatureMatrix -Toolchain $toolchain
+    }
+}
+
+function Invoke-CiLocal {
+    Assert-WindowsHost
+    Assert-FreeSpace
+    Set-Location -LiteralPath $repoRoot
+
+    $env:RUST_BACKTRACE = '1'
+    $env:RUSTFLAGS = '-D warnings'
+    Invoke-FormatAndStaticChecks
+    Invoke-FeatureMatrix -Toolchain 'stable' -CheckDependencies
+    Invoke-MsrvMatrix
+    Invoke-OptionalToolchainMatrix
+    Write-Host '[ci-local] OK'
+}
+
+Invoke-CiLocal

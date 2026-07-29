@@ -1,10 +1,10 @@
-set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+set windows-shell := ["powershell.exe", "-NoProfile", "-NoLogo", "-Command"]
 crate_name := env_var_or_default("RAPPCT_CRATE", "rappct")
 
 # === Modes ===
 
 # Pre-commit: fast checks (~10-30s)
-ci-fast: hygiene fmt lint build test-quick coverage
+ci-fast: hygiene size fmt lint build test-quick coverage
 
 # Pre-push: exhaustive checks (~5-15min)
 ci-deep: ci-fast test-full coverage security docs
@@ -33,6 +33,9 @@ package-list:
 package-list-clean: ensure-clean-tree
     cargo package --list --locked
 
+package-release-evidence:
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/package-release-evidence.ps1
+
 publish-dry-run:
     cargo publish --dry-run --allow-dirty --locked
 
@@ -54,28 +57,31 @@ ensure-clean-tree:
 hygiene:
     powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& ./scripts/hygiene.ps1"
 
+size:
+    python scripts/check_code_size.py
+
 # === Rust Recipes ===
 fmt:
     cargo fmt --all -- --check
 
 lint:
-    cargo clippy --all-targets --all-features -- -D warnings
+    cargo clippy --all-targets --all-features --locked -- -D warnings
     cargo machete
 
 lint-remote:
-    cargo clippy --all-targets --all-features -- -D warnings
+    cargo clippy --all-targets --all-features --locked -- -D warnings
 
 build:
     cargo build --all-targets --all-features --locked
 
 test-quick:
-    cargo nextest run --locked
+    cargo nextest run --test-threads 1 --features _test_helpers --locked
 
 test-full:
-    cargo nextest run --all-features --locked
+    cargo nextest run --test-threads 1 --all-features --locked
 
 coverage:
-    cargo llvm-cov nextest --all-features --ignore-filename-regex '(^|[\\/])(tests|examples|target|external|legacy)[\\/]' --fail-under-regions 85 --lcov --output-path lcov.info
+    cargo llvm-cov nextest --test-threads 1 --all-features --ignore-filename-regex '(^|[\\/])(tests|examples|target|external|legacy)[\\/]' --fail-under-regions 85 --lcov --output-path lcov.info
 
 security:
     cargo deny check
@@ -83,7 +89,7 @@ security:
     python scripts/enforce_advisory_policy.py
 
 docs:
-    $env:RUSTFLAGS='-D warnings'; cargo doc --no-deps --all-features
+    $env:RUSTFLAGS='-D warnings'; cargo doc --locked --no-deps --all-features
     powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& { if (-not (Get-Command mdbook -ErrorAction SilentlyContinue)) { Write-Error 'mdbook is required for the docs gate. Install with: cargo install mdbook --locked'; exit 1 }; mdbook build docs --dest-dir book }"
 
 bench:
