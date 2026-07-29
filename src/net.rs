@@ -4,155 +4,18 @@ use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
 #[cfg(all(windows, feature = "net"))]
-use crate::ffi::mem::LocalAllocGuard;
-#[cfg(all(windows, feature = "net"))]
-use crate::ffi::sid::OwnedSid;
-#[cfg(all(windows, feature = "net"))]
 use std::cell::RefCell;
 #[cfg(all(windows, feature = "net"))]
 use std::collections::HashSet;
 
 #[cfg(all(windows, feature = "net"))]
-use windows::core::PWSTR;
-
-#[cfg(all(windows, feature = "net"))]
-use windows::Win32::Security::PSID;
-
-#[cfg(all(windows, feature = "net"))]
-/// # Safety
-/// `ptr` must be a valid PWSTR to a NUL-terminated UTF-16 buffer.
-// SAFETY: `ptr` must reference a valid, NUL-terminated UTF-16 string from Win32.
-unsafe fn pwstr_to_string(ptr: PWSTR) -> String {
-    if ptr.is_null() {
-        return String::new();
-    }
-    let mut len = 0usize;
-    // SAFETY: Walk until trailing NUL; then build a slice over initialized code units.
-    // SAFETY: Walk until trailing NUL; then create a slice over initialized code units.
-    unsafe {
-        while *ptr.0.add(len) != 0 {
-            len += 1;
-        }
-        String::from_utf16_lossy(std::slice::from_raw_parts(ptr.0, len))
-    }
-}
-
-#[cfg(all(windows, feature = "net"))]
-// SAFETY: `psid` must be a valid SID pointer returned by a Win32 API.
-unsafe fn psid_to_string(psid: PSID) -> Result<String> {
-    use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
-    let mut raw = PWSTR::null();
-    // SAFETY: `psid` is a valid SID; API returns a LocalAlloc PWSTR which we free via guard.
-    // SAFETY: Convert a valid SID to SDDL; returned buffer is LocalAlloc-managed.
-    unsafe {
-        ConvertSidToStringSidW(psid, &mut raw)
-            .map_err(|e| AcError::Win32(format!("ConvertSidToStringSidW failed: {e}")))?;
-        let guard = crate::ffi::mem::LocalAllocGuard::<u16>::from_raw(raw.0);
-        Ok(guard.to_string_lossy())
-    }
-}
+mod windows_impl;
 
 /// Lists all registered AppContainer profiles and their display names from the firewall config.
 pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
     #[cfg(all(windows, feature = "net"))]
-    // SAFETY: Enumerates app containers and firewall config via Win32; out-pointers handled and freed.
-    unsafe {
-        use windows::Win32::NetworkManagement::WindowsFirewall::{
-            INET_FIREWALL_APP_CONTAINER, NETISO_FLAG_FORCE_COMPUTE_BINARIES,
-            NetworkIsolationEnumAppContainers, NetworkIsolationFreeAppContainers,
-            NetworkIsolationGetAppContainerConfig,
-        };
-        use windows::Win32::Security::SID_AND_ATTRIBUTES;
-
-        struct AppContainerArrayGuard(*mut INET_FIREWALL_APP_CONTAINER);
-
-        impl Drop for AppContainerArrayGuard {
-            fn drop(&mut self) {
-                if !self.0.is_null() {
-                    // SAFETY: Buffer is allocated by NetworkIsolationEnumAppContainers and must
-                    // be released via NetworkIsolationFreeAppContainers.
-                    unsafe {
-                        NetworkIsolationFreeAppContainers(self.0);
-                    }
-                    self.0 = std::ptr::null_mut();
-                }
-            }
-        }
-
-        let mut count: u32 = 0;
-        let mut arr: *mut INET_FIREWALL_APP_CONTAINER = std::ptr::null_mut();
-        // SAFETY: Enumerates app containers; returns count and array to be freed via API.
-        // SAFETY: Call enumeration API to retrieve array and count.
-        let err = NetworkIsolationEnumAppContainers(
-            NETISO_FLAG_FORCE_COMPUTE_BINARIES.0 as u32,
-            &mut count,
-            &mut arr,
-        );
-        if err != 0 {
-            return Err(AcError::Win32(format!(
-                "NetworkIsolationEnumAppContainers failed: {err}"
-            )));
-        }
-        let arr_guard = AppContainerArrayGuard(arr);
-
-        let slice = if arr_guard.0.is_null() {
-            if count == 0 {
-                &[][..]
-            } else {
-                return Err(AcError::Win32(
-                    "NetworkIsolationEnumAppContainers returned null array with non-zero count"
-                        .to_string(),
-                ));
-            }
-        } else {
-            std::slice::from_raw_parts(arr_guard.0, count as usize)
-        };
-        let mut out = Vec::with_capacity(slice.len());
-        let mut sid_set: HashSet<String> = HashSet::with_capacity(slice.len());
-        for item in slice {
-            let sid_str = psid_to_string(PSID(item.appContainerSid as *mut _))?;
-            let display = pwstr_to_string(item.displayName);
-            sid_set.insert(sid_str.clone());
-            out.push((AppContainerSid::from_sddl(sid_str), display));
-        }
-
-        let mut cfg_count: u32 = 0;
-        let mut cfg_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
-        // SAFETY: Retrieves current loopback config; returns SID_AND_ATTRIBUTES array to be LocalFreed.
-        // SAFETY: Retrieve firewall appcontainer config into LocalAlloc array.
-        let cfg_err = NetworkIsolationGetAppContainerConfig(&mut cfg_count, &mut cfg_arr);
-        if cfg_err != 0 {
-            return Err(AcError::Win32(format!(
-                "NetworkIsolationGetAppContainerConfig failed: {cfg_err}"
-            )));
-        }
-        if cfg_arr.is_null() {
-            if cfg_count > 0 {
-                return Err(AcError::Win32(
-                    "NetworkIsolationGetAppContainerConfig returned null array with non-zero count"
-                        .to_string(),
-                ));
-            }
-        } else {
-            let cfg_guard = LocalAllocGuard::<SID_AND_ATTRIBUTES>::from_raw(cfg_arr);
-            let cfg_slice = std::slice::from_raw_parts(
-                cfg_guard.as_ptr() as *const SID_AND_ATTRIBUTES,
-                cfg_count as usize,
-            );
-            for sa in cfg_slice {
-                let sid_str = psid_to_string(sa.Sid)?;
-                if !sid_set.contains(&sid_str) {
-                    #[cfg(feature = "tracing")]
-                    tracing::warn!(
-                        "Firewall config SID missing from enumeration; continuing: {}",
-                        sid_str
-                    );
-                    // Continue without failing; enumeration and config may be out of sync on some systems.
-                }
-            }
-        }
-
-        Ok(out)
+    {
+        windows_impl::list_appcontainers()
     }
     #[cfg(all(windows, not(feature = "net")))]
     {
@@ -196,8 +59,7 @@ thread_local! {
 pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
     let _ = &req;
     #[cfg(all(windows, feature = "net"))]
-    // SAFETY: Requires prior explicit confirmation; delegates to `set_loopback` with valid SID.
-    unsafe {
+    {
         // Safety latch: require explicit confirm prior to call
         let is_confirmed = CONFIRMED_LOOPBACK_SIDS
             .with(|confirmed| confirmed.borrow_mut().remove(req.0.as_string()));
@@ -210,7 +72,7 @@ pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
                 )),
             });
         }
-        set_loopback(true, &req.0)
+        windows_impl::set_loopback(true, &req.0)
     }
     #[cfg(all(windows, not(feature = "net")))]
     {
@@ -226,9 +88,8 @@ pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
 pub fn remove_loopback_exemption(sid: &AppContainerSid) -> Result<()> {
     let _ = sid;
     #[cfg(all(windows, feature = "net"))]
-    // SAFETY: Delegates to `set_loopback` with a valid SID reference.
-    unsafe {
-        set_loopback(false, sid)
+    {
+        windows_impl::set_loopback(false, sid)
     }
     #[cfg(all(windows, not(feature = "net")))]
     {
@@ -243,8 +104,8 @@ pub fn remove_loopback_exemption(sid: &AppContainerSid) -> Result<()> {
 /// RAII guard that applies a loopback exemption on construction and
 /// always removes it on drop. Intended for debug/testing only.
 ///
-/// Note: This uses the built-in safety latch. Callers must be explicit and
-/// opt-in to the operation via `LoopbackAdd::confirm_debug_only()`.
+/// Note: callers must be explicit and opt in to the operation via
+/// `LoopbackAdd::confirm_debug_only()`.
 #[must_use]
 #[derive(Debug)]
 pub struct LoopbackExemptionGuard {
@@ -253,26 +114,42 @@ pub struct LoopbackExemptionGuard {
 }
 
 impl LoopbackExemptionGuard {
-    /// Adds a loopback exemption for the provided AppContainer SID.
+    /// Attempts to add a loopback exemption without implicit confirmation.
     ///
-    /// This method requires explicit acknowledgement via the safety latch.
+    /// This preserves the original constructor shape, but it no longer
+    /// auto-confirms the debug-only operation. Use [`Self::new_confirmed`] with
+    /// `LoopbackAdd(...).confirm_debug_only()` for the RAII flow.
+    pub fn new(sid: &AppContainerSid) -> Result<Self> {
+        Self::new_confirmed(LoopbackAdd(sid.clone()))
+    }
+
+    /// Adds a loopback exemption from an explicitly confirmed request.
+    ///
     /// Typical usage:
     ///
     /// ```no_run
     /// # #[cfg(feature = "net")]
     /// # {
-    /// # use rappct::{AppContainerProfile, net::LoopbackExemptionGuard};
+    /// # use rappct::{AppContainerProfile, net::{LoopbackAdd, LoopbackExemptionGuard}};
     /// # let profile = AppContainerProfile::ensure("rappct.guard", "guard", None).unwrap();
-    /// let _guard = LoopbackExemptionGuard::new(&profile.sid).unwrap();
+    /// let _guard = LoopbackExemptionGuard::new_confirmed(
+    ///     LoopbackAdd(profile.sid.clone()).confirm_debug_only(),
+    /// ).unwrap();
     /// # }
     /// ```
-    pub fn new(sid: &AppContainerSid) -> Result<Self> {
-        // Use the safety latch confirm call to acknowledge debug-only usage
-        super::net::add_loopback_exemption(LoopbackAdd(sid.clone()).confirm_debug_only())?;
-        Ok(Self {
-            sid: sid.clone(),
-            active: true,
-        })
+    pub fn new_confirmed(req: LoopbackAdd) -> Result<Self> {
+        let sid = req.0.clone();
+        super::net::add_loopback_exemption(req)?;
+        Ok(Self { sid, active: true })
+    }
+
+    /// Removes the exemption immediately and disables the drop cleanup path.
+    pub fn close(mut self) -> Result<()> {
+        if self.active {
+            self.active = false;
+            return remove_loopback_exemption(&self.sid);
+        }
+        Ok(())
     }
 
     /// Disable removal on drop (opt-out). Primarily useful for testing.
@@ -319,101 +196,4 @@ impl LoopbackAdd {
         }
         self
     }
-}
-
-#[cfg(all(windows, feature = "net"))]
-unsafe fn set_loopback(allow: bool, sid: &AppContainerSid) -> Result<()> {
-    use windows::Win32::NetworkManagement::WindowsFirewall::{
-        NetworkIsolationGetAppContainerConfig, NetworkIsolationSetAppContainerConfig,
-    };
-    use windows::Win32::Security::Authorization::ConvertStringSidToSidW;
-    use windows::Win32::Security::SID_AND_ATTRIBUTES;
-    use windows::core::PCWSTR;
-
-    let mut cur_count: u32 = 0;
-    let mut cur_arr: *mut SID_AND_ATTRIBUTES = std::ptr::null_mut();
-    // SAFETY: Queries and updates firewall loopback configuration; LocalAlloc buffers are guarded.
-    unsafe {
-        let err = NetworkIsolationGetAppContainerConfig(&mut cur_count, &mut cur_arr);
-        if err != 0 {
-            return Err(AcError::Win32(format!(
-                "NetworkIsolationGetAppContainerConfig failed: {err}"
-            )));
-        }
-        let current_guard: Option<LocalAllocGuard<SID_AND_ATTRIBUTES>> = if cur_arr.is_null() {
-            if cur_count > 0 {
-                return Err(AcError::Win32(
-                    "NetworkIsolationGetAppContainerConfig returned null array with non-zero count"
-                        .to_string(),
-                ));
-            }
-            None
-        } else {
-            Some(LocalAllocGuard::<SID_AND_ATTRIBUTES>::from_raw(cur_arr))
-        };
-        let mut vec: Vec<SID_AND_ATTRIBUTES> = if let Some(ref guard) = current_guard {
-            std::slice::from_raw_parts(
-                guard.as_ptr() as *const SID_AND_ATTRIBUTES,
-                cur_count as usize,
-            )
-            .to_vec()
-        } else {
-            Vec::new()
-        };
-
-        let sddl_w: Vec<u16> = crate::ffi::wstr::to_utf16(sid.as_string());
-        let mut psid_raw = PSID::default();
-        // SAFETY: Convert SDDL to a LocalAlloc-managed PSID; wrap with guard.
-        ConvertStringSidToSidW(PCWSTR(sddl_w.as_ptr()), &mut psid_raw)
-            .map_err(|e| AcError::Win32(format!("ConvertStringSidToSidW failed: {e}")))?;
-        let owned_sid = OwnedSid::from_localfree_psid(psid_raw.0)?;
-        let target = owned_sid.as_psid();
-        let target_sddl = sid.as_string().to_owned();
-        let sid_matches =
-            |candidate: PSID| -> Result<bool> { Ok(psid_to_string(candidate)? == target_sddl) };
-
-        if allow {
-            let mut exists = false;
-            for sa in &vec {
-                if sid_matches(sa.Sid)? {
-                    exists = true;
-                    break;
-                }
-            }
-            if !exists {
-                vec.push(SID_AND_ATTRIBUTES {
-                    Sid: target,
-                    Attributes: 0,
-                });
-            }
-        } else {
-            let mut filtered = Vec::with_capacity(vec.len());
-            for sa in vec.into_iter() {
-                if !sid_matches(sa.Sid)? {
-                    filtered.push(sa);
-                }
-            }
-            vec = filtered;
-        }
-
-        let err2 = NetworkIsolationSetAppContainerConfig(&vec);
-        if err2 != 0 {
-            return Err(AcError::Win32(format!(
-                "NetworkIsolationSetAppContainerConfig failed: {err2}"
-            )));
-        }
-        Ok(())
-    }
-}
-
-#[cfg(all(windows, not(feature = "net")))]
-#[allow(dead_code)]
-unsafe fn set_loopback(_allow: bool, _sid: &AppContainerSid) -> Result<()> {
-    Err(AcError::Unimplemented("net feature not enabled"))
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-unsafe fn set_loopback(_allow: bool, _sid: &AppContainerSid) -> Result<()> {
-    Err(AcError::UnsupportedPlatform)
 }

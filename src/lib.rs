@@ -41,8 +41,8 @@
 //! # let _ = child.pid; profile.delete()?; Ok(()) }
 //! ```
 //!
-//! Testing note: in CI or local tests you can force LPAC support detection via the
-//! `RAPPCT_TEST_LPAC_STATUS` environment variable (`ok` or `unsupported`).
+//! Testing note: CI and crate tests enable the private `_test_helpers` feature, which
+//! allows LPAC support detection to be forced with `RAPPCT_TEST_LPAC_STATUS=ok|unsupported`.
 //!
 //! Refer to `CONTRIBUTING.md` for engineering conventions and contribution guidance.
 
@@ -58,6 +58,7 @@ pub mod launch;
 pub mod net;
 pub mod profile;
 pub mod sid;
+#[cfg(feature = "_test_helpers")]
 #[cfg(windows)]
 #[doc(hidden)]
 pub mod test_support;
@@ -81,13 +82,8 @@ pub use sid::AppContainerSid;
 pub fn supports_lpac() -> Result<()> {
     #[cfg(windows)]
     {
-        // Test/CI override: allow forcing LPAC support status
-        if let Ok(val) = std::env::var("RAPPCT_TEST_LPAC_STATUS") {
-            match val.as_str() {
-                "ok" => return Ok(()),
-                "unsupported" => return Err(AcError::UnsupportedLpac),
-                _ => {}
-            }
+        if let Some(status) = test_lpac_status_override() {
+            return status;
         }
         // Use ntdll!RtlGetVersion to query build number reliably
         #[repr(C)]
@@ -145,6 +141,20 @@ pub fn supports_lpac() -> Result<()> {
     {
         Err(AcError::UnsupportedPlatform)
     }
+}
+
+#[cfg(all(windows, feature = "_test_helpers"))]
+fn test_lpac_status_override() -> Option<Result<()>> {
+    match std::env::var("RAPPCT_TEST_LPAC_STATUS").ok()?.as_str() {
+        "ok" => Some(Ok(())),
+        "unsupported" => Some(Err(AcError::UnsupportedLpac)),
+        _ => None,
+    }
+}
+
+#[cfg(all(windows, not(feature = "_test_helpers")))]
+fn test_lpac_status_override() -> Option<Result<()>> {
+    None
 }
 
 #[cfg(test)]

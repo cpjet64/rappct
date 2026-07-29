@@ -9,24 +9,32 @@ Use `cargo build` for a debug build and `cargo build --release` when you need op
 ## Local Quality Gates (mandatory)
 Before every commit, push, or merge, you must run the same checks CI enforces:
 
+- Size guard: `python scripts/check_code_size.py`
+- Repository hygiene: `python scripts/hygiene.py`
 - Formatting: `cargo fmt --all -- --check`
-- Lints: `cargo clippy --all-targets --all-features -- -D warnings`
-- Tests: `cargo test --all-targets` (repeat with feature sets as needed, e.g. `--features net,introspection`)
+- Lints: `cargo clippy --all-targets --all-features --locked -- -D warnings`
+- Tests: `cargo test --all-targets --locked` (repeat with feature sets as needed, e.g. `--features net,introspection`)
 
 This repository includes Git hooks and helper scripts to make this easy:
 
 - Enable hooks locally: `git config core.hooksPath .githooks`
-- Pre-commit runs fmt, clippy, and tests for the current toolchain.
+- Pre-commit runs the size guard, fmt, clippy, and tests for the current toolchain.
 - Pre-push runs the full local CI script (stable + MSRV 1.88.0–1.95.0 across feature matrix):
   - PowerShell: `scripts/ci-local.ps1`
 
-Bypassing hooks (`--no-verify`) is discouraged and should only be used for emergencies.
+Do not bypass hooks with `--no-verify` unless the current user explicitly
+authorizes that specific bypass after receiving the exact failing gate and the
+reason a normal fix or rerun cannot be used. Record any authorized bypass and
+the resulting evidence gap in the task handoff.
 
 ## Coding Style & Naming Conventions
 Follow idiomatic Rust style with `rustfmt` (default configuration). Use `snake_case` for functions and modules, `UpperCamelCase` for types, and `SCREAMING_SNAKE_CASE` for constants. Keep public APIs documented with Rustdoc comments. Prefer explicit module paths over glob imports, except where the library intentionally re-exports helper types (e.g., `rappct::*` in examples).
 
 ## Testing Guidelines
 Unit tests typically sit alongside the code they cover (e.g., `src/capability.rs`). Cross-module scenarios belong in `tests/` or in dedicated examples. When adding features guarded by `net` or `introspection`, include feature-flagged tests to avoid breaking default builds. Favor descriptive test names such as `lpac_defaults_enable_flag` and ensure new tests run cleanly with `cargo test --all-features` on Windows hosts.
+
+## Code Size Guardrails
+Hand-authored source, tests, scripts, and executable configuration must stay at or below 500 physical lines per file. Functions, methods, handlers, block-bodied closures, tests, fixtures, and helpers must stay at or below 75 logical lines. Split by cohesive responsibility and never game these limits with compression, vague wrappers, visibility changes, or broad exclusions. Integration, end-to-end, contract, system, and workflow tests belong in dedicated test files; unit tests may stay co-located only when ecosystem-idiomatic, justified, and under the file limit. Generated, vendored, lockfile, snapshot, fixture, data, and migration files are inspected but not edited solely for line count; any exception requires a documented reason. Enforce with `python scripts/check_code_size.py`, `python scripts/hygiene.py`, `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features --locked -- -D warnings`, and `cargo test --all-targets --locked` with required feature sets.
 
 ## Commit & Pull Request Guidelines
 Follow the existing history: short, lowercase, imperative subject lines with optional scopes (`ci:`, `test(windows):`). Reference related issues in the body when applicable. Pull requests should summarize the change, list any feature flags or examples to run, mention testing performed, and include screenshots or logs for user-facing demos. Keep PRs focused; split unrelated changes into separate submissions.
@@ -80,18 +88,24 @@ cargo run --example acrun -- --help
 
 Run the same checks that CI enforces locally, every time:
 
+- `python scripts/check_code_size.py`
 - `cargo fmt --all -- --check`
-- `cargo clippy --all-targets --all-features -- -D warnings`
-- `cargo test --all-targets` (repeat with feature sets as needed: `--features net`, `--features introspection`, or both)
+- `python scripts/hygiene.py`
+- `cargo clippy --all-targets --all-features --locked -- -D warnings`
+- `cargo test --all-targets --locked` (repeat with feature sets as needed: `--features net`, `--features introspection`, or both)
 
 Repository-provided hooks and scripts:
 
 - Enable hooks once: `git config core.hooksPath .githooks`
-- `.githooks/pre-commit` runs fmt, clippy, and tests.
+- `.githooks/pre-commit` runs the size guard, fmt, clippy, and tests.
 - `.githooks/pre-push` runs the full local CI matrix via:
   - `scripts/ci-local.ps1` (PowerShell)
 
-Do not bypass hooks except in emergencies (`git push --no-verify`). Keeping local gates green will keep CI green.
+Do not use `git push --no-verify` unless the current user explicitly authorizes
+that specific bypass after receiving the exact failing gate and the reason a
+normal fix or rerun cannot be used. Record any authorized bypass and the
+resulting evidence gap in the task handoff. Keeping local gates green will keep
+CI green.
 
 **Note**: Some tests require elevated PowerShell when they involve loopback exemptions or ACL adjustments.
 
@@ -157,7 +171,7 @@ The crate is organized into focused modules that compose together:
 - `UnknownCapability { name, suggestion }` with optional fuzzy suggestions (when `introspection` feature enabled)
 - `UnsupportedLpac` vs `UnsupportedPlatform` for OS/platform checks
 
-**LPAC Detection**: `supports_lpac()` queries OS build via `ntdll!RtlGetVersion` (Windows 10 build 15063+). Can be overridden in tests via `RAPPCT_TEST_LPAC_STATUS` env var.
+**LPAC Detection**: `supports_lpac()` queries OS build via `ntdll!RtlGetVersion` (Windows 10 build 15063+). Test-only builds that enable the private `_test_helpers` feature can override detection with `RAPPCT_TEST_LPAC_STATUS`.
 
 ## Feature Flags
 
@@ -169,9 +183,12 @@ The crate is organized into focused modules that compose together:
 ## Testing Conventions
 
 - Integration tests in `tests/` are prefixed by platform: `windows_*.rs` for Windows-only, `api_surface.rs` for cross-platform API checks
-- Tests that modify global state (firewall, registry) should clean up in `Drop` or use `tempfile`
+- Tests that modify global state (firewall, registry) must clean up in `Drop`.
+  File-backed tests may use `tempfile::Builder::tempdir_in`, but its parent
+  must be a unique task-owned directory below the active worktree's `.tmp/`;
+  never use `tempfile`'s default system-temp location.
 - Use `#[cfg_attr(not(windows), ignore)]` for Windows-only tests
-- CI sets `RAPPCT_TEST_LPAC_STATUS=ok` to bypass LPAC detection on older CI images
+- CI may set `RAPPCT_TEST_LPAC_STATUS=ok` only for `_test_helpers` feature jobs that need deterministic LPAC coverage on older CI images
 
 ## Important Constraints
 
@@ -187,13 +204,13 @@ The crate is organized into focused modules that compose together:
 - **Not waiting for child process**: `LaunchedIo` has a `wait()` method; dropping it without waiting may leave orphaned processes if `kill_on_job_close` is false
 - **ACL grant failures on non-existent paths**: Ensure target file/directory/registry key exists before calling `grant_to_package()`
 - **Mixing `&str` and `&OsStr` UTF-16 conversions**: Use `util::to_utf16()` for `&str`, `util::to_utf16_os()` for `&OsStr`
-- **Custom environment blocks (Error 203)**: When passing `LaunchOptions::env`, it **completely replaces** the parent environment. Windows processes require essential system variables (SystemRoot, ComSpec, PATHEXT, TEMP, TMP) to function. Always copy these from the parent environment before adding custom variables. See `advanced_features.rs` Demo 5 for the pattern.
-- **PowerShell console buffer errors in AppContainer (Error 0x5)**: PowerShell tries to access the console output buffer for formatting, which AppContainers restrict. Redirect PowerShell output to temporary files using `Out-File -FilePath`, read back with `type`, and clean up with `del`. Must grant ACL access to temp directory for the AppContainer. See `network_demo.rs` and `comprehensive_demo.rs` Demo 4 for examples.
+- **Custom environment blocks (Error 203)**: When passing `LaunchOptions::env`, it **completely replaces** the parent environment. Copy required Windows variables such as `SystemRoot`, `ComSpec`, `PATHEXT`, and `PATH`, but set `TEMP` and `TMP` explicitly to a unique task-owned directory below the active worktree's `.tmp/`. When using parent-environment inheritance, set those variables only for the invoking process. See `advanced_features.rs` Demo 5 for the pattern.
+- **PowerShell console buffer errors in AppContainer (Error 0x5)**: PowerShell tries to access the console output buffer for formatting, which AppContainers restrict. Redirect output to files inside a unique task-owned directory below the active worktree's `.tmp/`, grant the AppContainer access only to that directory, read the files back with `type`, and clean up the exact task directory. Never grant an AppContainer access to the system or user temp directory. See `comprehensive_demo.rs` Demo 4 for the pattern.
 
 ## Debug Flags
 
 - `RAPPCT_DEBUG_LAUNCH=1`: Print CreateProcessW failure details to stderr (no tracing subscriber required)
-- `RAPPCT_TEST_LPAC_STATUS=ok|unsupported`: Override LPAC detection for tests
+- `RAPPCT_TEST_LPAC_STATUS=ok|unsupported`: Override LPAC detection only when the private `_test_helpers` feature is enabled
 
 ## External API Bindings
 
@@ -205,37 +222,46 @@ These Windows APIs are manually bound because they're not fully exposed in `wind
 
 ## Environment
 
-### Cache Locations
-All caches are centralized under `C:\Dev\cache\`. These environment variables are set system-wide — do not override them in project config or scripts.
+### Host Configuration Inheritance
 
-| Cache | Path | Env Variable |
-|---|---|---|
-| Cargo registry/git/bin | `C:\Dev\cache\cargo` | `CARGO_HOME` |
-| Rustup toolchains | `C:\Dev\cache\rustup` | `RUSTUP_HOME` |
-| sccache | `C:\Dev\cache\sccache` | `SCCACHE_DIR` |
+- Inherit host-level authentication, toolchain, and package-download cache
+  configuration. Do not copy host paths, credentials, or global settings into
+  repository config or scripts.
+- Keep build outputs repository-local. In particular, use the default
+  per-project `./target/`; never configure a shared Cargo target directory.
+- Do not add repository-local `CARGO_HOME`, `RUSTUP_HOME`, `SCCACHE_DIR`,
+  `RUSTC_WRAPPER`, or `CARGO_INCREMENTAL` overrides unless an explicit
+  repository requirement makes one necessary.
+- Per-project `.cargo/config.toml` remains appropriate for genuine
+  repository-specific linker flags, aliases, targets, source replacement,
+  rustflags, and profile overrides.
 
+### Project-Local Agent State
 
-#### Cargo Cache Rules
-- **sccache is enabled globally** via `$CARGO_HOME/config.toml` (`[build] rustc-wrapper = "sccache"`). All projects inherit this through Cargo's hierarchical config — do not duplicate it.
-- **Do NOT** add `rustc-wrapper = "sccache"` to per-project `.cargo/config.toml` — it is inherited from the global config.
-- **Do NOT** set `SCCACHE_DIR`, `RUSTC_WRAPPER`, or `CARGO_INCREMENTAL` in `.cargo/config.toml` `[env]` — these are set via system environment variables.
-- **Do NOT** set `target-dir` to a shared path (e.g. `C:\Dev\cache\target`) — this causes cross-project build artifact collisions. Use the default per-project `./target/`.
-- **Do NOT** create a local `.cargo-home/` directory — the global `CARGO_HOME` provides the registry, git checkouts, and installed binaries.
-- Per-project `.cargo/config.toml` **is appropriate** for: linker flags, cargo aliases, build targets, source replacement, rustflags, and profile overrides.
-
-### Agent Temp Directory
-If you need a temporary working directory, use `C:\Dev\agent-temp`. Do NOT use system temp or create temp dirs inside the project.
-
-### Project Location
-This project lives at `C:\Dev\repos\active\rappct`.
+- Resolve the active repository and worktree root at runtime; do not rely on a
+  hard-coded checkout path.
+- Put agent worktrees in `<repo>/.worktrees/`, transient files in
+  `<repo>/.tmp/`, task-specific caches in `<repo>/.cache/`, and agent logs in
+  `<repo>/.agent-logs/`. These locations are gitignored.
+- When a tool must use `TEMP` or `TMP`, point those variables at a task-specific
+  directory under `<repo>/.tmp/` for that process only when the tool supports
+  it. Do not change the host environment.
+- Do not use system temp, Downloads, or an unrelated directory for project
+  work. Treat insufficient disk space as a hard blocker and verify adequate
+  capacity before large builds, downloads, or generation.
 
 ## Workflow Orchestration
 
 ### 1. Plan Node Default
-- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
-- If something goes sideways, STOP and re-plan immediately - don't keep pushing
-- Use plan mode for verification steps, not just building
-- Write detailed specs upfront to reduce ambiguity
+- Use an in-session plan for non-trivial tasks when it materially improves
+  execution or verification; do not create repository plan files unless the
+  current request authorizes them.
+- If evidence invalidates the approach, stop that approach and re-plan before
+  continuing.
+- Include verification in the plan, not just implementation.
+- Resolve safe, reversible details from repository evidence. Ask the user only
+  when missing authority, irreducible ambiguity, or a material choice prevents
+  safe progress.
 
 ### 2. Subagent Strategy
 - Use subagents liberally to keep main context window clean
@@ -244,10 +270,12 @@ This project lives at `C:\Dev\repos\active\rappct`.
 - One tack per subagent for focused execution
 
 ### 3. Self-Improvement Loop
-- After ANY correction from the user: update `//reporoot/.AGENTS/lessons.md` with the pattern
-- Write rules for yourself that prevent the same mistake to AGENTS.md
-- Ruthlessly iterate on these lessons until mistake rate drops
-- Review lessons at session start for relevant project
+- Treat user corrections as guidance for the current task immediately.
+- Update `<repo>/.AGENTS/lessons.md`, `AGENTS.md`, or another durable policy
+  surface only when the current request authorizes that repository write and
+  the lesson belongs in this repository. Otherwise, report the proposed durable
+  lesson without writing it.
+- Review existing authorized lessons at session start when they are relevant.
 
 ### 4. Verification Before Done
 - Never mark a task complete without proving it works
@@ -262,21 +290,51 @@ This project lives at `C:\Dev\repos\active\rappct`.
 - Challenge your own work before presenting it
 
 ### 6. Autonomous Bug Fixing
-- When given a bug report: just fix it. Don't ask for hand-holding
+- When the current request authorizes a bug fix, investigate and implement it
+  without asking for details that repository evidence can resolve safely.
 - Point at logs, errors, failing tests - then resolve them
 - Zero context switching required from the user
-- Go fix failing CI tests without being told how
+- Fix failing CI only when implementation is within the current authorized
+  scope; diagnosis or review alone remains read-only.
+
+## Hosted CI Ownership
+
+- GitLab is the primary CI and release provider. Ordinary merge-request and
+  branch pipelines run blocking non-E2E checks on the explicit Debian and
+  macOS unprotected runner boundaries.
+- Because this crate exercises Windows-only APIs, GitLab also reproduces the
+  hosted Windows Rust/toolchain and feature matrix on the explicit Windows
+  unprotected boundary. Beta and nightly remain advisory; stable and the
+  supported MSRV range are blocking.
+- Keep `.github/workflows/ci.yml` and `.github/workflows/codeql.yml` active as
+  mirror/fallback coverage until an exact-SHA GitLab parity pipeline is green
+  and its required outputs are verified. GitHub CodeQL is not implied by
+  ordinary GitLab lint/test jobs.
+- Tag publication is accepted only from a protected tag on the explicit
+  Windows protected runner boundary. Release credentials must remain protected
+  CI variables and must never be exposed to branch or merge-request jobs.
+- CI helpers must use repository-local scratch where safe and stop before work
+  when the repository volume has less than the helper's declared minimum free
+  space. Windows AppContainer test jobs must not override process-wide
+  `TEMP`/`TMP`; file-backed tests create their own repository-local `.tmp/`
+  scratch. Missing runner toolchains or tools are provisioning blockers; CI
+  must not install or mutate shared runner toolchains during a job.
 
 ## Task Management
 
 1. **Initialize**: Check for the existence of and read the contents of the Justfile if present.
-2. **Plan First**: Write plan to `//reporoot/.AGENTS/todo.md` with checkable items
-3. **Save Plan**: Once a plan has been generated, save it to `//reporoot/.AGENTS/plans/shortnamethatdescribeswhattheplanis.md`
-4. **Verify Plan**: Check in before starting implementation
-5. **Track Progress**: Mark items complete as you go
+2. **Plan First**: Keep a checkable in-session plan for non-trivial work.
+3. **Persist Conditionally**: Write plans or task state under `<repo>/.AGENTS/`
+   only when the current request authorizes those repository artifacts.
+4. **Verify Plan**: Continue autonomously when scope and authority are clear.
+   Ask the user only when missing authority, irreducible ambiguity, or a
+   material choice prevents safe progress.
+5. **Track Progress**: Mark items complete in the active plan as you go.
 6. **Explain Changes**: High-level summary at each step
-7. **Document Results**: Add review section to `//reporoot/.AGENTS/todo.md`
-8. **Capture Lessons**: Update `//reporoot/.AGENTS/lessons.md` after corrections
+7. **Document Results**: Add a durable repository review only when the current
+   request authorizes it; otherwise include results in the handoff.
+8. **Capture Lessons**: Update `<repo>/.AGENTS/lessons.md` only when explicitly
+   authorized for this task.
 
 ## Core Principles
 

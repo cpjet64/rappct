@@ -63,6 +63,19 @@ fn loopback_requires_confirm() {
 
 #[cfg(all(windows, feature = "net"))]
 #[test]
+fn loopback_guard_new_requires_confirm() {
+    let sid = derive_sid_from_name("rappct.test.net.guard").expect("derive sid");
+    let res = net::LoopbackExemptionGuard::new(&sid);
+    match res {
+        Err(AcError::AccessDenied { context, .. }) => {
+            assert!(context.contains("confirm_debug_only"));
+        }
+        other => panic!("expected AccessDenied, got {other:?}"),
+    }
+}
+
+#[cfg(all(windows, feature = "net"))]
+#[test]
 #[ignore]
 /// This test mutates the system loopback exemption list but restores the original entries.
 /// Requires elevation and opt-in via RAPPCT_ALLOW_NET_TESTS=1.

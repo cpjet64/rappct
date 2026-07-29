@@ -11,15 +11,17 @@ This index is the canonical entry point for local project documentation.
 ## Quickstart Commands
 
 ```powershell
-# format/lint/test
+# size/format/lint/test
+python scripts/check_code_size.py
+python scripts/hygiene.py
 cargo fmt --all -- --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test --all-targets
+cargo clippy --all-targets --all-features --locked -- -D warnings
+cargo test --all-targets --locked
 
 # optional feature validation
-cargo test --all-targets --features net
-cargo test --all-targets --features introspection
-cargo test --all-targets --features "net introspection tracing serde"
+cargo test --all-targets --locked --features net
+cargo test --all-targets --locked --features introspection
+cargo test --all-targets --locked --features "net introspection tracing serde"
 ```
 
 ## Feature Matrix

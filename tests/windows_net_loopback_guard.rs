@@ -4,7 +4,10 @@
 mod windows_test_utils;
 
 use crate::windows_test_utils::{LocalAlloc, LocalWideString};
-use rappct::{AppContainerProfile, net::LoopbackExemptionGuard};
+use rappct::{
+    AppContainerProfile,
+    net::{LoopbackAdd, LoopbackExemptionGuard},
+};
 
 // Opt-in: this test mutates firewall config; set env var to run
 #[test]
@@ -23,7 +26,9 @@ fn loopback_guard_roundtrip_opt_in() {
     let _ = rappct::net::remove_loopback_exemption(&sid);
 
     // Add via guard
-    let guard = LoopbackExemptionGuard::new(&sid).expect("guard new");
+    let guard =
+        LoopbackExemptionGuard::new_confirmed(LoopbackAdd(sid.clone()).confirm_debug_only())
+            .expect("guard new");
     // Query and ensure present
     assert!(loopback_config_contains(sid.as_string()).expect("query after add"));
     drop(guard);

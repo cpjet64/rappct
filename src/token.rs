@@ -146,7 +146,20 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
         ))
     })?;
 
-    if buffer.len() < std::mem::size_of::<TOKEN_APPCONTAINER_INFORMATION>() {
+    let Some(sid) = read_token_appcontainer_sid(&buffer)? else {
+        return Ok(None);
+    };
+    if sid.0.is_null() {
+        return Ok(None);
+    }
+    let sid_string = sid_to_string(sid)?;
+    Ok(Some(AppContainerSid::from_sddl(sid_string)))
+}
+
+#[cfg(windows)]
+fn read_token_appcontainer_sid(buffer: &[u8]) -> Result<Option<windows::Win32::Security::PSID>> {
+    let required = std::mem::size_of::<TOKEN_APPCONTAINER_INFORMATION>();
+    if buffer.len() < required {
         return Err(AcError::Win32(format!(
             "GetTokenInformation(TokenAppContainerSid) returned undersized buffer: {} bytes",
             buffer.len()
@@ -154,13 +167,10 @@ unsafe fn query_appcontainer_sid(token: HANDLE) -> Result<Option<AppContainerSid
     }
 
     let info_ptr = buffer.as_ptr() as *const TOKEN_APPCONTAINER_INFORMATION;
-    // SAFETY: Buffer holds a TOKEN_APPCONTAINER_INFORMATION per API contract; read the SID field.
-    let sid = unsafe { (*info_ptr).TokenAppContainer };
-    if sid.0.is_null() {
-        return Ok(None);
-    }
-    let sid_string = sid_to_string(sid)?;
-    Ok(Some(AppContainerSid::from_sddl(sid_string)))
+    // SAFETY: Bounds are checked above. Vec<u8> does not guarantee alignment for
+    // TOKEN_APPCONTAINER_INFORMATION, so the fixed-size header is read unaligned.
+    let info = unsafe { std::ptr::read_unaligned(info_ptr) };
+    Ok(Some(info.TokenAppContainer))
 }
 
 #[cfg(windows)]
@@ -304,6 +314,29 @@ mod tests {
         let err =
             unsafe { query_appcontainer_sid(handle) }.expect_err("invalid handle should fail");
         assert!(err.to_string().contains("GetTokenInformation"));
+    }
+
+    #[test]
+    fn appcontainer_sid_parser_handles_misaligned_buffers() {
+        let expected = PSID(0x1234usize as *mut _);
+        let info = TOKEN_APPCONTAINER_INFORMATION {
+            TokenAppContainer: expected,
+        };
+        // SAFETY: `info` is a plain Win32 token-information struct local to this
+        // test, and the resulting byte slice does not outlive it.
+        let bytes = unsafe {
+            std::slice::from_raw_parts(
+                (&info as *const TOKEN_APPCONTAINER_INFORMATION).cast::<u8>(),
+                std::mem::size_of::<TOKEN_APPCONTAINER_INFORMATION>(),
+            )
+        };
+        let mut buffer = vec![0u8; bytes.len() + 1];
+        buffer[1..].copy_from_slice(bytes);
+
+        let sid = read_token_appcontainer_sid(&buffer[1..])
+            .expect("parse sid")
+            .expect("sid present");
+        assert_eq!(sid.0, expected.0);
     }
 
     #[test]

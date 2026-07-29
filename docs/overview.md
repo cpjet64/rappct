@@ -12,9 +12,11 @@ This directory contains project documentation for `rappct`, a Windows-focused Ru
 
 ```powershell
 # from repository root
-cargo build
-cargo test --all-targets
-cargo clippy --all-targets --all-features -- -D warnings
+python scripts/check_code_size.py
+python scripts/hygiene.py
+cargo build --locked
+cargo test --all-targets --locked
+cargo clippy --all-targets --all-features --locked -- -D warnings
 ```
 
 ## Generate Docs

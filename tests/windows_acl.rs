@@ -16,6 +16,8 @@ use windows::Win32::Security::Authorization::{
 #[cfg(windows)]
 use windows::Win32::Security::{ACL, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR};
 #[cfg(windows)]
+use windows::Win32::Storage::FileSystem::GetDiskFreeSpaceExW;
+#[cfg(windows)]
 use windows::Win32::System::Registry::{
     HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_ALL_ACCESS, KEY_READ, KEY_WRITE,
     REG_CREATE_KEY_DISPOSITION, REG_CREATED_NEW_KEY, REG_OPENED_EXISTING_KEY,
@@ -29,6 +31,80 @@ use windows::core::PCWSTR;
 mod windows_test_utils;
 #[cfg(windows)]
 use crate::windows_test_utils::{LocalAlloc, LocalWideString};
+
+#[cfg(windows)]
+const DEFAULT_TEST_MINIMUM_FREE_BYTES: u64 = 5 * 1024 * 1024 * 1024;
+
+#[cfg(windows)]
+fn test_minimum_free_bytes() -> u64 {
+    match std::env::var("RAPPCT_TEST_MINIMUM_FREE_BYTES") {
+        Ok(value) => value
+            .parse::<u64>()
+            .ok()
+            .filter(|minimum| *minimum > 0)
+            .expect("RAPPCT_TEST_MINIMUM_FREE_BYTES must be a positive integer"),
+        Err(std::env::VarError::NotPresent) => DEFAULT_TEST_MINIMUM_FREE_BYTES,
+        Err(error) => panic!("RAPPCT_TEST_MINIMUM_FREE_BYTES is not valid Unicode: {error}"),
+    }
+}
+
+#[cfg(windows)]
+fn repo_local_scratch_root() -> std::path::PathBuf {
+    let repo_root = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR"))
+        .expect("canonicalize repository root for test scratch");
+    let scratch_root = repo_root.join(".tmp").join("tests").join("windows-acl");
+    std::fs::create_dir_all(&scratch_root).expect("create repository-local test scratch root");
+    let scratch_root = std::fs::canonicalize(&scratch_root)
+        .expect("canonicalize repository-local test scratch root");
+    assert!(
+        scratch_root != repo_root && scratch_root.starts_with(&repo_root),
+        "refusing test scratch outside repository root: {}",
+        scratch_root.display()
+    );
+
+    let scratch_root_w: Vec<u16> = scratch_root
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let mut available_free_bytes = 0;
+    unsafe {
+        GetDiskFreeSpaceExW(
+            PCWSTR(scratch_root_w.as_ptr()),
+            Some(&mut available_free_bytes),
+            None,
+            None,
+        )
+    }
+    .expect("query repository-local test scratch capacity");
+    let minimum_free_bytes = test_minimum_free_bytes();
+    assert!(
+        available_free_bytes >= minimum_free_bytes,
+        "insufficient free space for repository-local test scratch at {}: \
+         {available_free_bytes} bytes available; {minimum_free_bytes} bytes required",
+        scratch_root.display()
+    );
+
+    scratch_root
+}
+
+#[cfg(windows)]
+fn repo_local_tempdir(prefix: &str) -> tempfile::TempDir {
+    let scratch_root = repo_local_scratch_root();
+    tempfile::Builder::new()
+        .prefix(prefix)
+        .tempdir_in(&scratch_root)
+        .expect("create repository-local test scratch directory")
+}
+
+#[cfg(windows)]
+fn repo_local_named_tempfile(prefix: &str) -> tempfile::NamedTempFile {
+    let scratch_root = repo_local_scratch_root();
+    tempfile::Builder::new()
+        .prefix(prefix)
+        .tempfile_in(&scratch_root)
+        .expect("create repository-local test scratch file")
+}
 
 #[cfg(windows)]
 fn security_sddl_for_path(path: &std::path::Path) -> String {
@@ -133,7 +209,7 @@ fn security_sddl_for_registry(spec: &str) -> String {
 fn grant_to_package_updates_file_dacl() {
     use std::io::Write;
 
-    let temp = tempfile::NamedTempFile::new().expect("temp file");
+    let temp = repo_local_named_tempfile("file-dacl-");
     let path = temp.path().to_path_buf();
     writeln!(&mut temp.as_file().try_clone().unwrap(), "hello").unwrap();
 
@@ -230,7 +306,7 @@ fn grant_to_package_updates_registry_dacl() {
 #[cfg(windows)]
 #[test]
 fn grant_to_package_updates_directory_custom_dacl() {
-    let root = tempfile::tempdir().expect("temp dir");
+    let root = repo_local_tempdir("custom-dacl-");
     let dir_path = root.path().join("acl-dir");
     std::fs::create_dir_all(&dir_path).expect("create dir");
 
@@ -264,7 +340,7 @@ fn grant_to_package_updates_directory_custom_dacl() {
 #[cfg(windows)]
 #[test]
 fn grant_to_package_updates_directory_default_inheritance_dacl() {
-    let root = tempfile::tempdir().expect("temp dir");
+    let root = repo_local_tempdir("default-inheritance-dacl-");
     let dir_path = root.path().join("acl-dir-default");
     std::fs::create_dir_all(&dir_path).expect("create dir");
 

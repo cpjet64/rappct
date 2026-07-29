@@ -12,6 +12,7 @@ Feature gates in `Cargo.toml`:
 - `introspection`: enables diagnostics (`rappct::diag`) and capability name suggestions
 - `tracing`: enables tracing points in launch/capability/network paths
 - `serde`: enables `Serialize`/`Deserialize` on selected SID/capability types
+- `_test_helpers`: private CI/test-only hooks; not part of the production API contract
 
 ## Module Boundaries
 
@@ -75,7 +76,7 @@ Critical lifetime invariants enforced in code:
 
 - `LaunchAttributes` owns `OwnedSecurityCapabilities`, optional LPAC policy buffer, and copied handle list so pointer-backed attribute entries remain valid through `CreateProcessW`.
 - `StartUpInfoExGuard` keeps attribute-list memory attached to `STARTUPINFOEXW` until launch completes.
-- `InheritList` owns duplicated inheritable handles for child startup and drops them after process creation.
+- `LaunchOptions` duplicates caller-supplied inherited handles when they are registered, and `InheritList` keeps those owned handles alive until after process creation.
 - For `StdioConfig::Pipe`, parent endpoints are returned as `std::fs::File`; child endpoints remain in inherited handle list only for launch.
 
 ## 4) Optional job-object control flow
@@ -90,9 +91,9 @@ When `LaunchOptions::join_job` is set:
 ## 5) Network loopback safety latch flow (`feature = "net"`)
 
 - `add_loopback_exemption` requires a `LoopbackAdd` that has called `confirm_debug_only()` first.
-- Confirmation toggles a one-shot atomic latch (`CONFIRM_NEXT`).
+- Confirmation records a one-shot SID-scoped latch.
 - Without confirmation, call fails with `AcError::AccessDenied`.
-- `LoopbackExemptionGuard` composes this API and auto-removes exemption in `Drop` unless disabled.
+- `LoopbackExemptionGuard::new_confirmed(...)` composes this API and auto-removes exemption in `Drop` unless disabled or explicitly closed.
 
 ## Error Model
 

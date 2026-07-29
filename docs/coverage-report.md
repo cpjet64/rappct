@@ -6,8 +6,8 @@ Branch: coverage-max-2026-02-26-r6
 ## Baseline (Round 5 End)
 
 Tooling combo:
-- cargo llvm-cov nextest
-- cargo nextest run --all-features
+- cargo llvm-cov nextest --test-threads 1
+- cargo nextest run --all-features --test-threads 1
 - cargo llvm-cov report --summary-only
 
 Baseline totals:
@@ -46,12 +46,12 @@ No dead code was removed.
 
 ## Verification Outcomes
 
-- Coverage gate: `cargo llvm-cov nextest --all-features --ignore-filename-regex '(^|[\\/])(tests|examples|target|external|legacy)[\\/]' --fail-under-regions 85 --lcov --output-path lcov.info`
+- Coverage gate: `cargo llvm-cov nextest --test-threads 1 --all-features --ignore-filename-regex '(^|[\\/])(tests|examples|target|external|legacy)[\\/]' --fail-under-regions 85 --lcov --output-path lcov.info`
 - Current enforceable baseline: 85% region coverage. The latest observed region coverage was 87.55%; a prior 95% threshold was aspirational and kept the release gate permanently red.
 - just ci-fast: requires coverage to remain at or above the enforceable baseline.
 - just ci-deep: requires `ci-fast`, full feature tests, security checks, and docs.
 
 ## What This Means
 
-The gating threshold in just coverage is currently Regions >= 95% and is satisfied.
+The gating threshold in `just coverage` is currently Regions >= 85% and is satisfied.
 Remaining misses are intentionally defensive/uncoverable in normal CI environments.

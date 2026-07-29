@@ -19,6 +19,7 @@ impl WideBlock {
         self.buf.as_ptr()
     }
 
+    #[cfg(any(test, feature = "tracing"))]
     pub(crate) fn len(&self) -> usize {
         self.buf.len()
     }

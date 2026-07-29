@@ -1,5 +1,7 @@
 /target
 /book/
+/.cargo-home/
+/.rustup-home/
 **/*.pdb
 .DS_Store
 .vscode/
@@ -21,6 +23,8 @@ output/
 __pycache__/
 .venv/
 /.worktrees/
+/.tmp/
+/.cache/
 # Agent runtime artifacts
 .agent-logs/
 .agent-state/

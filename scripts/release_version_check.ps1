@@ -136,89 +136,94 @@ function Compare-Versions {
     return Compare-SemVer $leftParsed $rightParsed
 }
 
-$tomlPath = Join-Path -Path (Get-Location) -ChildPath "Cargo.toml"
-$tomlLines = Get-Content -Path $tomlPath
-$inPackageSection = $false
-$localMatch = $null
-
-foreach ($line in $tomlLines) {
-    if ($line -match '^\s*\[package\]\s*$') {
-        $inPackageSection = $true
-        continue
-    }
-
-    if ($line -match '^\s*\[[^\]]+\]\s*$') {
-        if ($inPackageSection) {
-            break
+function Get-LocalCrateVersion {
+    $tomlPath = Join-Path -Path (Get-Location) -ChildPath "Cargo.toml"
+    $inPackageSection = $false
+    foreach ($line in (Get-Content -Path $tomlPath)) {
+        if ($line -match '^\s*\[package\]\s*$') {
+            $inPackageSection = $true
+            continue
         }
-        continue
+        if ($line -match '^\s*\[[^\]]+\]\s*$') {
+            if ($inPackageSection) { break }
+            continue
+        }
+        if (-not $inPackageSection) { continue }
+
+        $match = [regex]::Match($line, '^\s*version\s*=\s*"([^"]+)"(?:\s*#.*)?$')
+        if ($match.Success) {
+            return $match.Groups[1].Value
+        }
     }
 
-    if (-not $inPackageSection) {
-        continue
-    }
-
-    $localMatch = [regex]::Match(
-        $line,
-        '^\s*version\s*=\s*"([^"]+)"(?:\s*#.*)?$'
-    )
-    if ($localMatch.Success) {
-        break
-    }
-}
-
-if (-not $localMatch.Success) {
     throw "Could not parse version from Cargo.toml"
 }
-$localVersion = $localMatch.Groups[1].Value
 
-$cratesUrl = "https://crates.io/api/v1/crates/$Crate/versions"
-Write-Output "Checking published versions for $Crate at $cratesUrl"
+function Get-PublishedStableVersions {
+    param([Parameter(Mandatory = $true)][string]$Crate)
 
-try {
-    $versionsResponse = Invoke-RestMethod -Uri $cratesUrl -Method Get -TimeoutSec 20
-}
-catch {
-    $statusCode = $null
-    if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
-        $statusCode = [int]$_.Exception.Response.StatusCode
+    $cratesUrl = "https://crates.io/api/v1/crates/$Crate/versions"
+    Write-Output "Checking published versions for $Crate at $cratesUrl"
+    try {
+        $versionsResponse = Invoke-RestMethod -Uri $cratesUrl -Method Get -TimeoutSec 20
+    } catch {
+        $statusCode = $null
+        if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+        }
+        if ($statusCode -eq 404) {
+            return [pscustomobject]@{
+                Found = $false
+                Versions = @()
+            }
+        }
+        throw "Failed to query crates.io for '$Crate': $($_.Exception.Message)"
     }
 
-    if ($statusCode -eq 404) {
+    [pscustomobject]@{
+        Found = $true
+        Versions = @(
+            $versionsResponse.versions |
+                Where-Object { -not $_.yanked } |
+                Where-Object { $_.num -and -not $_.num.Contains("-") } |
+                Select-Object -ExpandProperty num
+        )
+    }
+}
+
+function Get-HighestStableVersion {
+    param([Parameter(Mandatory = $true)][string[]]$Versions)
+
+    $highest = $null
+    foreach ($version in $Versions) {
+        if ($null -eq $highest -or (Compare-Versions $version $highest) -gt 0) {
+            $highest = $version
+        }
+    }
+    return $highest
+}
+
+function Invoke-VersionCheck {
+    param([Parameter(Mandatory = $true)][string]$Crate)
+
+    $localVersion = Get-LocalCrateVersion
+    $published = Get-PublishedStableVersions -Crate $Crate
+    if (-not $published.Found) {
         Write-Output "No published versions found for $Crate (crate not found on crates.io). Assuming first publish; version floor check skipped."
         exit 0
     }
 
-    throw "Failed to query crates.io for '$Crate': $($_.Exception.Message)"
-}
-
-$allVersions = @(
-    $versionsResponse.versions |
-        Where-Object { -not $_.yanked } |
-        Where-Object { $_.num -and -not $_.num.Contains("-") } |
-        Select-Object -ExpandProperty num
-)
-
-if ($allVersions.Count -eq 0) {
-    Write-Output "No non-yanked stable versions found for $Crate. Assuming first stable publish; version floor check skipped."
-    exit 0
-}
-
-$highest = $null
-foreach ($version in $allVersions) {
-    if ($null -eq $highest) {
-        $highest = $version
-        continue
+    $allVersions = $published.Versions
+    if ($allVersions.Count -eq 0) {
+        Write-Output "No non-yanked stable versions found for $Crate. Assuming first stable publish; version floor check skipped."
+        exit 0
     }
 
-    if ((Compare-Versions $version $highest) -gt 0) {
-        $highest = $version
+    $highest = Get-HighestStableVersion -Versions $allVersions
+    if ((Compare-Versions $localVersion $highest) -le 0) {
+        throw "Version check failed for ${Crate}: local ${localVersion} is not greater than published ${highest}"
     }
+    Write-Output "Version check passed for ${Crate}: local=${localVersion} > published=${highest}"
 }
 
-$comparison = Compare-Versions $localVersion $highest
-if ($comparison -le 0) {
-    throw "Version check failed for ${Crate}: local ${localVersion} is not greater than published ${highest}"
-}
-
-Write-Output "Version check passed for ${Crate}: local=${localVersion} > published=${highest}"
+Invoke-VersionCheck -Crate $Crate
