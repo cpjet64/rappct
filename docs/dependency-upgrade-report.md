@@ -10,9 +10,10 @@ Created: `2026-02-26T01:52:38Z`
 | Compatible Direct Updates | Applied | `clap 4.6.1 -> 4.6.4`, `serde 1.0.228 -> 1.0.229`, `serde_json 1.0.149 -> 1.0.151`, `thiserror 2.0.18 -> 2.0.19`; lockfile refreshed with `cargo update`. |
 | Major Upgrade Review | Complete | No direct major upgrades were available for the current dependency set. `windows 0.62.2`, `tempfile 3.27.0`, `strsim 0.11.1`, and `tracing 0.1.44` remained current. |
 | Unused Dependency Check | Complete | `cargo machete` reported no unused direct dependencies. |
-| Duplicate Dependency Check | Complete | `cargo tree -d --locked` reported no duplicate crate versions in the default target graph. |
-| Advisory Review | Action Required | `cargo audit` exited successfully but reported warning `RUSTSEC-2026-0190` for `anyhow 1.0.102` through a target-specific WASI dev-dependency path. No baseline exception was added; reassess when upstream `tempfile/getrandom/wasip3` graph changes. |
-| Release Evidence | Hardened | GitLab package jobs now emit crate SHA-256 files and `cargo-metadata.json` alongside the `.crate` artifact. |
+| Duplicate Dependency Check | Reviewed | `syn 2.0.117` remains required by current `windows` and `tracing` proc macros while `syn 3.0.3` is required by current `thiserror`, `clap`, and `serde` proc macros. Collapsing the split requires upstream migration or direct-dependency downgrades, so it remains visible under `cargo deny`'s warning policy. |
+| Advisory Review | Resolved | Updated transitive `anyhow 1.0.102 -> 1.0.103`, the first patched release for `RUSTSEC-2026-0190`. `cargo audit` now reports no vulnerabilities or warnings, and no advisory exception was added. |
+| SBOM | Added | `python scripts/generate_sbom.py` generates and validates deterministic CycloneDX 1.6 JSON from locked Cargo metadata. GitLab supply-chain and protected package jobs retain the SBOM as an artifact. |
+| Release Evidence | Hardened | GitLab package jobs emit crate SHA-256 files, `cargo-metadata.json`, and `rappct.cdx.json` alongside the `.crate` artifact. |
 
 ## 2026-05-08 Modernization Pass
 

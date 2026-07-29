@@ -21,6 +21,7 @@ This repository includes Git hooks and helper scripts to make this easy:
 - Pre-commit runs the size guard, fmt, clippy, and tests for the current toolchain.
 - Pre-push runs the full local CI script (stable + MSRV 1.88.0–1.95.0 across feature matrix):
   - PowerShell: `scripts/ci-local.ps1`
+- Supply-chain evidence: `just security` (includes deterministic CycloneDX SBOM generation).
 
 Do not bypass hooks with `--no-verify` unless the current user explicitly
 authorizes that specific bypass after receiving the exact failing gate and the

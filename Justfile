@@ -36,6 +36,9 @@ package-list-clean: ensure-clean-tree
 package-release-evidence:
     powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/package-release-evidence.ps1
 
+sbom:
+    python scripts/generate_sbom.py
+
 publish-dry-run:
     cargo publish --dry-run --allow-dirty --locked
 
@@ -83,7 +86,7 @@ test-full:
 coverage:
     cargo llvm-cov nextest --test-threads 1 --all-features --ignore-filename-regex '(^|[\\/])(tests|examples|target|external|legacy)[\\/]' --fail-under-regions 85 --lcov --output-path lcov.info
 
-security:
+security: sbom
     cargo deny check
     cargo audit
     python scripts/enforce_advisory_policy.py

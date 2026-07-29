@@ -118,6 +118,10 @@ verify_supply_chain:
   timeout: 45 minutes
   script:
     - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/ci-gitlab-supply-chain.ps1
+  artifacts:
+    expire_in: 14 days
+    paths:
+      - target/sbom/*.cdx.json
 
 verify_release_windows:
   extends: .protected_tag
@@ -145,6 +149,7 @@ package_crate:
       - target/package/*.crate
       - target/package/*.crate.sha256
       - target/package/cargo-metadata.json
+      - target/package/*.cdx.json
 
 publish_crates_io:
   extends: .protected_tag
