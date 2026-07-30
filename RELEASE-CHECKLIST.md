@@ -4,8 +4,8 @@ Goal: maintain a clean, deterministic, GitLab tag-driven crates.io release path 
 
 ## Current target
 - Crate: `rappct`
-- Planned version: `0.13.10`
-- Target status: manifest and lockfile are aligned, package allow-list is explicit, and release remains blocked until a fresh clean-tree gate transcript is captured after the repository integrity restore.
+- Planned version: `0.14.0`
+- Target status: pre-release hardening is in progress; the manifest and lockfile intentionally remain at `0.13.10` until this checklist is satisfied.
 
 ## Crates.io baseline
 - Refresh immediately before tagging with `just release-version-check`.
@@ -25,8 +25,11 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 
 - [x] Confirm local `Cargo.toml`/`Cargo.lock` versions are synchronized for the release candidate.
 - [x] Confirm `scripts/verify-version-surfaces.cjs` validates all version surfaces and tag alignment.
-- [ ] Run `just bump-version-dry-run X.Y.Z` and confirm the changelog entry generated from commits since the previous tag is correct.
-- [ ] Run `just bump-version X.Y.Z` to commit, tag, and push the release trigger.
+- [ ] Run `just prepare-release-dry-run 0.14.0` and confirm `rappct-v0.13.3` is selected.
+- [ ] Run `just api-compat` and confirm only the reviewed 0.14.0 migration set is reported.
+- [ ] Run `just release-surface` and confirm no production test hooks are packaged.
+- [ ] Run `just prepare-release 0.14.0` on a topic branch; review, validate, and merge the three-file change.
+- [ ] From synchronized clean `main`, run `just create-release-tag 0.14.0`, review the local tag, then push it explicitly.
 - [x] Confirm local manifest uses explicit include policy for publish scope.
 - [x] Run `just package-list` and confirm tarball output is limited to include policy paths.
 - [x] Run `just publish-dry-run` and confirm lockfile + packaging checks remain green.
@@ -45,18 +48,18 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
   - protected tag `vX.Y.Z` matching `Cargo.toml`
   - an assigned, online runner matching the exact `windows-protected` boundary
   - protected `CARGO_REGISTRY_TOKEN` in CI variables
-  - successful `verify_release_windows`, `verify_supply_chain`, and `package_crate` jobs
+  - successful protected-tag `verify_release_windows` and `package_crate` jobs; `verify_release_windows` includes the deep supply-chain gate
   - package evidence artifacts: crate tarball, SHA-256 checksum, and Cargo metadata
   - successful GitLab release creation/update job
 - Local fallback still requires local confirmation in `scripts/release.ps1`, a clean `main` tree, and explicit `PUBLISH` prompt.
 - Strict evidence (`output/release-gate`) should be attached before final sign-off.
 
 ## Current blocker
-- Local publish is blocked until all clean-tree checks run and user gives explicit permission.
+- Do not prepare the version or create the tag until the pre-0.14 hardening MR and exact-SHA pipeline are green.
 
 ## Historical evidence captured
 
-- `just release-version-check`: passed (`0.13.10 > 0.13.3`).
+- Historical `just release-version-check`: passed (`0.13.10 > 0.13.3`); refresh immediately before preparing 0.14.0.
 - `just package-list` (allow-dirty): completed; output constrained to include list plus expected dirty artifacts (`.cargo_vcs_info.json`, `Cargo.toml.orig`, `Cargo.lock`).
 - `just publish-dry-run` (allow-dirty): completed successfully.
 - Historical `output/release-gate` evidence from before the integrity restore is not sufficient for release sign-off.

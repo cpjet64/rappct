@@ -97,7 +97,10 @@ $tagName = Get-RequiredEnv "CI_COMMIT_TAG"
 
 $script:Headers = @{ "JOB-TOKEN" = $jobToken }
 
-$version = $tagName.TrimStart("v")
+if ($tagName -notmatch '^v(?<version>(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))$') {
+    throw "CI_COMMIT_TAG must exactly match vX.Y.Z; got '$tagName'."
+}
+$version = $Matches.version
 $crateName = "rappct"
 $crateFileName = "$crateName-$version.crate"
 $cratePath = Join-Path $projectDir "target\package\$crateFileName"

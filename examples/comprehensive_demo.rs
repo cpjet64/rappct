@@ -207,7 +207,6 @@ fn demo_lpac() -> rappct::Result<()> {
     if supports_lpac().is_err() {
         println!("\n⚠ LPAC not supported on this system");
         println!("  Requires Windows 10 version 1703 or later");
-        println!("  💡 CI-only override support requires the private _test_helpers feature");
         return Ok(());
     }
 

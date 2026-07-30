@@ -5,6 +5,7 @@ use crate::ffi::handles::Handle as FHandle;
 use crate::ffi::sec_caps::OwnedSecurityCapabilities;
 use crate::ffi::sid::OwnedSid;
 use std::rc::Rc;
+use std::sync::Arc;
 use windows::Win32::Foundation::HANDLE;
 use windows::Win32::System::Threading::{LPPROC_THREAD_ATTRIBUTE_LIST, STARTUPINFOEXW};
 use windows::Win32::System::WindowsProgramming::PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT;
@@ -12,7 +13,7 @@ use windows::Win32::System::WindowsProgramming::PROCESS_CREATION_ALL_APPLICATION
 #[derive(Default)]
 pub(super) struct InheritList {
     handles: Vec<FHandle>,
-    shared_handles: Vec<Rc<FHandle>>,
+    shared_handles: Vec<Arc<FHandle>>,
     raw: Vec<HANDLE>,
 }
 
@@ -23,7 +24,7 @@ impl InheritList {
         self.handles.push(handle);
     }
 
-    pub(super) fn push_shared(&mut self, handle: Rc<FHandle>) {
+    pub(super) fn push_shared(&mut self, handle: Arc<FHandle>) {
         let raw = handle.as_win32();
         self.raw.push(raw);
         self.shared_handles.push(handle);
@@ -97,12 +98,7 @@ impl StartUpInfoExGuard {
 
 pub(super) fn inflate_security_caps(
     sec: &SecurityCapabilities,
-    override_caps: Option<Rc<OwnedSecurityCapabilities>>,
 ) -> Result<Rc<OwnedSecurityCapabilities>> {
-    if let Some(sc) = override_caps {
-        return Ok(sc);
-    }
-
     let app_sid = OwnedSid::from_sddl(sec.package.as_string())?;
     let mut caps_owned = Vec::with_capacity(sec.caps.len());
     for cap in &sec.caps {
@@ -113,7 +109,7 @@ pub(super) fn inflate_security_caps(
 }
 
 pub(super) fn duplicate_additional_handles(
-    handles: &[Rc<FHandle>],
+    handles: &[Arc<FHandle>],
     inherit_list: &mut InheritList,
 ) -> Result<()> {
     for handle in handles {

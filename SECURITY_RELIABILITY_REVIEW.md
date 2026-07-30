@@ -13,7 +13,7 @@ The intended project is security-sensitive. It manipulates Windows AppContainer 
 | S3 | Loopback exemption mutates host firewall | partial/known | `src/net.rs` docs/tests require `LoopbackAdd(...).confirm_debug_only()` | Misuse can weaken local network isolation. | Keep latch; document production use limits; require opt-in tests before release. |
 | S4 | ACL helpers can grant broad permissions | partial/known | docs examples mention `GENERIC_ALL`; ACL module grants file/dir/registry entries. | Misconfiguration can overexpose host resources to AppContainer SID/capability. | Add least-privilege examples and warnings; test invalid/nonexistent targets. |
 | S5 | Launch handle inheritance is high risk | broken/unverified | docs claim `InheritList`, copied handle list, stdio modes; implementation corrupted. | Handle leaks can violate sandbox assumptions. | Restore launch, inspect inherited handle list, run explicit tests. |
-| S6 | LPAC support can be overridden in tests | implemented/test-only | `src/lib.rs` uses `RAPPCT_TEST_LPAC_STATUS=ok|unsupported`. | If used outside tests, can misrepresent support. | Document as test-only; consider `cfg(test)` or feature gate if practical. |
+| S6 | LPAC support override exposed through a Cargo feature | resolved | Removed the feature, public test-support module, and ambient launch/LPAC overrides. | None; native detection now fails closed. | Keep pure unit tests for version evaluation and public-API integration tests. |
 | S7 | Deprecated RAII wrappers remain public | partial | `src/util.rs` exports deprecated `OwnedHandle`, `LocalFreeGuard`, `FreeSidGuard`. | Larger public unsafe-adjacent compatibility surface. | Define deprecation timeline; keep tests until removal. |
 | S8 | `AcError::Unimplemented` public variant remains | partial/stubbed | `src/error.rs` | Placeholder error may mask incomplete behavior if used. | Search usage and remove or document. |
 | S9 | Dependency/advisory checks are local-only | partial | `Justfile` has `cargo deny`, `cargo audit`, policy script; hosted CI omits them. | PRs can merge without security checks if local gate skipped. | Add scheduled/release security workflow or require local transcript. |
@@ -45,4 +45,3 @@ cargo test --test windows_launch --all-features -- --nocapture
 cargo test --test windows_acl --all-features -- --nocapture
 cargo test --test windows_net --features net -- --ignored --nocapture
 ```
-

@@ -56,35 +56,6 @@ fn repo_local_tempdir(scope: &str) -> rappct::Result<tempfile::TempDir> {
         })
 }
 
-#[cfg(windows)]
-fn set_env_override(key: &str, value: &str) {
-    // Mutates process environment; run single-threaded or before starting worker threads.
-    // Note: Environment mutation is unsafe on recent Rust; keep calls scoped.
-    unsafe {
-        std::env::set_var(key, value);
-    }
-}
-
-#[cfg(not(windows))]
-fn set_env_override(key: &str, value: &str) {
-    // Mutates process environment; run single-threaded or before starting worker threads.
-    let _ = (key, value);
-}
-
-#[cfg(windows)]
-fn clear_env_override(key: &str) {
-    // See note in set_env_override.
-    unsafe {
-        std::env::remove_var(key);
-    }
-}
-
-#[cfg(not(windows))]
-fn clear_env_override(key: &str) {
-    // See note in set_env_override.
-    let _ = key;
-}
-
 fn resolve_cmd_exe() -> PathBuf {
     if let Ok(comspec) = env::var("ComSpec") {
         let p = PathBuf::from(comspec);

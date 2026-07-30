@@ -23,10 +23,10 @@ else
     # Fallback: same checks as pre-commit for minimal coverage
     run_local cargo fmt --all :: --check
     run_local cargo clippy --all-targets --all-features --locked :: -Dwarnings
-    run_local cargo test --all-targets --locked --features _test_helpers
-    run_local cargo test --all-targets --locked --features "_test_helpers,introspection"
-    run_local cargo test --all-targets --locked --features "_test_helpers,net"
-    run_local cargo test --all-targets --locked --features "_test_helpers,introspection,net"
+    run_local cargo test --all-targets --locked
+    run_local cargo test --all-targets --locked --features introspection
+    run_local cargo test --all-targets --locked --features net
+    run_local cargo test --all-targets --locked --features "introspection,net"
 fi
 
 echo "=== pre-push OK ==="

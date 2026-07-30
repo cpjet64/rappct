@@ -72,9 +72,9 @@ function Get-TestFeatures {
     param([Parameter(Mandatory = $true)][AllowEmptyString()][string]$Feature)
 
     if ($Feature -eq '') {
-        return '_test_helpers'
+        return ''
     }
-    return "$Feature,_test_helpers"
+    return $Feature
 }
 
 function Get-FeatureLabel {
@@ -114,19 +114,24 @@ function Invoke-RustFeatureGate {
 
     $featureLabel = Get-FeatureLabel -Feature $Feature
     $testFeatures = Get-TestFeatures -Feature $Feature
+    $testArguments = @('test', '--all-targets', '--locked')
+    if ($testFeatures -ne '') { $testArguments += @('--features', $testFeatures) }
 
     Write-Host "[ci-local] test ($Toolchain, $featureLabel)"
     Invoke-CargoChecked `
         -Label "test ($Toolchain, $featureLabel)" `
         -Toolchain $Toolchain `
-        -Arguments @('test', '--all-targets', '--locked', '--features', $testFeatures)
+        -Arguments $testArguments
 
     Write-Host "[ci-local] clippy ($Toolchain, $featureLabel)"
     if ($Toolchain -eq 'stable') {
+        $clippyArguments = @('clippy', '--all-targets', '--locked')
+        if ($testFeatures -ne '') { $clippyArguments += @('--features', $testFeatures) }
+        $clippyArguments += @('--', '-D', 'warnings')
         Invoke-CargoChecked `
             -Label "clippy ($Toolchain, $featureLabel)" `
             -Toolchain $Toolchain `
-            -Arguments @('clippy', '--all-targets', '--locked', '--features', $testFeatures, '--', '-D', 'warnings')
+            -Arguments $clippyArguments
     } else {
         Write-Host "[ci-local] clippy ($Toolchain, $featureLabel) skipped; stable clippy is the lint gate"
     }

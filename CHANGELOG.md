@@ -17,18 +17,13 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Regenerated and refreshed the documentation suite; archived legacy docs snapshots.
 - Reduced launch environment-block construction and environment-merge overhead.
 - Updated lockfile dependency set, including `clap` and `tempfile`.
+- Removed the production-reachable `_test_helpers` feature and ambient LPAC/launch overrides.
+- Added capability catalog support and Windows security-capability construction previously prepared under the unpublished `0.13.4` heading.
 
 ### Fixed
 
 - Stabilized CI toolchain installation behavior and dependency pinning for reliability.
 - Replaced Mermaid-dependent docs index content with renderer-compatible Markdown mapping.
-
-## [0.13.4] - 2025-10-24
-
-### Added
-
-- Capability catalog + `OwnedSecurityCapabilities::from_catalog` (Windows). Additive API; no breaking changes.
-- Version bump: crate now published as 0.13.4 (additive API release).
 
 ## [0.13.3] - 2025-10-23
 
@@ -43,7 +38,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Fixed
 
-- Improve CreateProcessW diagnostics (GLE, HRESULT, message). Add local-only test toggles for diagnosing environment/cwd issues: `RAPPCT_TEST_FORCE_ENV`, `RAPPCT_TEST_NO_CWD`, `RAPPCT_DEBUG_LAUNCH`.
+- Improve CreateProcessW diagnostics (GLE, HRESULT, message). The former local launch test toggles were removed before the next published release; `RAPPCT_DEBUG_LAUNCH` remains available.
 
 ### Changed
 

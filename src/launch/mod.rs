@@ -22,13 +22,11 @@ use crate::{AcError, Result};
 
 #[cfg(windows)]
 use crate::ffi::handles::{self, Handle as FHandle};
-#[cfg(windows)]
-use crate::ffi::sec_caps::OwnedSecurityCapabilities;
 use std::ffi::OsString;
 #[cfg(windows)]
 use std::os::windows::io::BorrowedHandle;
 #[cfg(windows)]
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[cfg(windows)]
 pub use job::{JobGuard, JobObjectDropGuard};
@@ -73,17 +71,16 @@ pub struct LaunchOptions {
 #[derive(Clone, Debug, Default)]
 #[doc(hidden)]
 pub struct LaunchExtra {
-    security_caps: Option<Rc<OwnedSecurityCapabilities>>,
-    handle_list: Vec<Rc<FHandle>>,
+    handle_list: Vec<Arc<FHandle>>,
     stdio: StdioOverrides,
 }
 
 #[cfg(windows)]
 #[derive(Clone, Debug, Default)]
 struct StdioOverrides {
-    stdin: Option<Rc<FHandle>>,
-    stdout: Option<Rc<FHandle>>,
-    stderr: Option<Rc<FHandle>>,
+    stdin: Option<Arc<FHandle>>,
+    stdout: Option<Arc<FHandle>>,
+    stderr: Option<Arc<FHandle>>,
 }
 
 impl Default for LaunchOptions {
@@ -113,13 +110,6 @@ impl Default for LaunchOptions {
 
 impl LaunchOptions {
     #[cfg(windows)]
-    #[allow(dead_code)]
-    pub(crate) fn with_security_capabilities(mut self, sc: OwnedSecurityCapabilities) -> Self {
-        self.extra.security_caps = Some(Rc::new(sc));
-        self
-    }
-
-    #[cfg(windows)]
     pub fn with_handle_list(self, inheritable: &[BorrowedHandle<'_>]) -> Self {
         self.try_with_handle_list(inheritable)
             .expect("failed to duplicate inheritable handle list")
@@ -129,7 +119,7 @@ impl LaunchOptions {
     pub fn try_with_handle_list(mut self, inheritable: &[BorrowedHandle<'_>]) -> Result<Self> {
         for h in inheritable {
             let duplicated = handles::duplicate_handle(*h, true)?;
-            self.extra.handle_list.push(Rc::new(duplicated));
+            self.extra.handle_list.push(Arc::new(duplicated));
         }
         Ok(self)
     }
@@ -159,12 +149,12 @@ impl LaunchOptions {
     }
 
     #[cfg(windows)]
-    fn duplicate_stdio_handle(handle: Option<BorrowedHandle<'_>>) -> Result<Option<Rc<FHandle>>> {
+    fn duplicate_stdio_handle(handle: Option<BorrowedHandle<'_>>) -> Result<Option<Arc<FHandle>>> {
         let Some(handle) = handle else {
             return Ok(None);
         };
         let duplicated = handles::duplicate_handle(handle, true)?;
-        Ok(Some(Rc::new(duplicated)))
+        Ok(Some(Arc::new(duplicated)))
     }
 
     pub fn with_env_merge(mut self, add: &[(OsString, OsString)]) -> Self {

@@ -1,10 +1,6 @@
 use super::{JobObjectDropGuard, LaunchOptions, LaunchedIo, make_cmd_args, merge_parent_env};
-use crate::capability::CapabilityName;
-use crate::ffi::sec_caps::OwnedSecurityCapabilities;
-use crate::ffi::sid::OwnedSid;
 use std::ffi::OsString;
 use std::os::windows::io::{AsRawHandle, BorrowedHandle};
-use std::rc::Rc;
 use std::time::Duration;
 use windows::Win32::Foundation::HANDLE;
 use windows::Win32::System::Threading::CreateEventW;
@@ -68,6 +64,25 @@ fn make_cmd_args_handles_none_and_some() {
         String::from_utf16_lossy(&args[..args.len() - 1]),
         " /C exit 0"
     );
+}
+
+#[test]
+fn process_inputs_preserve_environment_and_working_directory() {
+    let inherited = LaunchOptions {
+        env: None,
+        cwd: None,
+        ..Default::default()
+    };
+    assert!(super::spawn::build_env_block(&inherited).unwrap().is_none());
+    assert!(super::spawn::build_cwd(&inherited).is_none());
+
+    let explicit = LaunchOptions {
+        env: Some(vec![(OsString::from("RAPPCT_X"), OsString::from("1"))]),
+        cwd: Some("C:\\Windows".into()),
+        ..Default::default()
+    };
+    assert!(super::spawn::build_env_block(&explicit).unwrap().is_some());
+    assert!(super::spawn::build_cwd(&explicit).is_some());
 }
 
 #[test]
@@ -194,15 +209,6 @@ fn launched_io_wait_returns_timeout_for_unsignaled_waitable_handle() {
 }
 
 #[test]
-fn with_security_capabilities_sets_internal_override() {
-    let sid = OwnedSid::from_sddl("S-1-15-2-1").expect("owned sid");
-    let caps = OwnedSecurityCapabilities::from_catalog(sid, &[CapabilityName::InternetClient])
-        .expect("security caps");
-    let opts = LaunchOptions::default().with_security_capabilities(caps);
-    assert!(opts.extra.security_caps.is_some());
-}
-
-#[test]
 fn effective_startup_timeout_skips_suspended_launches() {
     let suspended = LaunchOptions {
         suspended: true,
@@ -220,23 +226,6 @@ fn effective_startup_timeout_skips_suspended_launches() {
         super::startup::effective_startup_timeout(&active),
         Some(Duration::from_secs(5))
     );
-}
-
-#[test]
-fn inflate_security_caps_prefers_override_when_provided() {
-    let sec = crate::capability::SecurityCapabilities {
-        package: crate::sid::AppContainerSid::from_sddl("S-1-15-2-1"),
-        caps: Vec::new(),
-        lpac: false,
-    };
-    let sid = OwnedSid::from_sddl("S-1-15-2-1").expect("owned sid");
-    let override_caps = Rc::new(
-        OwnedSecurityCapabilities::from_catalog(sid, &[CapabilityName::InternetClient])
-            .expect("override caps"),
-    );
-    let got = super::attributes::inflate_security_caps(&sec, Some(override_caps.clone()))
-        .expect("inflate with override");
-    assert!(Rc::ptr_eq(&got, &override_caps));
 }
 
 #[test]
