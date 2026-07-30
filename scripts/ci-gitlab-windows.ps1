@@ -72,9 +72,9 @@ function Get-TestFeatures {
     )
 
     if ($FeatureSet -eq 'none') {
-        return '_test_helpers'
+        return ''
     }
-    return "$FeatureSet,_test_helpers"
+    return $FeatureSet
 }
 
 function Invoke-ToolchainVersionChecks {
@@ -126,12 +126,9 @@ function Invoke-FeatureTests {
         [string]$TestFeatures
     )
 
-    Invoke-NativeChecked -Label "tests ($RustToolchain, $FeatureSet)" -Action {
-        cargo $ToolchainArgument test `
-            --all-targets `
-            --locked `
-            --features $TestFeatures
-    }
+    $arguments = @($ToolchainArgument, 'test', '--all-targets', '--locked')
+    if ($TestFeatures -ne '') { $arguments += @('--features', $TestFeatures) }
+    Invoke-NativeChecked -Label "tests ($RustToolchain, $FeatureSet)" -Action { cargo @arguments }
 }
 
 function Invoke-DependencyTree {
@@ -168,14 +165,10 @@ function Invoke-Clippy {
         [string]$TestFeatures
     )
 
-    Invoke-NativeChecked -Label "clippy ($RustToolchain, $FeatureSet)" -Action {
-        cargo $ToolchainArgument clippy `
-            --all-targets `
-            --locked `
-            --features $TestFeatures `
-            -- `
-            -D warnings
-    }
+    $arguments = @($ToolchainArgument, 'clippy', '--all-targets', '--locked')
+    if ($TestFeatures -ne '') { $arguments += @('--features', $TestFeatures) }
+    $arguments += @('--', '-D', 'warnings')
+    Invoke-NativeChecked -Label "clippy ($RustToolchain, $FeatureSet)" -Action { cargo @arguments }
 }
 
 function Invoke-GitLabWindowsCi {

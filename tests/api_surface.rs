@@ -11,8 +11,11 @@ use rappct::{
 
 #[test]
 fn api_reexports_are_accessible() {
+    fn assert_send_sync<T: Send + Sync>() {}
+
     // Ensure core types are Sized and reachable from the crate root.
     let _ = size_of::<LaunchOptions>();
+    assert_send_sync::<LaunchOptions>();
     let _ = size_of::<JobLimits>();
     let _ = size_of::<SecurityCapabilities>();
     let _ = StdioConfig::Inherit;

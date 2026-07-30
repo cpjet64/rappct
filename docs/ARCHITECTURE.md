@@ -12,7 +12,6 @@ Feature gates in `Cargo.toml`:
 - `introspection`: enables diagnostics (`rappct::diag`) and capability name suggestions
 - `tracing`: enables tracing points in launch/capability/network paths
 - `serde`: enables `Serialize`/`Deserialize` on selected SID/capability types
-- `_test_helpers`: private CI/test-only hooks; not part of the production API contract
 
 ## Module Boundaries
 

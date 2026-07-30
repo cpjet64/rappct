@@ -172,7 +172,7 @@ The crate is organized into focused modules that compose together:
 - `UnknownCapability { name, suggestion }` with optional fuzzy suggestions (when `introspection` feature enabled)
 - `UnsupportedLpac` vs `UnsupportedPlatform` for OS/platform checks
 
-**LPAC Detection**: `supports_lpac()` queries OS build via `ntdll!RtlGetVersion` (Windows 10 build 15063+). Test-only builds that enable the private `_test_helpers` feature can override detection with `RAPPCT_TEST_LPAC_STATUS`.
+**LPAC Detection**: `supports_lpac()` queries OS build via `ntdll!RtlGetVersion` (Windows 10 build 15063+). Detection is fail-closed and has no environment-variable override.
 
 ## Feature Flags
 
@@ -189,7 +189,7 @@ The crate is organized into focused modules that compose together:
   must be a unique task-owned directory below the active worktree's `.tmp/`;
   never use `tempfile`'s default system-temp location.
 - Use `#[cfg_attr(not(windows), ignore)]` for Windows-only tests
-- CI may set `RAPPCT_TEST_LPAC_STATUS=ok` only for `_test_helpers` feature jobs that need deterministic LPAC coverage on older CI images
+- LPAC integration tests run only on hosts with native LPAC support
 
 ## Important Constraints
 
@@ -211,7 +211,6 @@ The crate is organized into focused modules that compose together:
 ## Debug Flags
 
 - `RAPPCT_DEBUG_LAUNCH=1`: Print CreateProcessW failure details to stderr (no tracing subscriber required)
-- `RAPPCT_TEST_LPAC_STATUS=ok|unsupported`: Override LPAC detection only when the private `_test_helpers` feature is enabled
 
 ## External API Bindings
 

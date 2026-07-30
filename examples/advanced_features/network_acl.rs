@@ -1,4 +1,4 @@
-use super::{clear_env_override, repo_local_tempdir, set_env_override};
+use super::repo_local_tempdir;
 use rappct::{
     AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
     acl::{AccessMask, ResourcePath, grant_to_capability},
@@ -103,48 +103,13 @@ fn grant_demo_capability_access(
     }
 }
 
-/// Demo 9: LPAC Testing Environment
-#[cfg(not(feature = "_test_helpers"))]
+/// Demo 9: LPAC support detection
 pub(crate) fn demo_lpac_testing() -> rappct::Result<()> {
-    println!("=== DEMO 9: LPAC Testing Environment ===");
-    println!("LPAC test overrides are available only with the private '_test_helpers' feature.");
+    println!("=== DEMO 9: LPAC Support Detection ===");
     match supports_lpac() {
         Ok(_) => println!("✓ LPAC is natively supported on this system"),
         Err(_) => println!("✓ Native LPAC detection reports unsupported on this system"),
     }
     println!("✓ Native LPAC detection complete\n");
-    Ok(())
-}
-
-/// Demo 9: LPAC Testing Environment
-#[cfg(feature = "_test_helpers")]
-pub(crate) fn demo_lpac_testing() -> rappct::Result<()> {
-    println!("=== DEMO 9: LPAC Testing Environment ===");
-    println!("Demonstrating test-only LPAC environment variable override");
-    match supports_lpac() {
-        Ok(_) => println!("✓ LPAC is natively supported on this system"),
-        Err(_) => println!("✗ LPAC is not natively supported"),
-    }
-
-    println!("\n→ Testing environment variable override...");
-    set_env_override("RAPPCT_TEST_LPAC_STATUS", "unsupported");
-    match supports_lpac() {
-        Ok(_) => println!("✗ Expected LPAC to be unsupported with env var"),
-        Err(_) => println!("✓ LPAC correctly forced as unsupported"),
-    }
-
-    set_env_override("RAPPCT_TEST_LPAC_STATUS", "ok");
-    match supports_lpac() {
-        Ok(_) => println!("✓ LPAC correctly forced as supported"),
-        Err(_) => println!("✗ Expected LPAC to be supported with env var"),
-    }
-
-    clear_env_override("RAPPCT_TEST_LPAC_STATUS");
-    match supports_lpac() {
-        Ok(_) => println!("✓ Back to native LPAC support detection"),
-        Err(_) => println!("✓ Back to native LPAC support detection (unsupported)"),
-    }
-
-    println!("✓ Environment variable testing complete\n");
     Ok(())
 }

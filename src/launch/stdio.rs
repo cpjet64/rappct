@@ -3,7 +3,7 @@ use super::{LaunchOptions, StdioConfig};
 use crate::ffi::handles::{self, Handle as FHandle};
 use crate::ffi::wstr::WideString;
 use crate::{AcError, Result};
-use std::rc::Rc;
+use std::sync::Arc;
 use windows::Win32::Foundation::{
     HANDLE, HANDLE_FLAG_INHERIT, HANDLE_FLAGS, SetHandleInformation, TRUE,
 };
@@ -68,7 +68,7 @@ fn setup_inherited_stdio(
 }
 
 fn inherit_override(
-    handle: Option<Rc<FHandle>>,
+    handle: Option<Arc<FHandle>>,
     target: &mut HANDLE,
     inherit_list: &mut InheritList,
 ) -> Result<bool> {

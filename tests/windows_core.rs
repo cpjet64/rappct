@@ -12,12 +12,6 @@ mod windows_test_utils;
 use crate::windows_test_utils::LocalAlloc;
 
 #[cfg(windows)]
-use std::sync::{Mutex, OnceLock};
-
-#[cfg(windows)]
-static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-
-#[cfg(windows)]
 #[test]
 fn derive_sid_from_name_works() {
     let sid = derive_sid_from_name("rappct.test.unit").expect("derive sid");
@@ -190,25 +184,6 @@ fn capability_typo_returns_suggestion() {
 
 #[cfg(windows)]
 #[test]
-fn supports_lpac_override_ok() {
-    let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
-    #[allow(unused_unsafe)]
-    unsafe {
-        std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "ok");
-    }
-    let result = rappct::supports_lpac();
-    #[allow(unused_unsafe)]
-    unsafe {
-        std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
-    }
-    assert!(
-        result.is_ok(),
-        "supports_lpac should succeed when override requests ok"
-    );
-}
-
-#[cfg(windows)]
-#[test]
 fn derive_arbitrary_capability_name_succeeds() {
     // DeriveCapabilitySidsFromName hashes any string; it never rejects a name.
     let caps =
@@ -222,39 +197,4 @@ fn derive_arbitrary_capability_name_succeeds() {
 fn derive_empty_list_returns_empty() {
     let caps = capability::derive_named_capability_sids(&[]).expect("derive empty");
     assert!(caps.is_empty());
-}
-
-#[cfg(windows)]
-#[test]
-fn supports_lpac_override_unsupported() {
-    let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
-    #[allow(unused_unsafe)]
-    unsafe {
-        std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "unsupported");
-    }
-    let result = rappct::supports_lpac();
-    #[allow(unused_unsafe)]
-    unsafe {
-        std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
-    }
-    assert!(matches!(result, Err(rappct::AcError::UnsupportedLpac)));
-}
-
-#[cfg(windows)]
-#[test]
-fn supports_lpac_unknown_override_uses_runtime_result() {
-    let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
-    #[allow(unused_unsafe)]
-    unsafe {
-        std::env::set_var("RAPPCT_TEST_LPAC_STATUS", "maybe-later");
-    }
-    let result = rappct::supports_lpac();
-    #[allow(unused_unsafe)]
-    unsafe {
-        std::env::remove_var("RAPPCT_TEST_LPAC_STATUS");
-    }
-    match result {
-        Ok(()) | Err(rappct::AcError::UnsupportedLpac) => {}
-        other => panic!("unexpected supports_lpac result for unknown override: {other:?}"),
-    }
 }

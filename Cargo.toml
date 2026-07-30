@@ -33,7 +33,6 @@ net = ["windows/Win32_NetworkManagement_WindowsFirewall"]
 introspection = ["dep:strsim"]
 tracing = ["dep:tracing"]
 serde = ["dep:serde"]
-_test_helpers = []
 
 [dependencies]
 thiserror = "2.0.19"
@@ -68,8 +67,3 @@ tempfile = "3.27.0"
 [lib]
 name = "rappct"
 path = "src/lib.rs"
-
-[[test]]
-name = "cap_smoke"
-path = "tests/cap_smoke.rs"
-required-features = ["_test_helpers"]

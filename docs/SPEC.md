@@ -8,7 +8,7 @@ Current crate metadata and compatibility:
 - Edition: Rust 2024
 - `rust-version`: `1.88`
 - Platform behavior: public APIs compile cross-platform, but runtime operations that require Windows return `AcError::UnsupportedPlatform` on non-Windows hosts.
-- LPAC gate: `supports_lpac()` requires Windows 10 build 15063+ (1703). CI/test builds that enable the private `_test_helpers` feature may force detection with `RAPPCT_TEST_LPAC_STATUS=ok|unsupported`.
+- LPAC gate: `supports_lpac()` requires Windows 10 build 15063+ (1703) and fails closed when native version detection fails.
 
 Feature flags:
 - `net`: enables firewall/network-isolation integration (`src/net.rs`) including appcontainer enumeration and loopback exemption APIs.
@@ -63,7 +63,7 @@ flowchart TD
 ### `src/lib.rs`
 - Defines module boundaries and feature gating.
 - Re-exports primary types/functions for consumers.
-- Implements `supports_lpac()` with `RtlGetVersion` and a `_test_helpers`-gated test override env var.
+- Re-exports `supports_lpac()`, whose private implementation uses `RtlGetVersion`.
 
 ### `src/profile.rs`
 - `AppContainerProfile::ensure/open/delete` for profile lifecycle.

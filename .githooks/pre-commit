@@ -28,7 +28,7 @@ python "$REPO_ROOT/scripts/check_code_size.py"
 echo "=== cargo clippy --all-targets --all-features -- -D warnings ==="
 run_local cargo clippy --all-targets --all-features --locked :: -Dwarnings
 
-echo "=== cargo test --all-targets --features _test_helpers ==="
-run_local cargo test --all-targets --locked --features _test_helpers
+echo "=== cargo test --all-targets ==="
+run_local cargo test --all-targets --locked
 
 echo "=== pre-commit OK ==="

@@ -76,9 +76,9 @@ jobs:
         shell: pwsh
         run: |
           if ("${{ matrix.features }}" -eq "") {
-            cargo test --all-targets --locked --features _test_helpers
+            cargo test --all-targets --locked
           } else {
-            cargo test --all-targets --locked --features "${{ matrix.features }},_test_helpers"
+            cargo test --all-targets --locked --features "${{ matrix.features }}"
           }
 
       - name: Dependency Duplicates (cargo tree -d)
@@ -95,7 +95,7 @@ jobs:
         shell: pwsh
         run: |
           if ("${{ matrix.features }}" -eq "") {
-            cargo clippy --all-targets --locked --features _test_helpers -- -D warnings
+            cargo clippy --all-targets --locked -- -D warnings
           } else {
-            cargo clippy --all-targets --locked --features "${{ matrix.features }},_test_helpers" -- -D warnings
+            cargo clippy --all-targets --locked --features "${{ matrix.features }}" -- -D warnings
           }

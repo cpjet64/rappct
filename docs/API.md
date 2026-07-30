@@ -300,4 +300,4 @@ Behavior:
 
 - Windows: checks OS build via `RtlGetVersion` and requires build `>= 15063`.
 - Non-Windows: returns `AcError::UnsupportedPlatform`.
-- Test override: when the private `_test_helpers` feature is enabled, `RAPPCT_TEST_LPAC_STATUS=ok|unsupported` can force detection for CI/test scenarios.
+- Detection is native and fail-closed; ambient environment variables cannot override it.

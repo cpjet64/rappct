@@ -12,7 +12,6 @@ use crate::ffi::handles::{self, Handle as FHandle};
 use crate::ffi::wstr::WideString;
 use crate::{AcError, Result};
 use core::ffi::c_void;
-use std::ffi::OsString;
 use windows::Win32::System::Threading::{
     CREATE_SUSPENDED, CREATE_UNICODE_ENVIRONMENT, CreateProcessW, EXTENDED_STARTUPINFO_PRESENT,
     PROCESS_CREATION_FLAGS, PROCESS_INFORMATION, STARTUPINFOEXW,
@@ -40,7 +39,7 @@ pub(super) fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> R
     let stdio = setup_stdio(opts, &mut startup_info, &mut inherit_list)?;
     duplicate_additional_handles(&opts.extra.handle_list, &mut inherit_list)?;
 
-    let security_caps = inflate_security_caps(sec, opts.extra.security_caps.clone())?;
+    let security_caps = inflate_security_caps(sec)?;
     let attributes = LaunchAttributes::new(security_caps, sec.lpac, inherit_list.slice())?;
     let mut startup_guard = StartUpInfoExGuard::new(startup_info, attributes);
     let mut pi = PROCESS_INFORMATION::default();
@@ -108,44 +107,17 @@ fn ensure_lpac_supported(sec: &SecurityCapabilities) -> Result<()> {
     }
 }
 
-fn build_env_block(opts: &LaunchOptions) -> Result<Option<WideBlock>> {
-    if let Some(env) = opts.env.as_ref() {
-        return make_wide_block(env).map(Some);
-    }
-    if force_custom_environment_from_tests() {
-        let all: Vec<(OsString, OsString)> = std::env::vars_os().collect();
-        return make_wide_block(&all).map(Some);
-    }
-    Ok(None)
+pub(super) fn build_env_block(opts: &LaunchOptions) -> Result<Option<WideBlock>> {
+    opts.env
+        .as_ref()
+        .map(|env| make_wide_block(env))
+        .transpose()
 }
 
-fn build_cwd(opts: &LaunchOptions) -> Option<WideString> {
-    if omit_cwd_from_tests() {
-        return None;
-    }
+pub(super) fn build_cwd(opts: &LaunchOptions) -> Option<WideString> {
     opts.cwd
         .as_ref()
         .map(|p| WideString::from_os_str(p.as_os_str()))
-}
-
-#[cfg(feature = "_test_helpers")]
-fn force_custom_environment_from_tests() -> bool {
-    std::env::var_os("RAPPCT_TEST_FORCE_ENV").is_some()
-}
-
-#[cfg(not(feature = "_test_helpers"))]
-fn force_custom_environment_from_tests() -> bool {
-    false
-}
-
-#[cfg(feature = "_test_helpers")]
-fn omit_cwd_from_tests() -> bool {
-    std::env::var_os("RAPPCT_TEST_NO_CWD").is_some()
-}
-
-#[cfg(not(feature = "_test_helpers"))]
-fn omit_cwd_from_tests() -> bool {
-    false
 }
 
 fn base_startup_info() -> STARTUPINFOEXW {
