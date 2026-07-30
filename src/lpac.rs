@@ -1,6 +1,8 @@
 use crate::{AcError, Result};
 
+#[cfg(any(windows, test))]
 const MINIMUM_LPAC_MAJOR: u32 = 10;
+#[cfg(any(windows, test))]
 const MINIMUM_LPAC_BUILD: u32 = 15_063;
 
 /// Returns `Ok(())` if LPAC is supported on this OS (Windows 10 1703+).
@@ -16,6 +18,7 @@ pub fn supports_lpac() -> Result<()> {
     }
 }
 
+#[cfg(any(windows, test))]
 fn evaluate_lpac_support(major: u32, build: u32) -> Result<()> {
     if major < MINIMUM_LPAC_MAJOR || build < MINIMUM_LPAC_BUILD {
         return Err(AcError::UnsupportedLpac);
