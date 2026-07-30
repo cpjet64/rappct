@@ -17,7 +17,10 @@ These wrappers isolate unsafe cleanup behavior from higher-level modules.
 
 ## Utility (`src/util.rs`)
 
-Public compatibility helpers include UTF-16 conversion helpers and legacy guards used by existing consumers.
+The public utility module contains UTF-16 conversion helpers. The legacy
+`OwnedHandle`, `LocalFreeGuard`, and `FreeSidGuard` types were removed for
+0.14.0; consumers should use standard owned handles or the corresponding
+`windows` crate ownership APIs.
 
 ## Related Docs
 

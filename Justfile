@@ -21,11 +21,23 @@ release-version-check:
 verify-version:
     node scripts/verify-version-surfaces.cjs
 
-bump-version version:
-    powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -File ./scripts/bump-version.ps1 -Version {{version}}
+prepare-release version:
+    powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -File ./scripts/prepare-release.ps1 -Version {{version}}
 
-bump-version-dry-run version:
-    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/bump-version.ps1 -Version {{version}} -DryRun
+prepare-release-dry-run version:
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/prepare-release.ps1 -Version {{version}} -DryRun
+
+create-release-tag version:
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/create-release-tag.ps1 -Version {{version}}
+
+test-release-flow:
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/tests/release-flow.Tests.ps1
+
+api-compat:
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/check-api-compat.ps1
+
+release-surface:
+    powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File ./scripts/check-release-surface.ps1
 
 package-list:
     cargo package --list --allow-dirty --locked
@@ -45,7 +57,7 @@ publish-dry-run:
 publish-dry-run-clean: ensure-clean-tree
     cargo publish --dry-run --locked
 
-release-gate: verify-version release-version-check ci-deep package-list-clean publish-dry-run-clean
+release-gate: verify-version release-version-check api-compat release-surface ci-deep package-list-clean publish-dry-run-clean
 
 release-gate-log:
     powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "& ./scripts/release_gate.ps1 -Crate {{crate_name}}"
@@ -78,7 +90,7 @@ build:
     cargo build --all-targets --all-features --locked
 
 test-quick:
-    cargo nextest run --test-threads 1 --features _test_helpers --locked
+    cargo nextest run --test-threads 1 --locked
 
 test-full:
     cargo nextest run --test-threads 1 --all-features --locked
