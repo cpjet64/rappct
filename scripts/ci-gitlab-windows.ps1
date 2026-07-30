@@ -123,6 +123,7 @@ function Invoke-FeatureTests {
         [string]$FeatureSet,
 
         [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
         [string]$TestFeatures
     )
 
@@ -162,6 +163,7 @@ function Invoke-Clippy {
         [string]$FeatureSet,
 
         [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
         [string]$TestFeatures
     )
 
