@@ -299,16 +299,18 @@ These Windows APIs are manually bound because they're not fully exposed in `wind
 
 ## Hosted CI Ownership
 
-- GitLab is the primary CI and release provider. Ordinary merge-request and
+- GitLab is the primary CI and release orchestrator. Ordinary merge-request and
   branch pipelines run blocking non-E2E checks on the explicit Debian and
   macOS unprotected runner boundaries.
 - Because this crate exercises Windows-only APIs, GitLab also reproduces the
   hosted Windows Rust/toolchain and feature matrix on the explicit Windows
   unprotected boundary. Beta and nightly remain advisory; stable and the
   supported MSRV range are blocking.
-- GitLab is the sole CI/CD and release provider. The GitHub repository is a
-  source mirror only and must not contain workflows, dependency bots, release
-  automation, or GitHub-specific contribution templates.
+- GitLab is the sole CI/CD execution provider. The GitHub repository is a
+  source and release mirror and must not contain workflows, dependency bots,
+  GitHub-hosted release automation, or GitHub-specific contribution templates.
+  Protected GitLab tag pipelines publish matching release objects and assets
+  to both providers.
 - Rust security coverage is owned by repository-native GitLab jobs: Clippy,
   cargo-deny, cargo-audit, duplicate-dependency policy, and deterministic SBOM
   generation. Do not add GitLab SAST as a substitute unless GitLab documents

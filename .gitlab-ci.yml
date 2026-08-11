@@ -188,3 +188,13 @@ publish_gitlab_release:
       artifacts: true
   script:
     - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/publish-gitlab-release.ps1
+
+publish_github_release:
+  extends: .protected_tag
+  stage: release
+  needs:
+    - job: verify_crates_io
+      artifacts: true
+  script:
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "if (-not $env:GITHUB_RELEASE_TOKEN) { throw 'GITHUB_RELEASE_TOKEN is required for GitHub release publication.' }"
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/publish-github-release.ps1

@@ -22,9 +22,9 @@ This project intentionally preserves a strict local-first and self-hosted workfl
 - mandatory local CI gates (`just ci-fast`, `just ci-deep`) before integration
 - dependency and advisory validation in the local/release gate (`cargo deny`, `cargo audit`, advisory policy script)
 - GitLab is the primary hosted CI provider: branch and merge-request pipelines run blocking Debian, macOS, and Windows matrix checks on explicit unprotected runner boundaries
-- GitLab is the sole hosted CI/CD provider; the GitHub repository is source-mirror-only
+- GitLab is the sole hosted CI/CD execution provider; protected GitLab tag jobs publish matching GitLab and GitHub releases
 - GitLab jobs provide Rust security coverage through Clippy, cargo-deny, cargo-audit, duplicate-dependency policy, and deterministic SBOM generation
-- protected GitLab tag pipelines own release publishing on the Windows protected runner boundary and require protected CI credentials
+- protected GitLab tag pipelines own crates.io and dual-provider release publishing on the Windows protected runner boundary and require protected CI credentials
 - Windows boundary-sensitive functionality guarded by explicit checks and feature flags
 
 ## Hardening Notes for Contributors

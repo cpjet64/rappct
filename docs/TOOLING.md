@@ -100,12 +100,29 @@ cargo test --all-targets --locked
   repo-local `.tmp/` scratch internally.
 - Assigned runners must have the toolchains already provisioned; CI jobs do
   not install or mutate host toolchains.
-- GitLab is the sole CI/CD provider. Repository-native GitLab jobs provide Rust
+- GitLab is the sole CI/CD execution provider. Repository-native GitLab jobs provide Rust
   security coverage through Clippy, cargo-deny, cargo-audit,
   duplicate-dependency policy, and deterministic SBOM generation. The GitHub
-  repository is a source mirror only.
-- Protected tag pipelines use the Windows protected runner boundary to run `verify_release_windows` including `just release-version-check`, package `target/package/*.crate`, emit `*.crate.sha256`, `cargo-metadata.json`, and `rappct.cdx.json`, publish to crates.io using the protected `CARGO_REGISTRY_TOKEN`, upload the crate package to GitLab generic packages, and create/update the GitLab release.
+  repository contains no GitHub-hosted CI workflows or dependency bots.
+- Protected tag pipelines use the Windows protected runner boundary to run `verify_release_windows` including `just release-version-check`, package `target/package/*.crate`, emit `*.crate.sha256`, `cargo-metadata.json`, and `rappct.cdx.json`, publish to crates.io using the protected `CARGO_REGISTRY_TOKEN`, upload the crate package to GitLab generic packages, fast-forward the GitHub `main` source mirror without force, and create or update matching GitLab and GitHub releases. GitHub publication uses the protected `GITHUB_RELEASE_TOKEN` and fails closed if the mirror has diverged.
 - `scripts/prepare-release.ps1` selects the highest reachable `vX.Y.Z` or legacy `rappct-vX.Y.Z` baseline and promotes curated `Unreleased` notes. It never commits, tags, pushes, or publishes.
+
+### Protected release credentials
+
+Create both variables directly in GitLab under **Settings > CI/CD > Variables**.
+Use variable type `Variable`, environment scope `*`, disable variable expansion,
+enable `Protect variable`, and choose `Masked and hidden`.
+
+- `CARGO_REGISTRY_TOKEN`: create a new crates.io API token at
+  `https://crates.io/settings/tokens`. Name it for this repository's GitLab
+  release pipeline and use the narrowest available publish scope for `rappct`.
+- `GITHUB_RELEASE_TOKEN`: create a fine-grained GitHub personal access token
+  restricted to `cpjet64/rappct`, with repository **Contents: Read and write**.
+  No Actions, administration, issues, or organization permissions are needed.
+
+Do not paste either token into a shell command, repository file, issue, job
+variable, or chat. Revoke the superseded crates.io token after the replacement
+is proven by a successful protected-tag publication.
 
 ### Release safety rule
 

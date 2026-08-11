@@ -1,6 +1,6 @@
 # Release Checklist (GitLab tag-driven publish flow)
 
-Goal: maintain a clean, deterministic, GitLab tag-driven crates.io release path for an already-published crate, with a guarded local fallback.
+Goal: maintain a clean, deterministic, GitLab tag-driven crates.io and dual-provider release path for an already-published crate, with a guarded local fallback.
 
 ## Current target
 - Crate: `rappct`
@@ -45,25 +45,29 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 - [ ] Run `just release` with explicit user confirmation `PUBLISH`.
 
 ## Audit notes
-- GitHub-hosted automation has been retired; GitLab owns CI/CD and releases.
+- GitHub-hosted automation has been retired; GitLab owns CI/CD execution and
+  orchestrates matching GitLab and GitHub releases.
 - Real publish normally occurs in GitLab tag pipeline job `publish_crates_io`.
 - GitLab publish requires:
   - protected tag `vX.Y.Z` matching `Cargo.toml`
   - an assigned, online runner matching the exact `windows-protected` boundary
   - protected `CARGO_REGISTRY_TOKEN` in CI variables
+  - protected `GITHUB_RELEASE_TOKEN` in CI variables
   - successful protected-tag `verify_release_windows` and `package_crate` jobs; `verify_release_windows` includes the deep supply-chain gate
   - package evidence artifacts: crate tarball, SHA-256 checksum, and Cargo metadata
   - successful byte-for-byte verification of the published crates.io archive against the pre-publish package
-  - successful GitLab release creation/update job
+  - successful GitLab and GitHub release creation/update jobs
 - Local fallback still requires local confirmation in `scripts/release.ps1`, a clean `main` tree, and explicit `PUBLISH` prompt.
 - Strict evidence (`output/release-gate`) should be attached before final sign-off.
 
 ## Current blockers
 
-- GitLab currently has no protected `v*` tag rule, so the protected-tag release boundary is not established.
-- GitLab currently does not require a successful pipeline before merge.
-- The GitHub source mirror does not yet contain the authoritative GitLab `main` SHA audited for this remediation.
-- Do not create or push the release tag until these settings are corrected, the remediation lands on synchronized `main`, the exact-SHA GitLab pipeline is green, and the source mirror matches that SHA.
+- The replacement crates.io token and the GitHub release token must be added as
+  protected, masked-and-hidden GitLab CI variables.
+- Do not create or push the release tag until the remediation lands on
+  synchronized `main`, the exact-SHA GitLab pipeline is green, and both
+  protected release credentials are present. The protected GitHub release job
+  fast-forwards the source mirror without force and fails closed on divergence.
 
 ## Historical evidence captured
 

@@ -128,7 +128,7 @@ flowchart TD
 - `examples/`: end-to-end demos (`acrun`, `network_demo`, `comprehensive_demo`, `advanced_features`, `rappct_demo`).
 - `scripts/`: local CI orchestration and policy checks.
 - `.gitlab/`: GitLab issue and merge-request templates.
-- `.gitlab-ci.yml`: GitLab branch/MR verification, Rust security checks, and tag-driven crates.io/GitLab release pipeline.
+- `.gitlab-ci.yml`: GitLab branch/MR verification, Rust security checks, and tag-driven crates.io plus GitLab/GitHub release pipeline.
 
 ## Data Models & Flows (Mermaid)
 Key data models:
@@ -255,12 +255,12 @@ Hosted CI governance:
   contract and rely on test-owned `.tmp/` scratch for file-backed cases.
   Runners must be provisioned with the required toolchains before assignment;
   jobs do not install host toolchains.
-- GitLab is the sole CI/CD provider. Rust security coverage is repository-native:
+- GitLab is the sole CI/CD execution provider. Rust security coverage is repository-native:
   Clippy, cargo-deny, cargo-audit, duplicate-dependency policy, and deterministic
   SBOM generation. GitLab SAST is not used because its supported-language list
   does not include Rust and its container analyzers do not fit these shell
   runner boundaries.
-- Release publishing is owned by protected GitLab tag pipelines on the Windows protected runner boundary, with `just release-gate-log` and `just release` retained as guarded local fallback tooling.
+- Release publishing is owned by protected GitLab tag pipelines on the Windows protected runner boundary. They publish crates.io and matching GitLab/GitHub releases, with `just release-gate-log` and `just release` retained as guarded local fallback tooling.
 
 Operational notes:
 - Loopback exemption tests and some job/process behavior tests are opt-in via env vars (`RAPPCT_ALLOW_NET_TESTS`, `RAPPCT_ALLOW_JOB_TESTS`, `RAPPCT_ITESTS`).

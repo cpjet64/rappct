@@ -83,10 +83,11 @@ fn suspended_launch_resumes_and_exits(profile: &TestProfile) {
 
 fn dual_stream_capture_drains_without_deadlock(profile: &TestProfile) {
     let caps = profile.capabilities();
-    let mut opts = bounded_command(
-        "(for /L %i in (1,1,8000) do @echo OUT-%i) & \
-         (for /L %i in (1,1,8000) do @echo ERR-%i 1>&2)",
-    );
+    let payload = "X".repeat(96);
+    let mut opts = bounded_command(&format!(
+        "(for /L %i in (1,1,800) do @echo OUT-%i-{payload}) & \
+             (for /L %i in (1,1,800) do @echo ERR-%i-{payload} 1>&2)"
+    ));
     opts.stdio = StdioConfig::Pipe;
     let mut child = launch_in_container_with_io(&caps, &opts).expect("launch capture child");
     let capture = child.capture_output();
@@ -94,8 +95,19 @@ fn dual_stream_capture_drains_without_deadlock(profile: &TestProfile) {
     let output = capture.finish().expect("join capture readers");
     assert!(output.stdout.len() > 64 * 1024);
     assert!(output.stderr.len() > 64 * 1024);
-    assert!(output.stdout.ends_with(b"OUT-8000\r\n"));
-    assert!(output.stderr.ends_with(b"ERR-8000 \r\n") || output.stderr.ends_with(b"ERR-8000\r\n"));
+    assert!(
+        output
+            .stdout
+            .ends_with(format!("OUT-800-{payload}\r\n").as_bytes())
+    );
+    assert!(
+        output
+            .stderr
+            .ends_with(format!("ERR-800-{payload} \r\n").as_bytes())
+            || output
+                .stderr
+                .ends_with(format!("ERR-800-{payload}\r\n").as_bytes())
+    );
 }
 
 fn pid_only_owner_retains_kill_on_close_job(profile: &TestProfile) {

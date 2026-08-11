@@ -6,7 +6,7 @@ Project documentation is in [`docs/`](./docs/).
 
 Start here: [`docs/index.md`](./docs/index.md)
 
-## GitLab release process
+## GitLab-orchestrated release process
 
 This repository uses a GitLab tag-driven release flow. Publish payload is controlled by a manifest `include` allow-list:
 
@@ -25,10 +25,10 @@ The release chain is:
 - `just api-compat` verifies the reviewed 0.13.3-to-0.14.0 API break classes with pinned `cargo-semver-checks` 0.49.0.
 - `just release-surface` rejects production test hooks and compiles a downstream all-features consumer.
 - Branch and merge-request GitLab pipelines run blocking Debian, macOS, and Windows checks on explicit unprotected runner boundaries. The Windows matrix covers stable plus supported MSRV toolchains across every feature combination; beta and nightly are advisory.
-- GitLab is the sole CI/CD provider. GitLab jobs run Clippy, cargo-deny,
+- GitLab is the sole CI/CD execution provider. GitLab jobs run Clippy, cargo-deny,
   cargo-audit, duplicate-dependency policy, and deterministic SBOM generation;
-  the GitHub repository is source-mirror-only.
-- A protected GitLab tag pipeline runs `just ci-deep` on the Windows protected runner boundary, verifies release version freshness, packages the crate, emits crate checksums and Cargo metadata as release evidence, publishes to crates.io, and creates/updates a GitLab release.
+  the GitHub repository contains no hosted CI workflows or dependency bots.
+- A protected GitLab tag pipeline runs `just ci-deep` on the Windows protected runner boundary, verifies release version freshness, packages the crate, emits crate checksums and Cargo metadata as release evidence, publishes to crates.io, and creates or updates matching GitLab and GitHub releases.
 - `just release-version-check` verifies crate version is greater than the published crate on crates.io.
 - `just release-gate` runs API, downstream-consumer, quality, security, docs, packaging, and dry-run checks on a **clean working tree**.
 - `just release-gate-log` remains available for a local transcript before manual release intervention.
