@@ -32,7 +32,6 @@ use std::{
 #[cfg(windows)]
 use rappct::launch::{StdioConfig, launch_in_container_with_io};
 
-#[cfg(windows)]
 type DemoEntry = (&'static str, fn() -> rappct::Result<()>);
 
 #[path = "comprehensive_demo/file_acls.rs"]

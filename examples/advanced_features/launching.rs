@@ -1,10 +1,13 @@
+#[cfg(windows)]
 use super::{repo_local_tempdir, resolve_cmd_exe};
+#[cfg(windows)]
 use rappct::{
     AppContainerProfile, KnownCapability, SecurityCapabilities, SecurityCapabilitiesBuilder,
     acl::{AccessMask, ResourcePath, grant_to_package},
     launch::{JobLimits, LaunchOptions, merge_parent_env},
     launch_in_container,
 };
+#[cfg(windows)]
 use std::{ffi::OsString, path::PathBuf, process::Command, thread, time::Duration};
 
 #[cfg(windows)]
@@ -36,6 +39,14 @@ pub(crate) fn demo_advanced_launch() -> rappct::Result<()> {
     cleanup_advanced_launch(profile, scratch)
 }
 
+#[cfg(not(windows))]
+pub(crate) fn demo_advanced_launch() -> rappct::Result<()> {
+    println!("=== DEMO 5: Advanced Launch Options ===");
+    println!("⚠ Advanced launch demo requires Windows");
+    Err(rappct::AcError::UnsupportedPlatform)
+}
+
+#[cfg(windows)]
 fn run_normal_environment_probe() {
     println!("\n→ Baseline: Normal process with custom environment");
     let output = Command::new("cmd")
@@ -55,6 +66,7 @@ fn run_normal_environment_probe() {
     }
 }
 
+#[cfg(windows)]
 fn custom_launch_environment(task_temp: OsString) -> Vec<(OsString, OsString)> {
     merge_parent_env(vec![
         (OsString::from("RAPPCT_DEMO"), OsString::from("advanced")),
@@ -72,6 +84,7 @@ fn custom_launch_environment(task_temp: OsString) -> Vec<(OsString, OsString)> {
     ])
 }
 
+#[cfg(windows)]
 fn advanced_launch_options(custom_env: Vec<(OsString, OsString)>) -> LaunchOptions {
     println!("→ Launching with custom environment and timeout...");
     println!(
@@ -94,6 +107,7 @@ fn advanced_launch_options(custom_env: Vec<(OsString, OsString)>) -> LaunchOptio
     }
 }
 
+#[cfg(windows)]
 fn run_advanced_launch(caps: &SecurityCapabilities, opts: &LaunchOptions) -> rappct::Result<()> {
     match launch_in_container(caps, opts) {
         Ok(child) => {
@@ -110,6 +124,7 @@ fn run_advanced_launch(caps: &SecurityCapabilities, opts: &LaunchOptions) -> rap
     Ok(())
 }
 
+#[cfg(windows)]
 fn cleanup_advanced_launch(
     profile: AppContainerProfile,
     scratch: tempfile::TempDir,

@@ -23,7 +23,9 @@ use rappct::{
     profile::derive_sid_from_name,
 };
 
-use std::{env, fs, path::PathBuf};
+#[cfg(windows)]
+use std::path::PathBuf;
+use std::{env, fs};
 
 type DemoEntry = (&'static str, fn() -> rappct::Result<()>);
 
@@ -56,6 +58,7 @@ fn repo_local_tempdir(scope: &str) -> rappct::Result<tempfile::TempDir> {
         })
 }
 
+#[cfg(windows)]
 fn resolve_cmd_exe() -> PathBuf {
     if let Ok(comspec) = env::var("ComSpec") {
         let p = PathBuf::from(comspec);
