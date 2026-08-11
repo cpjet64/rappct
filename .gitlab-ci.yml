@@ -161,13 +161,30 @@ publish_crates_io:
     - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "if (-not $env:CARGO_REGISTRY_TOKEN) { throw 'CARGO_REGISTRY_TOKEN is required for crates.io publish.' }"
     - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-project-temp.ps1 -Scope gitlab-publish cargo publish --locked
 
-publish_gitlab_release:
+verify_crates_io:
   extends: .protected_tag
-  stage: release
+  stage: publish
   needs:
     - job: package_crate
       artifacts: true
     - job: publish_crates_io
       artifacts: false
+  script:
+    - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/verify-published-crate.ps1
+  artifacts:
+    expire_in: 14 days
+    paths:
+      - target/package/*.crate
+      - target/package/*.crate.sha256
+      - target/package/*.crate.published.sha256
+      - target/package/cargo-metadata.json
+      - target/package/*.cdx.json
+
+publish_gitlab_release:
+  extends: .protected_tag
+  stage: release
+  needs:
+    - job: verify_crates_io
+      artifacts: true
   script:
     - powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/publish-gitlab-release.ps1

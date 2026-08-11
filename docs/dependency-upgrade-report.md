@@ -6,7 +6,7 @@ Created: `2026-02-26T01:52:38Z`
 
 | Step | Status | Notes |
 |---|---|---|
-| Stack Detection | Complete | Rust 2024 library crate with Cargo lockfile, Justfile gates, GitLab primary CI, GitHub mirror CI/CodeQL, mdBook docs, PowerShell/Node release tooling. |
+| Stack Detection | Complete | Rust 2024 library crate with Cargo lockfile, Justfile gates, GitLab CI/CD, a source-only GitHub mirror, mdBook docs, and PowerShell/Node release tooling. |
 | Compatible Direct Updates | Applied | `clap 4.6.1 -> 4.6.4`, `serde 1.0.228 -> 1.0.229`, `serde_json 1.0.149 -> 1.0.151`, `thiserror 2.0.18 -> 2.0.19`; lockfile refreshed with `cargo update`. |
 | Major Upgrade Review | Complete | No direct major upgrades were available for the current dependency set. `windows 0.62.2`, `tempfile 3.27.0`, `strsim 0.11.1`, and `tracing 0.1.44` remained current. |
 | Unused Dependency Check | Complete | `cargo machete` reported no unused direct dependencies. |
@@ -19,11 +19,11 @@ Created: `2026-02-26T01:52:38Z`
 
 | Step | Status | Notes |
 |---|---|---|
-| Stack Detection | Complete | Rust crate with Cargo manifest/lockfile, Justfile gates, GitLab CI, GitHub Actions/CodeQL, mdBook docs, and PowerShell/Node release scripts. |
+| Stack Detection | Complete | Historical snapshot: Rust crate with Cargo manifest/lockfile, Justfile gates, GitLab CI, then-active GitHub Actions/CodeQL, mdBook docs, and PowerShell/Node release scripts. |
 | Baseline Validation | Complete | `just ci-fast` passed before dependency changes. |
 | Compatible Updates | Complete | Planned direct dev-dependency updates: `clap 4.5.60 -> 4.6.1`, `tempfile 3.26.0 -> 3.27.0`; lockfile refreshed with `cargo update`. |
 | Toolchain Update | Complete | Local pinned toolchain moved from `1.93.1` to `1.95.0`; MSRV remains `1.88`. |
-| Matrix Alignment | Complete | Local/GitHub Rust matrix documentation extended from `1.88.0`..`1.93.0` to `1.88.0`..`1.95.0`. |
+| Matrix Alignment | Complete | Historical snapshot: local/GitHub Rust matrix documentation extended from `1.88.0`..`1.93.0` to `1.88.0`..`1.95.0`; the matrix is now GitLab-owned. |
 
 | Step | Status | Notes |
 |---|---|---|

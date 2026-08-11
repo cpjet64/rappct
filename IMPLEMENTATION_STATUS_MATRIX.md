@@ -1,5 +1,7 @@
 # Implementation Status Matrix
 
+> Historical audit snapshot. Findings may have been remediated; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 Status definitions:
 
 - `implemented`: readable implementation exists and aligns with documented shape.
@@ -44,4 +46,3 @@ Status definitions:
 | Release checklist | `RELEASE-CHECKLIST.md` | partial/stale | Several clean-tree release gates unchecked; registry baseline from 2026-03-04 may be stale. |
 | Docs | `docs/*` | partial/stale | Many docs readable and detailed, but some are corrupted and all must be regenerated after source restore. |
 | Legacy docs | `legacy/*` | stale/corrupted | Some legacy docs are readable but explicitly deprecated; others are corrupted. |
-

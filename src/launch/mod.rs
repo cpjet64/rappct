@@ -5,6 +5,8 @@
 #[cfg(windows)]
 mod attributes;
 #[cfg(windows)]
+mod capture;
+#[cfg(windows)]
 mod env;
 #[cfg(windows)]
 mod job;
@@ -28,6 +30,8 @@ use std::os::windows::io::BorrowedHandle;
 #[cfg(windows)]
 use std::sync::Arc;
 
+#[cfg(windows)]
+pub use capture::{CapturedOutput, OutputCapture};
 #[cfg(windows)]
 pub use job::{JobGuard, JobObjectDropGuard};
 #[cfg(windows)]
@@ -109,6 +113,12 @@ impl Default for LaunchOptions {
 }
 
 impl LaunchOptions {
+    /// Duplicate additional inheritable handles for the child.
+    ///
+    /// # Panics
+    ///
+    /// Panics if Windows cannot duplicate a handle. Use
+    /// [`Self::try_with_handle_list`] when duplication failure must be handled.
     #[cfg(windows)]
     pub fn with_handle_list(self, inheritable: &[BorrowedHandle<'_>]) -> Self {
         self.try_with_handle_list(inheritable)
@@ -124,6 +134,12 @@ impl LaunchOptions {
         Ok(self)
     }
 
+    /// Duplicate explicit child standard-I/O handles.
+    ///
+    /// # Panics
+    ///
+    /// Panics if Windows cannot duplicate a handle. Use
+    /// [`Self::try_with_stdio_inherit`] when duplication failure must be handled.
     #[cfg(windows)]
     pub fn with_stdio_inherit(
         self,
@@ -165,9 +181,13 @@ impl LaunchOptions {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct Launched {
     pub pid: u32,
+    #[cfg(windows)]
+    control: ProcessControl,
+    #[cfg(windows)]
+    _job_guard: Option<JobGuard>,
 }
 
 #[cfg(windows)]
@@ -178,16 +198,33 @@ pub struct LaunchedIo {
     pub stdout: Option<std::fs::File>,
     pub stderr: Option<std::fs::File>,
     pub job_guard: Option<JobGuard>,
-    pub(crate) process: FHandle,
+    control: ProcessControl,
 }
 
 #[cfg(not(windows))]
 pub struct LaunchedIo;
 
+#[cfg(windows)]
+#[derive(Debug)]
+struct ProcessControl {
+    process: FHandle,
+    suspended_thread: Option<FHandle>,
+}
+
 pub fn launch_in_container(_sec: &SecurityCapabilities, _opts: &LaunchOptions) -> Result<Launched> {
     #[cfg(windows)]
     {
-        launch_impl(_sec, _opts).map(|io| Launched { pid: io.pid })
+        if matches!(_opts.stdio, StdioConfig::Pipe) {
+            return Err(AcError::LaunchFailed {
+                stage: "launch_options",
+                hint: "use launch_in_container_with_io when stdio is Pipe",
+                source: Box::new(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    "pipe handles require the I/O launch API",
+                )),
+            });
+        }
+        launch_impl(_sec, _opts).map(LaunchedIo::without_io)
     }
     #[cfg(not(windows))]
     {
@@ -254,7 +291,60 @@ pub fn launch_in_container_with_io(
 
 #[cfg(windows)]
 impl LaunchedIo {
-    pub fn wait(self, timeout: Option<std::time::Duration>) -> Result<u32> {
+    fn without_io(self) -> Launched {
+        let LaunchedIo {
+            pid,
+            job_guard,
+            control,
+            ..
+        } = self;
+        Launched {
+            pid,
+            control,
+            _job_guard: job_guard,
+        }
+    }
+
+    pub fn wait(&self, timeout: Option<std::time::Duration>) -> Result<u32> {
+        self.control.wait(timeout)
+    }
+
+    /// Resume a child created with [`LaunchOptions::suspended`].
+    pub fn resume(&mut self) -> Result<()> {
+        self.control.resume()
+    }
+
+    /// Terminate the child and wait for it to exit.
+    pub fn terminate(&mut self, exit_code: u32) -> Result<u32> {
+        self.control.terminate(exit_code)
+    }
+
+    /// Start draining stdout and stderr concurrently.
+    pub fn capture_output(&mut self) -> OutputCapture {
+        OutputCapture::start(self.stdout.take(), self.stderr.take())
+    }
+}
+
+#[cfg(windows)]
+impl Launched {
+    pub fn wait(&self, timeout: Option<std::time::Duration>) -> Result<u32> {
+        self.control.wait(timeout)
+    }
+
+    /// Resume a child created with [`LaunchOptions::suspended`].
+    pub fn resume(&mut self) -> Result<()> {
+        self.control.resume()
+    }
+
+    /// Terminate the child and wait for it to exit.
+    pub fn terminate(&mut self, exit_code: u32) -> Result<u32> {
+        self.control.terminate(exit_code)
+    }
+}
+
+#[cfg(windows)]
+impl ProcessControl {
+    fn wait(&self, timeout: Option<std::time::Duration>) -> Result<u32> {
         use windows::Win32::Foundation::{STILL_ACTIVE, WAIT_FAILED, WAIT_TIMEOUT};
         use windows::Win32::System::Threading::{
             GetExitCodeProcess, INFINITE, WaitForSingleObject,
@@ -283,6 +373,28 @@ impl LaunchedIo {
                 .map_err(|_| AcError::Win32("GetExitCodeProcess failed".into()))?;
             Ok(code)
         }
+    }
+
+    fn resume(&mut self) -> Result<()> {
+        use windows::Win32::System::Threading::ResumeThread;
+        let thread = self.suspended_thread.take().ok_or_else(|| {
+            AcError::Win32("process is not suspended or was already resumed".into())
+        })?;
+        // SAFETY: The retained handle is the primary thread created suspended by CreateProcessW.
+        let previous = unsafe { ResumeThread(thread.as_win32()) };
+        if previous == u32::MAX {
+            self.suspended_thread = Some(thread);
+            return Err(AcError::Win32("ResumeThread failed".into()));
+        }
+        Ok(())
+    }
+
+    fn terminate(&mut self, exit_code: u32) -> Result<u32> {
+        use windows::Win32::System::Threading::TerminateProcess;
+        // SAFETY: The process handle is owned and remains live for this call.
+        unsafe { TerminateProcess(self.process.as_win32(), exit_code) }
+            .map_err(|_| AcError::Win32("TerminateProcess failed".into()))?;
+        self.wait(None)
     }
 }
 

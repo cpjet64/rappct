@@ -1,5 +1,7 @@
 # Production Readiness Report
 
+> Historical audit snapshot. Findings may have been remediated; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 **Date:** 2026-05-07  
 **Repository:** `E:\CursorAI\rappct`  
 **Result:** Production-readiness restoration and hardening completed for the current local Windows checkout.

@@ -5,7 +5,7 @@ Goal: maintain a clean, deterministic, GitLab tag-driven crates.io release path 
 ## Current target
 - Crate: `rappct`
 - Planned version: `0.14.0`
-- Target status: pre-release hardening is in progress; the manifest and lockfile intentionally remain at `0.13.10` until this checklist is satisfied.
+- Target status: the manifest and lockfile are aligned at the unreleased `0.14.0` candidate; release remains blocked on the settings and exact-SHA evidence below.
 
 ## Crates.io baseline
 - Refresh immediately before tagging with `just release-version-check`.
@@ -17,6 +17,9 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 - `LICENSE`
 - `README.md`
 - `Cargo.toml`
+- `CHANGELOG.md`
+- `SECURITY.md`
+- `docs/releases/0.14.0-migration.md`
 - `src/**`
 - `examples/**`
 - `tests/**`
@@ -26,7 +29,7 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 - [x] Confirm local `Cargo.toml`/`Cargo.lock` versions are synchronized for the release candidate.
 - [x] Confirm `scripts/verify-version-surfaces.cjs` validates all version surfaces and tag alignment.
 - [ ] Run `just prepare-release-dry-run 0.14.0` and confirm `rappct-v0.13.3` is selected.
-- [ ] Run `just api-compat` and confirm only the reviewed 0.14.0 migration set is reported.
+- [x] Run `just api-compat` and confirm only the reviewed 0.14.0 migration set is reported.
 - [ ] Run `just release-surface` and confirm no production test hooks are packaged.
 - [ ] Run `just prepare-release 0.14.0` on a topic branch; review, validate, and merge the three-file change.
 - [ ] From synchronized clean `main`, run `just create-release-tag 0.14.0`, review the local tag, then push it explicitly.
@@ -42,7 +45,7 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 - [ ] Run `just release` with explicit user confirmation `PUBLISH`.
 
 ## Audit notes
-- GitHub-hosted publish workflows have been removed from release execution.
+- GitHub-hosted automation has been retired; GitLab owns CI/CD and releases.
 - Real publish normally occurs in GitLab tag pipeline job `publish_crates_io`.
 - GitLab publish requires:
   - protected tag `vX.Y.Z` matching `Cargo.toml`
@@ -50,16 +53,21 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
   - protected `CARGO_REGISTRY_TOKEN` in CI variables
   - successful protected-tag `verify_release_windows` and `package_crate` jobs; `verify_release_windows` includes the deep supply-chain gate
   - package evidence artifacts: crate tarball, SHA-256 checksum, and Cargo metadata
+  - successful byte-for-byte verification of the published crates.io archive against the pre-publish package
   - successful GitLab release creation/update job
 - Local fallback still requires local confirmation in `scripts/release.ps1`, a clean `main` tree, and explicit `PUBLISH` prompt.
 - Strict evidence (`output/release-gate`) should be attached before final sign-off.
 
-## Current blocker
-- Do not prepare the version or create the tag until the pre-0.14 hardening MR and exact-SHA pipeline are green.
+## Current blockers
+
+- GitLab currently has no protected `v*` tag rule, so the protected-tag release boundary is not established.
+- GitLab currently does not require a successful pipeline before merge.
+- The GitHub source mirror does not yet contain the authoritative GitLab `main` SHA audited for this remediation.
+- Do not create or push the release tag until these settings are corrected, the remediation lands on synchronized `main`, the exact-SHA GitLab pipeline is green, and the source mirror matches that SHA.
 
 ## Historical evidence captured
 
-- Historical `just release-version-check`: passed (`0.13.10 > 0.13.3`); refresh immediately before preparing 0.14.0.
+- Historical `just release-version-check`: passed for the prior `0.13.10` candidate; refresh immediately before releasing 0.14.0.
 - `just package-list` (allow-dirty): completed; output constrained to include list plus expected dirty artifacts (`.cargo_vcs_info.json`, `Cargo.toml.orig`, `Cargo.lock`).
 - `just publish-dry-run` (allow-dirty): completed successfully.
 - Historical `output/release-gate` evidence from before the integrity restore is not sufficient for release sign-off.

@@ -257,11 +257,10 @@ fn validate(sec: &rappct::SecurityCapabilities, opts: &rappct::LaunchOptions) {
 Public items:
 
 - `list_appcontainers()`
-- `LoopbackAdd(AppContainerSid)` + `confirm_debug_only()`
+- `LoopbackAdd::new(AppContainerSid)` + `confirm_debug_only()`
 - `add_loopback_exemption(LoopbackAdd)`
 - `remove_loopback_exemption(&AppContainerSid)`
 - `LoopbackExemptionGuard::new_confirmed(LoopbackAdd)` and `close()` / `disable()`
-- `LoopbackExemptionGuard::new(&AppContainerSid)` preserves the old constructor shape but fails unless the debug latch is explicitly confirmed through `new_confirmed`.
 
 Typical safe sequence:
 
@@ -273,7 +272,7 @@ fn main() -> rappct::Result<()> {
     let profile = AppContainerProfile::ensure("rappct.net", "net", None)?;
 
     net::add_loopback_exemption(
-        net::LoopbackAdd(profile.sid.clone()).confirm_debug_only()
+        net::LoopbackAdd::new(profile.sid.clone()).confirm_debug_only()
     )?;
 
     net::remove_loopback_exemption(&profile.sid)?;

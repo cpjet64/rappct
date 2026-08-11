@@ -3,6 +3,7 @@ use thiserror::Error;
 pub type Result<T> = std::result::Result<T, AcError>;
 
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum AcError {
     #[error("Unsupported platform (Windows required)")]
     UnsupportedPlatform,

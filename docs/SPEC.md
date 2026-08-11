@@ -108,7 +108,7 @@ flowchart TD
   - `add_loopback_exemption`
   - `remove_loopback_exemption`
   - `LoopbackExemptionGuard` (RAII add/remove)
-- Explicit safety latch: `LoopbackAdd(...).confirm_debug_only()` required before add or RAII guard creation via `LoopbackExemptionGuard::new_confirmed(...)`.
+- Explicit safety latch: `LoopbackAdd::new(...).confirm_debug_only()` required before add or RAII guard creation via `LoopbackExemptionGuard::new_confirmed(...)`.
 
 ### `src/diag.rs` (`feature = "introspection"`)
 - `validate_configuration` emits `ConfigWarning` values for:
@@ -127,8 +127,8 @@ flowchart TD
 - `tests/`: Windows-heavy integration and API surface validation.
 - `examples/`: end-to-end demos (`acrun`, `network_demo`, `comprehensive_demo`, `advanced_features`, `rappct_demo`).
 - `scripts/`: local CI orchestration and policy checks.
-- `.github/workflows/`: hosted CI matrix and CodeQL.
-- `.gitlab-ci.yml`: GitLab branch/MR verification and tag-driven crates.io/GitLab release pipeline.
+- `.gitlab/`: GitLab issue and merge-request templates.
+- `.gitlab-ci.yml`: GitLab branch/MR verification, Rust security checks, and tag-driven crates.io/GitLab release pipeline.
 
 ## Data Models & Flows (Mermaid)
 Key data models:
@@ -247,8 +247,7 @@ Local governance commands:
 - `just ci-deep`: pre-push/full gate (`ci-fast` + full tests, security checks, docs).
 - Local matrix helper: `scripts/ci-local.ps1` (stable + MSRV toolchains and feature combinations).
 
-Hosted CI governance differences:
-- `.github/workflows/ci.yml` runs on `windows-latest` with Rust matrix (`stable`, `1.88.0`..`1.95.0`, `beta`, `nightly`) and feature matrix (`""`, `introspection`, `net`, `introspection,net`).
+Hosted CI governance:
 - GitLab branch/MR CI runs blocking Debian and macOS all-target/all-feature checks plus a Windows stable/MSRV feature matrix; beta and nightly Windows jobs are advisory.
 - GitLab jobs use explicit unprotected runner boundaries. Packaging and
   supply-chain helpers use repository-local temporary directories when safe;
@@ -256,9 +255,12 @@ Hosted CI governance differences:
   contract and rely on test-owned `.tmp/` scratch for file-backed cases.
   Runners must be provisioned with the required toolchains before assignment;
   jobs do not install host toolchains.
-- `.github/workflows/codeql.yml` adds GitHub CodeQL analysis (actions + rust categories).
-- GitHub CI and CodeQL remain active as mirror/fallback coverage until an exact-SHA GitLab parity pipeline is green and verified.
-- `.github/workflows/release.yml` is not used; release publishing is owned by protected GitLab tag pipelines on the Windows protected runner boundary, with `just release-gate-log` and `just release` retained as guarded local fallback tooling.
+- GitLab is the sole CI/CD provider. Rust security coverage is repository-native:
+  Clippy, cargo-deny, cargo-audit, duplicate-dependency policy, and deterministic
+  SBOM generation. GitLab SAST is not used because its supported-language list
+  does not include Rust and its container analyzers do not fit these shell
+  runner boundaries.
+- Release publishing is owned by protected GitLab tag pipelines on the Windows protected runner boundary, with `just release-gate-log` and `just release` retained as guarded local fallback tooling.
 
 Operational notes:
 - Loopback exemption tests and some job/process behavior tests are opt-in via env vars (`RAPPCT_ALLOW_NET_TESTS`, `RAPPCT_ALLOW_JOB_TESTS`, `RAPPCT_ITESTS`).
@@ -313,6 +315,7 @@ Operational notes:
 - `scripts/hygiene.ps1`
 - `scripts/enforce_advisory_policy.py`
 - `Justfile`
-- `.github/workflows/ci.yml`
-- `.github/workflows/codeql.yml`
+- `.gitlab-ci.yml`
+- `.gitlab/issue_templates/Bug.md`
+- `.gitlab/merge_request_templates/Default.md`
 - `scripts/release_version_check.ps1`

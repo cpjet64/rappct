@@ -1,5 +1,7 @@
 # Documented Promises Matrix
 
+> Historical audit snapshot. Findings may have been remediated; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 This matrix treats readable documentation as claims and current code behavior as source of truth. Claims that depend on corrupted modules are not accepted as implemented.
 
 | Promise | Source | Classification | Current evidence | Completion criteria |
@@ -27,4 +29,3 @@ This matrix treats readable documentation as claims and current code behavior as
 | Local-only crates.io publish flow | `RELEASE-CHECKLIST.md`, `Justfile`, `scripts/release*.ps1` | partial/stale | scripts exist; checklist has incomplete clean-tree tasks and stale published baseline. | Fresh `just release-gate-log` on clean tree, version check against current crates.io, explicit publish approval. |
 | No unattended publish | `docs/TOOLING.md`, `scripts/release.ps1` | implemented | script requires branch `main`, clean tree, and typed `PUBLISH`; auth prompt requires `FORCE` if no credential. | Keep as release policy; test dry-run on clean tree. |
 | Documentation generated via rustdoc and mdBook | `docs/TOOLING.md`, `docs/PROGRESS.md` | partial | mdBook was scaffolded, but prior note says `mdbook` was unavailable during generation. | `cargo doc --workspace --all-features --no-deps` and `mdbook build docs --dest-dir book` pass. |
-

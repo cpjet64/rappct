@@ -7,10 +7,14 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.14.0] - Unreleased
+
 ### Added
 
 - Restored `CHANGELOG.md` after accidental deletion and normalized historical entries.
 - Expanded targeted Windows coverage rounds, including LPAC override fallback behavior coverage.
+- Added owned process lifecycle control, suspended-process resume, bounded waits,
+  termination, and concurrent stdout/stderr capture.
 
 ### Changed
 
@@ -19,11 +23,18 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Updated lockfile dependency set, including `clap` and `tempfile`.
 - Removed the production-reachable `_test_helpers` feature and ambient LPAC/launch overrides.
 - Added capability catalog support and Windows security-capability construction previously prepared under the unpublished `0.13.4` heading.
+- Made `AcError` non-exhaustive and made loopback confirmation part of each
+  request instead of thread-local state.
 
 ### Fixed
 
 - Stabilized CI toolchain installation behavior and dependency pinning for reliability.
 - Replaced Mermaid-dependent docs index content with renderer-compatible Markdown mapping.
+- Corrected registry DACL access rights and preserved null DACL semantics.
+- Made profile-folder lookup fail closed instead of synthesizing a path.
+- Prevented process, thread, pipe, and job handle loss across launch failures.
+- Corrected UTF-16 encoding behavior on non-Windows targets and rejected
+  invalid custom environment keys.
 
 ## [0.13.3] - 2025-10-23
 

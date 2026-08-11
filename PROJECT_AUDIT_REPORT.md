@@ -1,5 +1,7 @@
 # Project Audit Report
 
+> Historical audit snapshot. Findings may have been remediated; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 Audit date: 2026-05-06  
 Repository: `E:\CursorAI\rappct`  
 Scope: read-only production-readiness audit of documentation, source, tests, CI, release scripts, security posture, examples, and legacy planning artifacts.
@@ -72,4 +74,3 @@ Primary reason: current checkout integrity is compromised. Production work must 
 4. Run full local gates: `just ci-fast`, then `just ci-deep`.
 5. Reconcile docs against restored source, deleting or clearly marking stale legacy release docs.
 6. Only then continue feature hardening and production polish.
-

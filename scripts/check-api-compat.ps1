@@ -62,9 +62,13 @@ $output | Write-Output
 
 $expected = @(
     "constructible_struct_adds_field",
+    "constructible_struct_adds_private_field",
+    "derive_trait_impl_removed",
     "enum_marked_non_exhaustive",
     "enum_variant_added",
+    "inherent_method_missing",
     "struct_missing"
+    "tuple_struct_to_plain_struct"
 )
 $found = [regex]::Matches($output, "(?m)^--- failure ([a-z0-9_]+):") |
     ForEach-Object { $_.Groups[1].Value } |

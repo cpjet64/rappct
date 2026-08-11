@@ -1,5 +1,7 @@
 # Production Readiness Gaps
 
+> Historical audit snapshot. Findings may have been remediated; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 | ID | Gap | Classification | Evidence | Production impact | Acceptance criteria |
 | --- | --- | --- | --- | --- | --- |
 | P1 | Core source files are corrupted | broken | `src/profile.rs`, `src/launch/mod.rs`, `src/token.rs` appear zeroed/corrupted. | Crate cannot be trusted, likely cannot compile. | Restore and pass full gates. |
@@ -33,4 +35,3 @@ just ci-deep
 scripts/ci-local.ps1
 just release-gate-log
 ```
-

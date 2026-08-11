@@ -156,34 +156,17 @@ impl AppContainerProfile {
             #[link(name = "Userenv")]
             unsafe extern "system" {
                 fn GetAppContainerFolderPath(
-                    pszAppContainerSid: windows::Win32::Security::PSID,
+                    pszAppContainerSid: windows::core::PCWSTR,
                     ppszPath: *mut windows::core::PWSTR,
                 ) -> windows::core::HRESULT;
             }
-            #[link(name = "Userenv")]
-            unsafe extern "system" {
-                fn DeriveAppContainerSidFromAppContainerName(
-                    name: windows::core::PCWSTR,
-                    sid: *mut windows::Win32::Security::PSID,
-                ) -> windows::core::HRESULT;
-            }
             use windows::core::PWSTR;
-            // SAFETY: Derive PSID from profile name, then query folder path returning CoTaskMem PWSTR.
+            // SAFETY: Query by a stable, NUL-terminated SDDL SID string. The returned path uses
+            // CoTaskMem allocation and is wrapped immediately on success.
             unsafe {
-                // Derive package PSID from name for folder query
-                let name_w = WideString::from_str(&self.name);
-                let mut psid = windows::Win32::Security::PSID(std::ptr::null_mut());
-                let hr_sid =
-                    DeriveAppContainerSidFromAppContainerName(name_w.as_pcwstr(), &mut psid);
-                if !hr_sid.is_ok() {
-                    return Err(AcError::Win32(format!(
-                        "DeriveAppContainerSidFromAppContainerName failed: 0x{hr_sid_code:08X}",
-                        hr_sid_code = hr_sid.0
-                    )));
-                }
-                let psid_owned = OwnedSid::from_freesid_psid(psid.0)?;
+                let sid_w = WideString::from_str(self.sid.as_string());
                 let mut out: PWSTR = PWSTR::null();
-                let hr = GetAppContainerFolderPath(psid_owned.as_psid(), &mut out);
+                let hr = GetAppContainerFolderPath(sid_w.as_pcwstr(), &mut out);
                 if hr.is_ok() {
                     if out.is_null() {
                         return Err(AcError::Win32(
@@ -211,16 +194,10 @@ impl AppContainerProfile {
                         // buffer even when HRESULT indicates failure.
                         let _ = crate::ffi::mem::CoTaskMem::<u16>::from_raw(out.0);
                     }
-                    // Fallback: synthesize under LocalAppData\Packages\{ProfileName}
-                    // AppContainer profile storage is keyed by the profile/package name,
-                    // not by the SID string.
-                    match std::env::var_os("LOCALAPPDATA") {
-                        Some(base) => Ok(PathBuf::from(base).join("Packages").join(&self.name)),
-                        None => Err(AcError::Win32(format!(
-                            "GetAppContainerFolderPath failed: 0x{hr_code:08X}",
-                            hr_code = hr.0
-                        ))),
-                    }
+                    Err(AcError::Win32(format!(
+                        "GetAppContainerFolderPath failed: 0x{hr_code:08X}",
+                        hr_code = hr.0
+                    )))
                 }
             }
         }

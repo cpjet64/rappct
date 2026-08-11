@@ -4,11 +4,6 @@ use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
 #[cfg(all(windows, feature = "net"))]
-use std::cell::RefCell;
-#[cfg(all(windows, feature = "net"))]
-use std::collections::HashSet;
-
-#[cfg(all(windows, feature = "net"))]
 mod windows_impl;
 
 /// Lists all registered AppContainer profiles and their display names from the firewall config.
@@ -30,11 +25,9 @@ pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
 /// Safety latch: force explicit acknowledgement before applying loopback exemptions.
 /// Marker type used to acknowledge loopback firewall exemptions in development builds.
 #[derive(Debug, Clone)]
-pub struct LoopbackAdd(pub AppContainerSid);
-
-#[cfg(all(windows, feature = "net"))]
-thread_local! {
-    static CONFIRMED_LOOPBACK_SIDS: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
+pub struct LoopbackAdd {
+    sid: AppContainerSid,
+    confirmed: bool,
 }
 
 /// Applies a loopback firewall exemption for the given AppContainer SID.
@@ -51,7 +44,7 @@ thread_local! {
 ///     Some("loopback demo"),
 /// )?;
 /// net::remove_loopback_exemption(&profile.sid).ok();
-/// net::add_loopback_exemption(net::LoopbackAdd(profile.sid.clone()).confirm_debug_only())?;
+/// net::add_loopback_exemption(net::LoopbackAdd::new(profile.sid.clone()).confirm_debug_only())?;
 /// profile.delete()?;
 /// # Ok(())
 /// # }
@@ -60,10 +53,7 @@ pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
     let _ = &req;
     #[cfg(all(windows, feature = "net"))]
     {
-        // Safety latch: require explicit confirm prior to call
-        let is_confirmed = CONFIRMED_LOOPBACK_SIDS
-            .with(|confirmed| confirmed.borrow_mut().remove(req.0.as_string()));
-        if !is_confirmed {
+        if !req.confirmed {
             return Err(AcError::AccessDenied {
                 context: "loopback exemption requires confirm_debug_only()".into(),
                 source: Box::new(std::io::Error::new(
@@ -72,7 +62,7 @@ pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
                 )),
             });
         }
-        windows_impl::set_loopback(true, &req.0)
+        windows_impl::set_loopback(true, &req.sid)
     }
     #[cfg(all(windows, not(feature = "net")))]
     {
@@ -114,15 +104,6 @@ pub struct LoopbackExemptionGuard {
 }
 
 impl LoopbackExemptionGuard {
-    /// Attempts to add a loopback exemption without implicit confirmation.
-    ///
-    /// This preserves the original constructor shape, but it no longer
-    /// auto-confirms the debug-only operation. Use [`Self::new_confirmed`] with
-    /// `LoopbackAdd(...).confirm_debug_only()` for the RAII flow.
-    pub fn new(sid: &AppContainerSid) -> Result<Self> {
-        Self::new_confirmed(LoopbackAdd(sid.clone()))
-    }
-
     /// Adds a loopback exemption from an explicitly confirmed request.
     ///
     /// Typical usage:
@@ -133,12 +114,12 @@ impl LoopbackExemptionGuard {
     /// # use rappct::{AppContainerProfile, net::{LoopbackAdd, LoopbackExemptionGuard}};
     /// # let profile = AppContainerProfile::ensure("rappct.guard", "guard", None).unwrap();
     /// let _guard = LoopbackExemptionGuard::new_confirmed(
-    ///     LoopbackAdd(profile.sid.clone()).confirm_debug_only(),
+    ///     LoopbackAdd::new(profile.sid.clone()).confirm_debug_only(),
     /// ).unwrap();
     /// # }
     /// ```
     pub fn new_confirmed(req: LoopbackAdd) -> Result<Self> {
-        let sid = req.0.clone();
+        let sid = req.sid.clone();
         super::net::add_loopback_exemption(req)?;
         Ok(Self { sid, active: true })
     }
@@ -146,8 +127,8 @@ impl LoopbackExemptionGuard {
     /// Removes the exemption immediately and disables the drop cleanup path.
     pub fn close(mut self) -> Result<()> {
         if self.active {
+            remove_loopback_exemption(&self.sid)?;
             self.active = false;
-            return remove_loopback_exemption(&self.sid);
         }
         Ok(())
     }
@@ -168,6 +149,14 @@ impl Drop for LoopbackExemptionGuard {
 }
 
 impl LoopbackAdd {
+    /// Creates an unconfirmed loopback-exemption request.
+    pub fn new(sid: AppContainerSid) -> Self {
+        Self {
+            sid,
+            confirmed: false,
+        }
+    }
+
     /// Confirms that the caller is intentionally requesting a loopback exemption.
     /// Without this acknowledgement `add_loopback_exemption` returns `AccessDenied`.
     ///
@@ -182,18 +171,15 @@ impl LoopbackAdd {
     ///     "Confirm",
     ///     Some("loopback confirm"),
     /// )?;
-    /// net::add_loopback_exemption(net::LoopbackAdd(profile.sid.clone()).confirm_debug_only())?;
+    /// net::add_loopback_exemption(
+    ///     net::LoopbackAdd::new(profile.sid.clone()).confirm_debug_only()
+    /// )?;
     /// profile.delete()?;
     /// # Ok(())
     /// # }
     /// ```
-    pub fn confirm_debug_only(self) -> Self {
-        #[cfg(all(windows, feature = "net"))]
-        {
-            CONFIRMED_LOOPBACK_SIDS.with(|confirmed| {
-                confirmed.borrow_mut().insert(self.0.as_string().to_owned());
-            });
-        }
+    pub fn confirm_debug_only(mut self) -> Self {
+        self.confirmed = true;
         self
     }
 }

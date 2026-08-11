@@ -2,7 +2,7 @@ use super::{repo_local_tempdir, resolve_cmd_exe};
 use rappct::{
     AppContainerProfile, KnownCapability, SecurityCapabilities, SecurityCapabilitiesBuilder,
     acl::{AccessMask, ResourcePath, grant_to_package},
-    launch::{JobLimits, LaunchOptions},
+    launch::{JobLimits, LaunchOptions, merge_parent_env},
     launch_in_container,
 };
 use std::{ffi::OsString, path::PathBuf, process::Command, thread, time::Duration};
@@ -10,8 +10,6 @@ use std::{ffi::OsString, path::PathBuf, process::Command, thread, time::Duration
 #[cfg(windows)]
 use rappct::launch::{StdioConfig, launch_in_container_with_io};
 #[cfg(windows)]
-use std::io::{BufRead, BufReader};
-
 /// Demo 5: Advanced Launch Options
 pub(crate) fn demo_advanced_launch() -> rappct::Result<()> {
     println!("=== DEMO 5: Advanced Launch Options ===");
@@ -58,7 +56,7 @@ fn run_normal_environment_probe() {
 }
 
 fn custom_launch_environment(task_temp: OsString) -> Vec<(OsString, OsString)> {
-    vec![
+    merge_parent_env(vec![
         (OsString::from("RAPPCT_DEMO"), OsString::from("advanced")),
         (
             OsString::from("ISOLATION_LEVEL"),
@@ -71,7 +69,7 @@ fn custom_launch_environment(task_temp: OsString) -> Vec<(OsString, OsString)> {
         (OsString::from("TEMP"), task_temp.clone()),
         (OsString::from("TMP"), task_temp.clone()),
         (OsString::from("TMPDIR"), task_temp),
-    ]
+    ])
 }
 
 fn advanced_launch_options(custom_env: Vec<(OsString, OsString)>) -> LaunchOptions {
@@ -138,9 +136,11 @@ pub(crate) fn demo_enhanced_io() -> rappct::Result<()> {
 
     let mut child_io = launch_in_container_with_io(&caps, &opts)?;
     println!("✓ Process launched with PID: {}", child_io.pid);
-    read_process_pipe("stdout", child_io.stdout.take());
-    read_process_pipe("stderr", child_io.stderr.take());
+    let capture = child_io.capture_output();
     child_io.wait(Some(Duration::from_secs(5)))?;
+    let output = capture.finish()?;
+    print_process_pipe("stdout", &output.stdout);
+    print_process_pipe("stderr", &output.stderr);
 
     profile.delete()?;
     println!("✓ Profile cleaned up\n");
@@ -159,16 +159,10 @@ fn enhanced_io_options() -> LaunchOptions {
 }
 
 #[cfg(windows)]
-fn read_process_pipe(label: &str, pipe: Option<std::fs::File>) {
-    if let Some(pipe) = pipe {
-        println!("\n→ Reading {label}:");
-        let reader = BufReader::new(pipe);
-        for line in reader.lines() {
-            match line {
-                Ok(content) => println!("  {}: {content}", label.to_uppercase()),
-                Err(e) => println!("  {} read error: {e}", label.to_uppercase()),
-            }
-        }
+fn print_process_pipe(label: &str, bytes: &[u8]) {
+    println!("\n→ Reading {label}:");
+    for line in String::from_utf8_lossy(bytes).lines() {
+        println!("  {}: {line}", label.to_uppercase());
     }
 }
 

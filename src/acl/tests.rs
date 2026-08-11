@@ -15,7 +15,7 @@ fn repo_local_tempdir(prefix: &str) -> tempfile::TempDir {
 
 #[test]
 fn constants_are_consistent() {
-    assert_eq!(AccessMask::GENERIC_ALL.0, 0x001F_01FF);
+    assert_eq!(AccessMask::GENERIC_ALL.0, 0x1000_0000);
     #[cfg(windows)]
     {
         use windows::Win32::Storage::FileSystem::{FILE_GENERIC_READ, FILE_GENERIC_WRITE};

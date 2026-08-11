@@ -52,7 +52,7 @@ fn loopback_config_sids() -> Result<Vec<String>> {
 #[test]
 fn loopback_requires_confirm() {
     let sid = derive_sid_from_name("rappct.test.net").expect("derive sid");
-    let res = net::add_loopback_exemption(net::LoopbackAdd(sid));
+    let res = net::add_loopback_exemption(net::LoopbackAdd::new(sid));
     match res {
         Err(AcError::AccessDenied { context, .. }) => {
             assert!(context.contains("confirm_debug_only"));
@@ -63,9 +63,9 @@ fn loopback_requires_confirm() {
 
 #[cfg(all(windows, feature = "net"))]
 #[test]
-fn loopback_guard_new_requires_confirm() {
+fn loopback_guard_requires_confirmed_request() {
     let sid = derive_sid_from_name("rappct.test.net.guard").expect("derive sid");
-    let res = net::LoopbackExemptionGuard::new(&sid);
+    let res = net::LoopbackExemptionGuard::new_confirmed(net::LoopbackAdd::new(sid));
     match res {
         Err(AcError::AccessDenied { context, .. }) => {
             assert!(context.contains("confirm_debug_only"));
@@ -100,7 +100,7 @@ fn loopback_add_remove_roundtrip() {
         "loopback config already contained test SID"
     );
 
-    net::add_loopback_exemption(net::LoopbackAdd(sid.clone()).confirm_debug_only())
+    net::add_loopback_exemption(net::LoopbackAdd::new(sid.clone()).confirm_debug_only())
         .expect("add loopback exemption");
 
     let after_add: HashSet<String> = loopback_config_sids()
@@ -118,7 +118,7 @@ fn loopback_add_remove_roundtrip() {
         "loopback config changed unexpectedly when adding exemption"
     );
 
-    let res = net::add_loopback_exemption(net::LoopbackAdd(sid.clone()));
+    let res = net::add_loopback_exemption(net::LoopbackAdd::new(sid.clone()));
     match res {
         Err(AcError::AccessDenied { context, .. }) => {
             assert!(context.contains("confirm_debug_only"));

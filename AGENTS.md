@@ -37,8 +37,8 @@ Unit tests typically sit alongside the code they cover (e.g., `src/capability.rs
 ## Code Size Guardrails
 Hand-authored source, tests, scripts, and executable configuration must stay at or below 500 physical lines per file. Functions, methods, handlers, block-bodied closures, tests, fixtures, and helpers must stay at or below 75 logical lines. Split by cohesive responsibility and never game these limits with compression, vague wrappers, visibility changes, or broad exclusions. Integration, end-to-end, contract, system, and workflow tests belong in dedicated test files; unit tests may stay co-located only when ecosystem-idiomatic, justified, and under the file limit. Generated, vendored, lockfile, snapshot, fixture, data, and migration files are inspected but not edited solely for line count; any exception requires a documented reason. Enforce with `python scripts/check_code_size.py`, `python scripts/hygiene.py`, `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features --locked -- -D warnings`, and `cargo test --all-targets --locked` with required feature sets.
 
-## Commit & Pull Request Guidelines
-Follow the existing history: short, lowercase, imperative subject lines with optional scopes (`ci:`, `test(windows):`). Reference related issues in the body when applicable. Pull requests should summarize the change, list any feature flags or examples to run, mention testing performed, and include screenshots or logs for user-facing demos. Keep PRs focused; split unrelated changes into separate submissions.
+## Commit & Merge Request Guidelines
+Follow the existing history: short, lowercase, imperative subject lines with optional scopes (`ci:`, `test(windows):`). Reference related issues in the body when applicable. Merge requests should summarize the change, list any feature flags or examples to run, mention testing performed, and include screenshots or logs for user-facing demos. Keep merge requests focused; split unrelated changes into separate submissions.
 
 ## Security & Configuration Tips
 Many modules are Windows-only. Clearly mark new APIs with `#[cfg(windows)]` or feature gates, and guard LPAC or firewall operations behind explicit checks (`supports_lpac()`, `LoopbackAdd::confirm_debug_only()`). Avoid introducing network calls in tests unless guarded behind the `net` feature to keep CI deterministic.
@@ -306,10 +306,14 @@ These Windows APIs are manually bound because they're not fully exposed in `wind
   hosted Windows Rust/toolchain and feature matrix on the explicit Windows
   unprotected boundary. Beta and nightly remain advisory; stable and the
   supported MSRV range are blocking.
-- Keep `.github/workflows/ci.yml` and `.github/workflows/codeql.yml` active as
-  mirror/fallback coverage until an exact-SHA GitLab parity pipeline is green
-  and its required outputs are verified. GitHub CodeQL is not implied by
-  ordinary GitLab lint/test jobs.
+- GitLab is the sole CI/CD and release provider. The GitHub repository is a
+  source mirror only and must not contain workflows, dependency bots, release
+  automation, or GitHub-specific contribution templates.
+- Rust security coverage is owned by repository-native GitLab jobs: Clippy,
+  cargo-deny, cargo-audit, duplicate-dependency policy, and deterministic SBOM
+  generation. Do not add GitLab SAST as a substitute unless GitLab documents
+  Rust support and the assigned shell-runner boundary can execute it without
+  containers or runtime toolchain installation.
 - Tag publication is accepted only from a protected tag on the explicit
   Windows protected runner boundary. Release credentials must remain protected
   CI variables and must never be exposed to branch or merge-request jobs.

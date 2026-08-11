@@ -71,9 +71,9 @@ cargo test --all-targets --locked
 - `just verify-version` - checks `Cargo.toml`, `Cargo.lock`, and tag/version alignment.
 - `just prepare-release-dry-run X.Y.Z` - previews the selected legacy/current baseline without changing files or Git state.
 - `just prepare-release X.Y.Z` - updates only version surfaces and promotes curated `Unreleased` notes for review.
-- `just test-release-flow` - validates legacy/current tag selection and non-publishing preparation in isolated fixture repositories.
+- `just test-release-flow` - validates tag selection, non-publishing preparation, and exact-byte published-crate evidence in isolated fixtures.
 - `just create-release-tag X.Y.Z` - verifies synchronized clean `main` and creates only a local `vX.Y.Z` tag.
-- `just api-compat` - checks the exact reviewed 0.14.0 API break classes against published 0.13.3 using `cargo-semver-checks` 0.49.0.
+- `just api-compat` - checks the exact eight reviewed 0.14.0 API break classes against published 0.13.3 using `cargo-semver-checks` 0.49.0.
 - `just release-surface` - verifies production test hooks are absent and compiles a locked downstream all-features consumer.
 - `just release-version-check` - checks local `Cargo.toml` version is greater than latest published crates.io version.
 - `just package-list` - runs `cargo package --list --allow-dirty --locked`.
@@ -100,7 +100,10 @@ cargo test --all-targets --locked
   repo-local `.tmp/` scratch internally.
 - Assigned runners must have the toolchains already provisioned; CI jobs do
   not install or mutate host toolchains.
-- GitHub Actions CI and CodeQL remain active as mirror/fallback coverage until an exact-SHA GitLab parity pipeline is green and verified.
+- GitLab is the sole CI/CD provider. Repository-native GitLab jobs provide Rust
+  security coverage through Clippy, cargo-deny, cargo-audit,
+  duplicate-dependency policy, and deterministic SBOM generation. The GitHub
+  repository is a source mirror only.
 - Protected tag pipelines use the Windows protected runner boundary to run `verify_release_windows` including `just release-version-check`, package `target/package/*.crate`, emit `*.crate.sha256`, `cargo-metadata.json`, and `rappct.cdx.json`, publish to crates.io using the protected `CARGO_REGISTRY_TOKEN`, upload the crate package to GitLab generic packages, and create/update the GitLab release.
 - `scripts/prepare-release.ps1` selects the highest reachable `vX.Y.Z` or legacy `rappct-vX.Y.Z` baseline and promotes curated `Unreleased` notes. It never commits, tags, pushes, or publishes.
 

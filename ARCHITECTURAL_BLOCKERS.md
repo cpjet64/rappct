@@ -1,5 +1,7 @@
 # Architectural Blockers
 
+> Historical audit snapshot. Findings may have been remediated; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 ## B1. Source Integrity Is Compromised
 
 Classification: broken  
@@ -111,4 +113,3 @@ just ci-fast
 just ci-deep
 scripts/ci-local.ps1
 ```
-

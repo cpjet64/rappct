@@ -1,5 +1,7 @@
 # Recommended Completion Plan
 
+> Historical audit snapshot. This plan has been superseded by the current remediation; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 This plan is ordered so ChatGPT or another agent can turn it into a production-grade `/goal` prompt. Do not implement feature work before Phase 0 is complete.
 
 ## Phase 0: Restore Repository Integrity
@@ -176,4 +178,3 @@ The project is production-ready only when:
 - Docs match source behavior.
 - Release gate passes with current crates.io baseline.
 - Privileged Windows behavior has explicit manual or automated evidence.
-

@@ -45,6 +45,17 @@ function Assert-Equal {
     if ($Expected -ne $Actual) { throw "$Message Expected '$Expected', got '$Actual'." }
 }
 
+function Assert-Fails {
+    param([scriptblock]$Action, [string]$Pattern, [string]$Message)
+    try {
+        & $Action
+    } catch {
+        if ($_.Exception.Message -match $Pattern) { return }
+        throw "$Message Unexpected error: $($_.Exception.Message)"
+    }
+    throw "$Message The command unexpectedly succeeded."
+}
+
 function Test-LegacyAndCanonicalBaselines {
     $legacy = New-FixtureRepository 'legacy'
     Invoke-Git $legacy tag rappct-v0.13.3
@@ -79,12 +90,54 @@ function Test-PreparationIsReviewOnly {
     }
 }
 
+function Test-PublishedCrateVerification {
+    $packageDir = Join-Path $scratchRoot 'published'
+    New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
+    $crateName = 'rappct-0.14.0.crate'
+    $packaged = Join-Path $packageDir $crateName
+    $published = Join-Path $scratchRoot 'published-copy.crate'
+    [System.IO.File]::WriteAllBytes($packaged, [byte[]](1, 3, 3, 7))
+    Copy-Item -LiteralPath $packaged -Destination $published
+
+    $relativePackage = $packageDir.Substring($repoRoot.TrimEnd('\', '/').Length).TrimStart('\', '/')
+    & (Join-Path $repoRoot 'scripts\verify-published-crate.ps1') `
+        -PackageDir $relativePackage -PublishedCratePath $published
+    $evidence = Get-Content -Raw -LiteralPath (Join-Path $packageDir "$crateName.published.sha256")
+    if ($evidence -notmatch '(?m)^crate=rappct-0\.14\.0\.crate$' -or
+        $evidence -notmatch '(?m)^version=0\.14\.0$' -or
+        $evidence -notmatch '(?m)^packaged_sha256=([0-9a-f]{64})$' -or
+        $evidence -notmatch '(?m)^published_sha256=([0-9a-f]{64})$') {
+        throw 'Published-crate evidence is incomplete.'
+    }
+
+    [System.IO.File]::WriteAllBytes($published, [byte[]](9, 9, 9))
+    Assert-Fails {
+        & (Join-Path $repoRoot 'scripts\verify-published-crate.ps1') `
+            -PackageDir $relativePackage -PublishedCratePath $published
+    } 'does not match packaged hash' 'Mismatched published bytes were accepted.'
+}
+
+function Test-PublishedCrateInputValidation {
+    Assert-Fails {
+        & (Join-Path $repoRoot 'scripts\verify-published-crate.ps1') `
+            -PackageDir '..\outside-repository' -PublishedCratePath 'missing'
+    } 'must stay inside the repository' 'An external package directory was accepted.'
+    Assert-Fails {
+        & (Join-Path $repoRoot 'scripts\verify-published-crate.ps1') -Attempts 0
+    } 'Attempts' 'A zero retry count was accepted.'
+    Assert-Fails {
+        & (Join-Path $repoRoot 'scripts\verify-published-crate.ps1') -DelaySeconds -1
+    } 'DelaySeconds' 'A negative retry delay was accepted.'
+}
+
 if (Test-Path -LiteralPath $scratchRoot) {
     Remove-Item -LiteralPath $scratchRoot -Recurse -Force
 }
 try {
     Test-LegacyAndCanonicalBaselines
     Test-PreparationIsReviewOnly
+    Test-PublishedCrateVerification
+    Test-PublishedCrateInputValidation
     Write-Host 'release-flow tests passed'
 } finally {
     if (Test-Path -LiteralPath $scratchRoot) {

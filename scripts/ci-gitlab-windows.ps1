@@ -132,22 +132,9 @@ function Invoke-FeatureTests {
     Invoke-NativeChecked -Label "tests ($RustToolchain, $FeatureSet)" -Action { cargo @arguments }
 }
 
-function Invoke-DependencyTree {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$ToolchainArgument,
-
-        [Parameter(Mandatory = $true)]
-        [string]$FeatureSet
-    )
-
-    $treeArguments = @($toolchainArgument, 'tree', '-d', '--locked')
-    if ($FeatureSet -ne 'none') {
-        $treeArguments += @('--features', $FeatureSet)
-    }
-
-    Invoke-NativeChecked -Label "dependency tree ($FeatureSet)" -Action {
-        cargo @treeArguments
+function Invoke-DependencyPolicy {
+    Invoke-NativeChecked -Label 'duplicate dependency policy' -Action {
+        python scripts/check_duplicate_dependencies.py
     }
 }
 
@@ -204,8 +191,8 @@ function Invoke-GitLabWindowsCi {
         -FeatureSet $FeatureSet `
         -TestFeatures $testFeatures
 
-    if ($RustToolchain -eq 'stable') {
-        Invoke-DependencyTree -ToolchainArgument $toolchainArgument -FeatureSet $FeatureSet
+    if ($RustToolchain -eq 'stable' -and $FeatureSet -eq 'none') {
+        Invoke-DependencyPolicy
     }
 
     if ($RustToolchain -eq 'stable') {

@@ -54,6 +54,6 @@ fn api_reexports_are_accessible() {
         let sid = AppContainerSid::from_sddl("S-1-15-2-1");
         let _ = list_appcontainers as fn() -> Result<Vec<(AppContainerSid, String)>>;
         let _ = add_loopback_exemption as fn(LoopbackAdd) -> Result<()>;
-        let _ = LoopbackAdd(sid);
+        let _ = LoopbackAdd::new(sid);
     }
 }

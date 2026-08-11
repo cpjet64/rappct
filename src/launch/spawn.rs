@@ -12,9 +12,11 @@ use crate::ffi::handles::{self, Handle as FHandle};
 use crate::ffi::wstr::WideString;
 use crate::{AcError, Result};
 use core::ffi::c_void;
+use windows::Win32::Foundation::{CloseHandle, WAIT_OBJECT_0};
 use windows::Win32::System::Threading::{
     CREATE_SUSPENDED, CREATE_UNICODE_ENVIRONMENT, CreateProcessW, EXTENDED_STARTUPINFO_PRESENT,
-    PROCESS_CREATION_FLAGS, PROCESS_INFORMATION, STARTUPINFOEXW,
+    INFINITE, PROCESS_CREATION_FLAGS, PROCESS_INFORMATION, STARTUPINFOEXW, TerminateProcess,
+    WaitForSingleObject,
 };
 use windows::core::{PCWSTR, PWSTR};
 
@@ -26,7 +28,7 @@ struct ProcessInputs {
 }
 
 struct ChildHandles {
-    thread: FHandle,
+    thread: Option<FHandle>,
     process: FHandle,
 }
 
@@ -55,12 +57,28 @@ pub(super) fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> R
     )?;
     drop(inherit_list);
 
-    let child = process_handles(pi)?;
-    let job_guard = job::create_job_guard(opts.join_job.as_ref(), child.process.as_win32())?;
-    drop(child.thread);
-    startup::wait_for_startup(opts, child.process.as_win32())?;
-
-    Ok(launched_io(pi.dwProcessId, stdio, child.process, job_guard))
+    let mut child = process_handles(pi)?;
+    let job_guard = match prepare_child(opts, &child) {
+        Ok(guard) => guard,
+        Err(error) => {
+            return match terminate_and_reap(&child.process) {
+                Ok(()) => Err(error),
+                Err(cleanup) => Err(post_spawn_cleanup_error(error, cleanup)),
+            };
+        }
+    };
+    let suspended_thread = if opts.suspended {
+        child.thread.take()
+    } else {
+        None
+    };
+    Ok(launched_io(
+        pi.dwProcessId,
+        stdio,
+        child.process,
+        suspended_thread,
+        job_guard,
+    ))
 }
 
 pub(super) fn make_cmd_args(cmdline: &Option<String>) -> Option<Vec<u16>> {
@@ -173,17 +191,37 @@ fn create_child_process(
 }
 
 fn process_handles(pi: PROCESS_INFORMATION) -> Result<ChildHandles> {
-    let thread = handles::from_win32(pi.hThread)
-        .map_err(|_| AcError::Win32("invalid thread handle".into()))?;
-    let process = handles::from_win32(pi.hProcess)
-        .map_err(|_| AcError::Win32("invalid process handle".into()))?;
-    Ok(ChildHandles { thread, process })
+    let process = match handles::from_win32(pi.hProcess) {
+        Ok(process) => process,
+        Err(_) => {
+            // SAFETY: CreateProcessW transferred ownership of hThread to this function.
+            unsafe {
+                let _ = CloseHandle(pi.hThread);
+            }
+            return Err(AcError::Win32("invalid process handle".into()));
+        }
+    };
+    let thread = match handles::from_win32(pi.hThread) {
+        Ok(thread) => thread,
+        Err(_) => {
+            let original = AcError::Win32("invalid thread handle".into());
+            return match terminate_and_reap(&process) {
+                Ok(()) => Err(original),
+                Err(cleanup) => Err(post_spawn_cleanup_error(original, cleanup)),
+            };
+        }
+    };
+    Ok(ChildHandles {
+        thread: Some(thread),
+        process,
+    })
 }
 
 fn launched_io(
     pid: u32,
     stdio: StdioSetupResult,
     process: FHandle,
+    suspended_thread: Option<FHandle>,
     job_guard: Option<job::JobGuard>,
 ) -> LaunchedIo {
     LaunchedIo {
@@ -192,7 +230,62 @@ fn launched_io(
         stdout: stdio.parent_stdout.map(|h| h.into_file()),
         stderr: stdio.parent_stderr.map(|h| h.into_file()),
         job_guard,
-        process,
+        control: super::ProcessControl {
+            process,
+            suspended_thread,
+        },
+    }
+}
+
+fn prepare_child(opts: &LaunchOptions, child: &ChildHandles) -> Result<Option<job::JobGuard>> {
+    let guard = job::create_job_guard(opts.join_job.as_ref(), child.process.as_win32())?;
+    startup::wait_for_startup(opts, child.process.as_win32())?;
+    Ok(guard)
+}
+
+pub(super) fn terminate_and_reap(process: &FHandle) -> Result<()> {
+    // SAFETY: The process handle remains owned and live for both calls. A successful
+    // TerminateProcess guarantees eventual signaling, so the infinite reap wait cannot
+    // strand a still-running child. A failed termination is probed without blocking.
+    match unsafe { TerminateProcess(process.as_win32(), 1) } {
+        Ok(()) => {
+            // SAFETY: Successful termination guarantees eventual process signaling.
+            let wait = unsafe { WaitForSingleObject(process.as_win32(), INFINITE) };
+            if wait == WAIT_OBJECT_0 {
+                Ok(())
+            } else {
+                Err(cleanup_failure(format!("process reap failed: {wait:?}")))
+            }
+        }
+        Err(terminate_error) => {
+            // SAFETY: Zero-time probe on the still-owned process handle cannot block.
+            let wait = unsafe { WaitForSingleObject(process.as_win32(), 0) };
+            if wait == WAIT_OBJECT_0 {
+                Ok(())
+            } else {
+                Err(cleanup_failure(format!(
+                    "TerminateProcess failed: {terminate_error}; process state: {wait:?}"
+                )))
+            }
+        }
+    }
+}
+
+fn cleanup_failure(message: String) -> AcError {
+    AcError::LaunchFailed {
+        stage: "post_spawn_cleanup",
+        hint: "terminate and reap spawned child",
+        source: Box::new(std::io::Error::other(message)),
+    }
+}
+
+fn post_spawn_cleanup_error(original: AcError, cleanup: AcError) -> AcError {
+    AcError::LaunchFailed {
+        stage: "post_spawn_cleanup",
+        hint: "child cleanup failed after launch setup error",
+        source: Box::new(std::io::Error::other(format!(
+            "launch setup error: {original}; cleanup error: {cleanup}"
+        ))),
     }
 }
 

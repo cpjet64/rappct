@@ -25,7 +25,7 @@ Key APIs:
 - `remove_loopback_exemption(...)`
 - `LoopbackExemptionGuard::new_confirmed(...)`
 
-Use only in development/debug workflows. Loopback exemption changes host firewall policy, and every add path requires `LoopbackAdd(...).confirm_debug_only()` before mutation.
+Use only in development/debug workflows. Loopback exemption changes host firewall policy, and every add path requires `LoopbackAdd::new(...).confirm_debug_only()` before mutation.
 
 ## Related Docs
 

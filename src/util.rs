@@ -20,12 +20,17 @@ pub mod win {
 
 #[cfg(not(windows))]
 pub mod win {
-    /// Non-Windows stub conversion; returns an empty buffer.
-    pub fn to_utf16(_s: &str) -> Vec<u16> {
-        Vec::new()
+    /// Converts a Rust string into portable, null-terminated UTF-16.
+    pub fn to_utf16(s: &str) -> Vec<u16> {
+        s.encode_utf16().chain(std::iter::once(0)).collect()
     }
-    pub fn to_utf16_os(_s: &std::ffi::OsStr) -> Vec<u16> {
-        Vec::new()
+
+    /// Converts a platform string lossily into portable, null-terminated UTF-16.
+    pub fn to_utf16_os(s: &std::ffi::OsStr) -> Vec<u16> {
+        s.to_string_lossy()
+            .encode_utf16()
+            .chain(std::iter::once(0))
+            .collect()
     }
 }
 
@@ -37,7 +42,6 @@ pub use win::to_utf16_os;
 pub use win::{to_utf16, to_utf16_os};
 
 #[cfg(test)]
-#[cfg(windows)]
 mod tests {
     use std::ffi::OsStr;
 

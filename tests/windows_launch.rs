@@ -17,6 +17,9 @@ mod diagnostics;
 #[path = "windows_launch/job.rs"]
 mod job;
 #[cfg(windows)]
+#[path = "windows_launch/lifecycle.rs"]
+mod lifecycle;
+#[cfg(windows)]
 #[path = "windows_launch/stdio.rs"]
 mod stdio;
 #[cfg(windows)]

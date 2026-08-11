@@ -33,8 +33,6 @@ use std::{
 use rappct::launch::{StdioConfig, launch_in_container_with_io};
 
 #[cfg(windows)]
-use std::io::{BufRead, BufReader};
-
 type DemoEntry = (&'static str, fn() -> rappct::Result<()>);
 
 #[path = "comprehensive_demo/file_acls.rs"]
@@ -318,25 +316,22 @@ fn demo_io_redirection() -> rappct::Result<()> {
     println!("✓ Process launched with PID: {}", child_io.pid);
 
     println!("\n→ Reading piped output:");
-
-    if let Some(stdout) = child_io.stdout.take() {
-        let reader = BufReader::new(stdout);
-        println!("  STDOUT:");
-        for line in reader.lines().map_while(Result::ok) {
-            println!("    > {line}");
-        }
-    }
-
-    if let Some(stderr) = child_io.stderr.take() {
-        let reader = BufReader::new(stderr);
-        println!("  STDERR:");
-        for line in reader.lines().map_while(Result::ok) {
-            println!("    > {line}");
-        }
-    }
+    let capture = child_io.capture_output();
+    child_io.wait(Some(std::time::Duration::from_secs(5)))?;
+    let output = capture.finish()?;
+    print_captured_stream("STDOUT", &output.stdout);
+    print_captured_stream("STDERR", &output.stderr);
 
     profile.delete()?;
     Ok(())
+}
+
+#[cfg(windows)]
+fn print_captured_stream(label: &str, bytes: &[u8]) {
+    println!("  {label}:");
+    for line in String::from_utf8_lossy(bytes).lines() {
+        println!("    > {line}");
+    }
 }
 
 #[cfg(not(windows))]

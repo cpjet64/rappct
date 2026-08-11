@@ -42,6 +42,11 @@ pub(crate) fn make_wide_block(entries: &[(OsString, OsString)]) -> Result<WideBl
                 "invalid environment key: embedded NUL is not allowed".into(),
             ));
         }
+        if key.encode_wide().any(|ch| ch == b'=' as u16) {
+            return Err(AcError::Win32(
+                "invalid environment key: '=' is not allowed".into(),
+            ));
+        }
         if value.encode_wide().any(|ch| ch == 0) {
             return Err(AcError::Win32(
                 "invalid environment value: embedded NUL is not allowed".into(),
@@ -153,5 +158,12 @@ mod tests {
     fn make_block_rejects_empty_key() {
         let err = make_wide_block(&[(OsString::from(""), OsString::from("value"))]).unwrap_err();
         assert!(err.to_string().contains("empty key"));
+    }
+
+    #[test]
+    fn make_block_rejects_key_containing_equals() {
+        let err =
+            make_wide_block(&[(OsString::from("BAD=KEY"), OsString::from("value"))]).unwrap_err();
+        assert!(err.to_string().contains("'=' is not allowed"));
     }
 }

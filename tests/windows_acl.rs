@@ -1,7 +1,7 @@
 #[cfg(windows)]
-use rappct::AppContainerProfile;
-#[cfg(windows)]
 use rappct::acl::{self, AccessMask, ResourcePath};
+#[cfg(windows)]
+use rappct::derive_sid_from_name;
 
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
@@ -11,7 +11,7 @@ use windows::Win32::Foundation::HANDLE;
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::{
     ConvertSecurityDescriptorToStringSecurityDescriptorW, GetNamedSecurityInfoW, GetSecurityInfo,
-    SDDL_REVISION_1, SE_FILE_OBJECT, SE_REGISTRY_KEY,
+    SDDL_REVISION_1, SE_FILE_OBJECT, SE_REGISTRY_KEY, SetNamedSecurityInfoW,
 };
 #[cfg(windows)]
 use windows::Win32::Security::{ACL, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR};
@@ -142,6 +142,32 @@ fn security_sddl_for_path(path: &std::path::Path) -> String {
 }
 
 #[cfg(windows)]
+fn path_has_null_dacl(path: &std::path::Path) -> bool {
+    unsafe {
+        let path_w: Vec<u16> = path
+            .as_os_str()
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        let mut sd = PSECURITY_DESCRIPTOR::default();
+        let mut dacl: *mut ACL = std::ptr::null_mut();
+        let status = GetNamedSecurityInfoW(
+            PCWSTR(path_w.as_ptr()),
+            SE_FILE_OBJECT,
+            DACL_SECURITY_INFORMATION,
+            None,
+            None,
+            Some(&mut dacl),
+            None,
+            &mut sd,
+        );
+        assert_eq!(status.0, 0, "GetNamedSecurityInfoW failed: {status:?}");
+        let _sd = LocalAlloc::<u8>::from_raw(sd.0 as *mut u8);
+        dacl.is_null()
+    }
+}
+
+#[cfg(windows)]
 fn parse_registry_spec(spec: &str) -> Option<(HKEY, Vec<u16>)> {
     let up = spec.to_ascii_uppercase();
     let (root, rest) = if up.strip_prefix("HKCU\\").is_some() {
@@ -205,7 +231,6 @@ fn security_sddl_for_registry(spec: &str) -> String {
 }
 
 #[cfg(windows)]
-#[test]
 fn grant_to_package_updates_file_dacl() {
     use std::io::Write;
 
@@ -214,9 +239,8 @@ fn grant_to_package_updates_file_dacl() {
     writeln!(&mut temp.as_file().try_clone().unwrap(), "hello").unwrap();
 
     let name = format!("rappct.test.acl.file.{}", std::process::id());
-    let profile =
-        AppContainerProfile::ensure(&name, "rappct acl", Some("acl test")).expect("ensure profile");
-    let sid_str = profile.sid.as_string().to_string();
+    let sid = derive_sid_from_name(&name).expect("derive package SID");
+    let sid_str = sid.as_string().to_string();
 
     let before = security_sddl_for_path(&path);
     assert!(
@@ -224,33 +248,59 @@ fn grant_to_package_updates_file_dacl() {
         "pre-grant DACL unexpectedly contained test SID: {before}"
     );
 
-    acl::grant_to_package(
-        ResourcePath::File(path.clone()),
-        &profile.sid,
-        AccessMask(0x120089),
-    )
-    .expect("grant file access");
+    acl::grant_to_package(ResourcePath::File(path.clone()), &sid, AccessMask(0x120089))
+        .expect("grant file access");
 
     let after = security_sddl_for_path(&path);
     assert!(
         after.contains(&sid_str),
         "post-grant DACL missing SID {sid_str}: {after}"
     );
-
-    profile.delete().ok();
 }
 
 #[cfg(windows)]
-#[test]
+fn grant_preserves_existing_null_file_dacl() {
+    let temp = repo_local_named_tempfile("null-dacl-");
+    let path = temp.path().to_path_buf();
+    let path_w: Vec<u16> = path
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let status = unsafe {
+        SetNamedSecurityInfoW(
+            PCWSTR(path_w.as_ptr()),
+            SE_FILE_OBJECT,
+            DACL_SECURITY_INFORMATION,
+            None,
+            None,
+            None,
+            None,
+        )
+    };
+    assert_eq!(status.0, 0, "set null DACL failed: {status:?}");
+    assert!(path_has_null_dacl(&path));
+
+    let sid = derive_sid_from_name("rappct.test.acl.null").expect("derive package SID");
+    acl::grant_to_package(ResourcePath::File(path.clone()), &sid, AccessMask(0x120089))
+        .expect("null DACL already grants requested access");
+    assert!(path_has_null_dacl(&path), "grant replaced the null DACL");
+}
+
+#[cfg(windows)]
 fn grant_to_package_updates_registry_dacl() {
     use std::ffi::OsStr;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     let name = format!("rappct.test.acl.reg.{}", std::process::id());
-    let profile =
-        AppContainerProfile::ensure(&name, "rappct acl", Some("acl test")).expect("ensure profile");
-    let sid_str = profile.sid.as_string().to_string();
+    let sid = derive_sid_from_name(&name).expect("derive package SID");
+    let sid_str = sid.as_string().to_string();
 
-    let subkey = format!(r"Software\\rappct\\acl\\{}", std::process::id());
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system clock")
+        .as_nanos();
+    let subkey = format!(r"Software\rappct-acl-{}-{nonce}", std::process::id());
     let w: Vec<u16> = OsStr::new(&subkey)
         .encode_wide()
         .chain(std::iter::once(0))
@@ -286,7 +336,7 @@ fn grant_to_package_updates_registry_dacl() {
 
     acl::grant_to_package(
         ResourcePath::RegistryKey(full_spec.clone()),
-        &profile.sid,
+        &sid,
         AccessMask(0x20019),
     )
     .expect("grant registry access");
@@ -300,20 +350,17 @@ fn grant_to_package_updates_registry_dacl() {
     unsafe {
         let _ = RegDeleteTreeW(HKEY_CURRENT_USER, PCWSTR(w.as_ptr()));
     }
-    profile.delete().ok();
 }
 
 #[cfg(windows)]
-#[test]
 fn grant_to_package_updates_directory_custom_dacl() {
     let root = repo_local_tempdir("custom-dacl-");
     let dir_path = root.path().join("acl-dir");
     std::fs::create_dir_all(&dir_path).expect("create dir");
 
     let name = format!("rappct.test.acl.dir.{}", std::process::id());
-    let profile =
-        AppContainerProfile::ensure(&name, "rappct acl", Some("acl test")).expect("ensure profile");
-    let sid_str = profile.sid.as_string().to_string();
+    let sid = derive_sid_from_name(&name).expect("derive package SID");
+    let sid_str = sid.as_string().to_string();
 
     let before = security_sddl_for_path(&dir_path);
     assert!(
@@ -323,7 +370,7 @@ fn grant_to_package_updates_directory_custom_dacl() {
 
     acl::grant_to_package(
         ResourcePath::DirectoryCustom(dir_path.clone(), acl::AceInheritance::OBJECTS_ONLY),
-        &profile.sid,
+        &sid,
         AccessMask(0x120089),
     )
     .expect("grant directory access");
@@ -333,21 +380,17 @@ fn grant_to_package_updates_directory_custom_dacl() {
         after.contains(&sid_str),
         "post-grant directory DACL missing SID {sid_str}: {after}"
     );
-
-    profile.delete().ok();
 }
 
 #[cfg(windows)]
-#[test]
 fn grant_to_package_updates_directory_default_inheritance_dacl() {
     let root = repo_local_tempdir("default-inheritance-dacl-");
     let dir_path = root.path().join("acl-dir-default");
     std::fs::create_dir_all(&dir_path).expect("create dir");
 
     let name = format!("rappct.test.acl.dir.default.{}", std::process::id());
-    let profile =
-        AppContainerProfile::ensure(&name, "rappct acl", Some("acl test")).expect("ensure profile");
-    let sid_str = profile.sid.as_string().to_string();
+    let sid = derive_sid_from_name(&name).expect("derive package SID");
+    let sid_str = sid.as_string().to_string();
 
     let before = security_sddl_for_path(&dir_path);
     assert!(
@@ -357,7 +400,7 @@ fn grant_to_package_updates_directory_default_inheritance_dacl() {
 
     acl::grant_to_package(
         ResourcePath::Directory(dir_path.clone()),
-        &profile.sid,
+        &sid,
         AccessMask(0x120089),
     )
     .expect("grant directory access");
@@ -367,6 +410,14 @@ fn grant_to_package_updates_directory_default_inheritance_dacl() {
         after.contains(&sid_str),
         "post-grant directory DACL missing SID {sid_str}: {after}"
     );
+}
 
-    profile.delete().ok();
+#[cfg(windows)]
+#[test]
+fn acl_grant_contracts() {
+    grant_to_package_updates_registry_dacl();
+    grant_to_package_updates_file_dacl();
+    grant_preserves_existing_null_file_dacl();
+    grant_to_package_updates_directory_custom_dacl();
+    grant_to_package_updates_directory_default_inheritance_dacl();
 }

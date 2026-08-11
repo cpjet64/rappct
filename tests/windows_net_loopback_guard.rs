@@ -27,7 +27,7 @@ fn loopback_guard_roundtrip_opt_in() {
 
     // Add via guard
     let guard =
-        LoopbackExemptionGuard::new_confirmed(LoopbackAdd(sid.clone()).confirm_debug_only())
+        LoopbackExemptionGuard::new_confirmed(LoopbackAdd::new(sid.clone()).confirm_debug_only())
             .expect("guard new");
     // Query and ensure present
     assert!(loopback_config_contains(sid.as_string()).expect("query after add"));

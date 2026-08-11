@@ -1,5 +1,7 @@
 # Security and Reliability Review
 
+> Historical audit snapshot. Findings may have been remediated; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 ## Security Posture Summary
 
 The intended project is security-sensitive. It manipulates Windows AppContainer profiles, capability SIDs, process creation attributes, ACLs, token inspection, job objects, and firewall loopback exemptions. The readable design favors RAII ownership and explicit feature gates, but current repository corruption prevents production assurance.

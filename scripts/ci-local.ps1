@@ -137,12 +137,11 @@ function Invoke-RustFeatureGate {
     }
 
     if ($CheckDependencies) {
-        $treeArgs = @('tree', '-d', '--locked')
-        if ($Feature -ne '') { $treeArgs += @('--features', $Feature) }
-        Invoke-CargoChecked `
-            -Label "duplicate dependency check ($Toolchain, $featureLabel)" `
-            -Toolchain $Toolchain `
-            -Arguments $treeArgs
+        Write-Host "[ci-local] duplicate dependency policy"
+        python scripts/check_duplicate_dependencies.py
+        if ($LASTEXITCODE -ne 0) {
+            throw "[ci-local] duplicate dependency policy failed with exit code $LASTEXITCODE"
+        }
     }
 }
 

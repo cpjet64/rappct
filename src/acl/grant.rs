@@ -13,7 +13,7 @@ use windows::Win32::Security::{
     ACE_FLAGS, ACL, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR, PSID,
 };
 use windows::Win32::System::Registry::{
-    HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WRITE, RegCloseKey, RegOpenKeyExW,
+    HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_SAM_FLAGS, RegCloseKey, RegOpenKeyExW,
 };
 use windows::core::{PCWSTR, PWSTR};
 
@@ -107,6 +107,9 @@ fn grant_file_system_path(
 ) -> Result<()> {
     let path_w = crate::ffi::wstr::to_utf16_os(path.as_os_str());
     let dacl = read_named_dacl(&path_w)?;
+    if dacl.old_dacl.is_null() {
+        return Ok(());
+    }
     let new_dacl = merge_dacl(
         dacl.old_dacl,
         access,
@@ -161,6 +164,9 @@ fn grant_registry_key(spec: &str, access: u32, trustee: TRUSTEE_W) -> Result<()>
     let (root, subkey_w) = parse_registry_root(spec)?;
     let key = RegistryKeyHandle::open(root, &subkey_w)?;
     let dacl = read_registry_dacl(key.raw())?;
+    if dacl.old_dacl.is_null() {
+        return Ok(());
+    }
     let new_dacl = merge_dacl(
         dacl.old_dacl,
         access,
@@ -199,13 +205,13 @@ struct RegistryKeyHandle(HKEY);
 impl RegistryKeyHandle {
     fn open(root: HKEY, subkey_w: &[u16]) -> Result<Self> {
         let mut hkey = HKEY(std::ptr::null_mut());
-        // SAFETY: Open the registry key under the parsed root with read/write access.
+        // SAFETY: Open the key with only the rights required to read and replace its DACL.
         let status = unsafe {
             RegOpenKeyExW(
                 root,
                 PCWSTR(subkey_w.as_ptr()),
                 Some(0),
-                KEY_READ | KEY_WRITE,
+                REG_SAM_FLAGS(0x0002_0000 | 0x0004_0000),
                 &mut hkey,
             )
         };

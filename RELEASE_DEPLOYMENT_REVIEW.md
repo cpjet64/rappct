@@ -1,5 +1,7 @@
 # Release and Deployment Review
 
+> Historical audit snapshot. Findings may have been remediated; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 ## Current Release Model
 
 Readable current root docs describe a local-only crates.io release flow:
@@ -52,4 +54,3 @@ This is a Rust library crate with examples and no long-running service deploymen
 - crates.io version is semver-correct and greater than published baseline.
 - Examples and CLI compile and run on supported Windows hosts.
 - Security-sensitive optional operations are documented with privilege and host-mutation requirements.
-

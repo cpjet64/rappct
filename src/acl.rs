@@ -45,7 +45,7 @@ pub struct AccessMask(pub u32);
 
 impl AccessMask {
     /// Full (generic) access commonly used in examples/tests.
-    pub const GENERIC_ALL: Self = Self(0x001F_01FF);
+    pub const GENERIC_ALL: Self = Self(0x1000_0000);
 
     /// FILE_GENERIC_READ access mask.
     #[cfg(windows)]

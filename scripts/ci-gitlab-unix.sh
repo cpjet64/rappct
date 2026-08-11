@@ -69,6 +69,7 @@ cargo -V
 
 "$python_cmd" scripts/hygiene.py
 "$python_cmd" scripts/check_code_size.py
+"$python_cmd" scripts/check_duplicate_dependencies.py
 cargo fmt --all -- --check
 cargo clippy --all-targets --all-features --locked -- -D warnings
 cargo build --all-targets --all-features --locked

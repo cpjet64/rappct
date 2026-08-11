@@ -2,12 +2,15 @@
 use rappct::*;
 
 #[cfg(windows)]
-#[test]
+fn profile_name(scope: &str) -> String {
+    format!("rappct.test.launch.{scope}.{}", std::process::id())
+}
+
+#[cfg(windows)]
 fn profile_ensure_and_delete_roundtrip() {
-    // Use a quasi-unique name to avoid collisions
-    let name = format!("rappct.test.{}", std::process::id());
-    let prof =
-        AppContainerProfile::ensure(&name, &name, Some("rappct test")).expect("ensure profile");
+    let name = profile_name("prof");
+    let prof = AppContainerProfile::ensure(&name, "rappct test", Some("rappct test"))
+        .expect("ensure profile");
     assert!(prof.sid.as_string().starts_with("S-1-15-"));
     // Folder path and named object path should resolve
     let _folder = prof.folder_path().expect("folder path");
@@ -18,10 +21,9 @@ fn profile_ensure_and_delete_roundtrip() {
 }
 
 #[cfg(windows)]
-#[test]
 fn profile_open_resolves_existing_name() {
-    let name = format!("rappct.test.profile.open.{}", std::process::id());
-    let first = AppContainerProfile::ensure(&name, &name, Some("rappct open test"))
+    let name = profile_name("open");
+    let first = AppContainerProfile::ensure(&name, "rappct open", Some("rappct open test"))
         .expect("ensure profile");
     let first_sid = first.sid.as_string().to_string();
     drop(first);
@@ -32,7 +34,6 @@ fn profile_open_resolves_existing_name() {
 }
 
 #[cfg(windows)]
-#[test]
 fn profile_open_matches_derived_sid_for_name() {
     let name = "rappct.invalid\\name";
     let derived = derive_sid_from_name(name).expect("derive sid");
@@ -41,10 +42,10 @@ fn profile_open_matches_derived_sid_for_name() {
 }
 
 #[cfg(windows)]
-#[test]
 fn profile_ensure_existing_handles_metadata_mismatch() {
-    let name = format!("rappct.test.profile.ensure.{}", std::process::id());
-    let first = AppContainerProfile::ensure(&name, &name, Some("display one")).expect("ensure");
+    let name = profile_name("meta");
+    let first =
+        AppContainerProfile::ensure(&name, "rappct ensure", Some("display one")).expect("ensure");
     let sid_first = first.sid.as_string().to_string();
     drop(first);
     let second = AppContainerProfile::ensure(&name, "different display", Some("display two"))
@@ -58,11 +59,10 @@ fn profile_ensure_existing_handles_metadata_mismatch() {
 }
 
 #[cfg(windows)]
-#[test]
-fn profile_folder_path_fallback_after_delete() {
-    use std::path::PathBuf;
-    let name = format!("rappct.test.profile.folder.{}", std::process::id());
-    let prof = AppContainerProfile::ensure(&name, &name, Some("folder test")).expect("ensure");
+fn profile_folder_path_fails_after_delete() {
+    let name = profile_name("fold");
+    let prof =
+        AppContainerProfile::ensure(&name, "rappct folder", Some("folder test")).expect("ensure");
     let sid = prof.sid.clone();
     let pname = prof.name.clone();
     prof.delete().expect("delete");
@@ -70,14 +70,28 @@ fn profile_folder_path_fallback_after_delete() {
         name: pname,
         sid: sid.clone(),
     };
-    let path = ghost.folder_path().expect("folder path fallback");
-    let base = std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA not set");
-    let expected = PathBuf::from(base).join("Packages").join(&ghost.name);
-    assert_eq!(path, expected);
+    let error = ghost
+        .folder_path()
+        .expect_err("deleted profile folder lookup must fail closed");
+    assert!(
+        error
+            .to_string()
+            .contains("GetAppContainerFolderPath failed")
+    );
 }
 
 #[cfg(windows)]
 #[test]
+fn profile_mutation_contracts() {
+    profile_ensure_and_delete_roundtrip();
+    profile_open_resolves_existing_name();
+    profile_open_matches_derived_sid_for_name();
+    profile_ensure_existing_handles_metadata_mismatch();
+    profile_folder_path_fails_after_delete();
+    profile_named_object_path_invalid_sid_errors();
+}
+
+#[cfg(windows)]
 fn profile_named_object_path_invalid_sid_errors() {
     let bogus = AppContainerProfile {
         name: "rappct.invalid".to_string(),

@@ -79,12 +79,15 @@ size:
 fmt:
     cargo fmt --all -- --check
 
-lint:
+lint: duplicates
     cargo clippy --all-targets --all-features --locked -- -D warnings
     cargo machete
 
 lint-remote:
     cargo clippy --all-targets --all-features --locked -- -D warnings
+
+duplicates:
+    python scripts/check_duplicate_dependencies.py
 
 build:
     cargo build --all-targets --all-features --locked
@@ -100,7 +103,7 @@ coverage:
 
 security: sbom
     cargo deny check
-    cargo audit
+    cargo audit --db .cache/rustsec-advisory-db
     python scripts/enforce_advisory_policy.py
 
 docs:

@@ -85,7 +85,7 @@ if ($LASTEXITCODE -ne 0) { Fail "7 - Doctests" }
 
 # ---- 8. Security audit -----------------------------------------------------
 Banner 8 "Security audit (cargo audit)"
-cargo audit
+cargo audit --db .cache/rustsec-advisory-db
 if ($LASTEXITCODE -ne 0) { Fail "8 - Security audit" }
 
 # ---- 9. License & advisory check -------------------------------------------

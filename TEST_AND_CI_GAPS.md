@@ -1,5 +1,7 @@
 # Test and CI Gaps
 
+> Historical audit snapshot. Findings may have been remediated; use `RELEASE-CHECKLIST.md`, `CHANGELOG.md`, and fresh validation evidence for current status.
+
 ## Current Test Coverage Shape
 
 Readable test files show strong intended Windows integration coverage:
@@ -64,4 +66,3 @@ cargo doc --workspace --all-features --no-deps
 mdbook build docs --dest-dir book
 just release-gate-log
 ```
-

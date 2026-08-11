@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -25,9 +24,9 @@ BINARY_EXTENSIONS = {
     ".zip",
 }
 LARGE_FILE_LIMIT = 10 * 1024 * 1024
+import re
+
 CONFLICT_MARKER = re.compile(rb"(?m)^(<<<<<<<|>>>>>>>|=======$)")
-ACTION_USE = re.compile(r"^\s*(?:-\s*)?uses:\s*([^@\s]+)@([^\s#]+)(?:\s+#\s+(\S+))?")
-FULL_COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
 def tracked_files(root: Path) -> list[Path]:
@@ -87,26 +86,15 @@ def test_required_files(root: Path) -> bool:
     return print_result("Required files", missing_files)
 
 
-def test_action_pins(files: list[Path], root: Path) -> bool:
-    failures = []
-    workflows = [
-        path
-        for path in files
-        if path.parent.parent == root / ".github" and path.parent.name == "workflows"
-    ]
-    for path in workflows:
-        lines = path.read_text(encoding="utf-8").splitlines()
-        for line_number, line in enumerate(lines, 1):
-            match = ACTION_USE.match(line)
-            if not match or match.group(1).startswith(("./", "docker://")):
-                continue
-            action, revision, version = match.groups()
-            relative = path.relative_to(root).as_posix()
-            if not FULL_COMMIT_SHA.fullmatch(revision):
-                failures.append(f"  {relative}:{line_number}: {action} is not SHA-pinned")
-            elif not version:
-                failures.append(f"  {relative}:{line_number}: {action} lacks update metadata")
-    return print_result("GitHub Action immutable pins", failures)
+def test_provider_ownership(files: list[Path], root: Path) -> bool:
+    forbidden = []
+    for path in files:
+        if not path.exists():
+            continue
+        relative = path.relative_to(root).as_posix()
+        if relative.startswith(".github/workflows/") or relative == ".github/dependabot.yml":
+            forbidden.append(f"  {relative}")
+    return print_result("GitLab-only automation ownership", forbidden)
 
 
 def print_result(label: str, failures: list[str]) -> bool:
@@ -127,7 +115,7 @@ def main() -> int:
         test_nul_bytes(files, root),
         test_conflict_markers(files, root),
         test_required_files(root),
-        test_action_pins(files, root),
+        test_provider_ownership(files, root),
     ]
     if all(checks):
         print("All hygiene checks passed")

@@ -193,7 +193,10 @@ fn launched_io_wait_returns_timeout_for_unsignaled_waitable_handle() {
         stdout: None,
         stderr: None,
         job_guard: None,
-        process,
+        control: super::ProcessControl {
+            process,
+            suspended_thread: None,
+        },
     };
 
     let err = io
@@ -206,6 +209,22 @@ fn launched_io_wait_returns_timeout_for_unsignaled_waitable_handle() {
         }
         other => panic!("expected timeout LaunchFailed, got: {other:?}"),
     }
+}
+
+#[test]
+fn post_spawn_cleanup_failure_does_not_wait_on_non_process_handle() {
+    // SAFETY: CreateEventW returns an owned event handle on success.
+    let event = unsafe { CreateEventW(None, true, false, None).expect("create event") };
+    let handle = crate::ffi::handles::from_win32(event).expect("wrap event handle");
+    let error = super::spawn::terminate_and_reap(&handle)
+        .expect_err("an event cannot be terminated as a process");
+    assert!(matches!(
+        error,
+        crate::AcError::LaunchFailed {
+            stage: "post_spawn_cleanup",
+            ..
+        }
+    ));
 }
 
 #[test]

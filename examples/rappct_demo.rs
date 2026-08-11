@@ -261,7 +261,9 @@ fn demo_loopback_with_exemption(
     port: u16,
 ) -> rappct::Result<Option<FirewallGuard>> {
     println!("\n→ Adding firewall exemption to allow loopback for this container...");
-    if let Err(e) = add_loopback_exemption(LoopbackAdd(profile.sid.clone()).confirm_debug_only()) {
+    if let Err(e) =
+        add_loopback_exemption(LoopbackAdd::new(profile.sid.clone()).confirm_debug_only())
+    {
         println!("✗ Exemption failed: {e} (continuing anyway)");
         return Ok(None);
     }
@@ -339,11 +341,10 @@ fn launch_capture(
     timeout: Duration,
 ) -> rappct::Result<(u32, String)> {
     let mut child = launch_in_container_with_io(caps, opts)?;
-    let mut out = String::new();
-    if let Some(mut s) = child.stdout.take() {
-        let _ = s.read_to_string(&mut out);
-    }
+    let capture = child.capture_output();
     let code = child.wait(Some(timeout))?;
+    let output = capture.finish()?;
+    let out = String::from_utf8_lossy(&output.stdout).into_owned();
     Ok((code, out))
 }
 
