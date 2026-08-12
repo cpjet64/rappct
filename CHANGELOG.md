@@ -7,14 +7,16 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-08-12
+
+Changes since `rappct-v0.13.3`.
+
 ### Changed
 
 - Kept GitLab as the sole CI/CD executor while publishing matching release
   objects and evidence assets to both GitLab and GitHub.
 - Reduced Windows dual-stream lifecycle test process overhead while preserving
   the greater-than-pipe-capacity deadlock contract.
-
-## [0.14.0] - Unreleased
 
 ### Added
 
