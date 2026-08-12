@@ -90,6 +90,49 @@ function Test-PreparationIsReviewOnly {
     }
 }
 
+function Test-AlreadyVersionedCandidateFinalization {
+    $fixture = New-FixtureRepository 'candidate'
+    Invoke-Git $fixture tag rappct-v0.13.3
+    $cargoToml = Join-Path $fixture 'Cargo.toml'
+    $cargoLock = Join-Path $fixture 'Cargo.lock'
+    $changelogPath = Join-Path $fixture 'CHANGELOG.md'
+    $unicodeText = "phases 1$([char]0x2013)3 and warning $([char]0x26A0)"
+    [System.IO.File]::WriteAllText(
+        $cargoToml,
+        (Get-Content -Raw $cargoToml).Replace('0.13.10', '0.14.0'),
+        [System.Text.UTF8Encoding]::new($false)
+    )
+    [System.IO.File]::WriteAllText(
+        $cargoLock,
+        (Get-Content -Raw $cargoLock).Replace('0.13.10', '0.14.0'),
+        [System.Text.UTF8Encoding]::new($false)
+    )
+    [System.IO.File]::WriteAllText(
+        $changelogPath,
+        "# Changelog`n`n## [Unreleased]`n`n### Fixed`n`n- Late fix.`n`n" +
+            "## [0.14.0] - Unreleased`n`n### Added`n`n- Candidate feature.`n`n" +
+            "## [0.13.3]`n`n- Preserves $unicodeText text.`n",
+        [System.Text.UTF8Encoding]::new($false)
+    )
+    Invoke-Git $fixture add .
+    Invoke-Git $fixture commit -m candidate
+
+    & (Join-Path $fixture 'scripts\prepare-release.ps1') -Version 0.14.0
+    $changed = @(& git -C $fixture diff --name-only)
+    Assert-Equal 'CHANGELOG.md' ($changed -join ' ') 'Candidate finalization changed version files.'
+    $changelog = [System.IO.File]::ReadAllText(
+        $changelogPath,
+        [System.Text.Encoding]::UTF8
+    )
+    $escapedUnicode = [regex]::Escape($unicodeText)
+    if ($changelog -match '(?m)^## \[0\.14\.0\] - Unreleased\r?$' -or
+        $changelog -notmatch '(?m)^## \[0\.14\.0\] - \d{4}-\d{2}-\d{2}\r?$' -or
+        $changelog -notmatch 'Late fix' -or $changelog -notmatch 'Candidate feature' -or
+        $changelog -notmatch $escapedUnicode) {
+        throw "Already-versioned candidate was not finalized correctly:`n$changelog"
+    }
+}
+
 function Test-PublishedCrateVerification {
     $packageDir = Join-Path $scratchRoot 'published'
     New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
@@ -136,6 +179,7 @@ if (Test-Path -LiteralPath $scratchRoot) {
 try {
     Test-LegacyAndCanonicalBaselines
     Test-PreparationIsReviewOnly
+    Test-AlreadyVersionedCandidateFinalization
     Test-PublishedCrateVerification
     Test-PublishedCrateInputValidation
     Write-Host 'release-flow tests passed'

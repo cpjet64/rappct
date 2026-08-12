@@ -21,7 +21,10 @@ function Invoke-Git {
 }
 
 function Get-ManifestVersion {
-    $content = Get-Content -Raw -LiteralPath (Join-Path $root 'Cargo.toml')
+    $content = [System.IO.File]::ReadAllText(
+        (Join-Path $root 'Cargo.toml'),
+        [System.Text.Encoding]::UTF8
+    )
     $match = [regex]::Match($content, '(?m)^version\s*=\s*"([^"]+)"')
     if (-not $match.Success) { throw 'Could not parse Cargo.toml package version.' }
     $match.Groups[1].Value
@@ -29,7 +32,7 @@ function Get-ManifestVersion {
 
 function Set-FirstMatch {
     param([string]$Path, [string]$Pattern, [string]$Replacement)
-    $content = Get-Content -Raw -LiteralPath $Path
+    $content = [System.IO.File]::ReadAllText($Path, [System.Text.Encoding]::UTF8)
     $regex = [regex]::new($Pattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
     $updated = $regex.Replace($content, $Replacement, 1)
     if ($updated -eq $content) { throw "Expected version surface was not found in $Path." }
@@ -40,9 +43,6 @@ function Set-FirstMatch {
 
 function Get-PromotedChangelog {
     param([string]$Content, [string]$Baseline)
-    if ($Content -match "(?m)^## \[$([regex]::Escape($Version))\](?:\s|$)") {
-        throw "CHANGELOG.md already contains a $Version section."
-    }
     $match = [regex]::Match(
         $Content,
         '(?ms)^## \[Unreleased\]\s*\r?\n(?<body>.*?)(?=^## \[)'
@@ -52,6 +52,30 @@ function Get-PromotedChangelog {
     }
     $date = Get-Date -Format 'yyyy-MM-dd'
     $body = $match.Groups['body'].Value.Trim()
+    $candidate = [regex]::Match(
+        $Content,
+        "(?ms)^## \[$([regex]::Escape($Version))\] - Unreleased\s*\r?\n" +
+            '(?<body>.*?)(?=^## \[)'
+    )
+    if ($candidate.Success) {
+        $candidateBody = $candidate.Groups['body'].Value.Trim()
+        $releaseBody = "Changes since ``$Baseline``.`r`n`r`n$body"
+        if (-not [string]::IsNullOrWhiteSpace($candidateBody)) {
+            $releaseBody += "`r`n`r`n$candidateBody"
+        }
+        $withoutCandidate = $Content.Remove($candidate.Index, $candidate.Length)
+        $unreleased = [regex]::Match(
+            $withoutCandidate,
+            '(?ms)^## \[Unreleased\]\s*\r?\n.*?(?=^## \[)'
+        )
+        $replacement = "## [Unreleased]`r`n`r`n## [$Version] - $date`r`n`r`n" +
+            "$releaseBody`r`n`r`n"
+        return $withoutCandidate.Remove($unreleased.Index, $unreleased.Length).
+            Insert($unreleased.Index, $replacement)
+    }
+    if ($Content -match "(?m)^## \[$([regex]::Escape($Version))\](?:\s|$)") {
+        throw "CHANGELOG.md already contains a finalized $Version section."
+    }
     $replacement = "## [Unreleased]`r`n`r`n## [$Version] - $date`r`n`r`n" +
         "Changes since ``$Baseline``.`r`n`r`n$body`r`n`r`n"
     $Content.Remove($match.Index, $match.Length).Insert($match.Index, $replacement)
@@ -64,13 +88,16 @@ $branch = (Invoke-Git @('rev-parse', '--abbrev-ref', 'HEAD') | Select-Object -Fi
 if ($branch -eq 'HEAD') { throw 'Detached HEAD is not supported.' }
 
 $current = Get-ManifestVersion
-if ([version]$Version -le [version]$current) {
-    throw "Target $Version must be greater than current manifest version $current."
+if ([version]$Version -lt [version]$current) {
+    throw "Target $Version must not be older than current manifest version $current."
 }
 $baseline = & (Join-Path $PSScriptRoot 'release-tag-baseline.ps1') `
     -RepositoryRoot $root -TargetVersion $Version
 if ($LASTEXITCODE -ne 0) { throw 'Release baseline selection failed.' }
 $baseline = ($baseline | Select-Object -First 1).Trim()
+$changelogPath = Join-Path $root 'CHANGELOG.md'
+$changelog = [System.IO.File]::ReadAllText($changelogPath, [System.Text.Encoding]::UTF8)
+$updated = Get-PromotedChangelog -Content $changelog -Baseline $baseline
 
 Write-Host "Preparing $current -> $Version from $baseline..HEAD"
 if ($DryRun) {
@@ -78,12 +105,11 @@ if ($DryRun) {
     return
 }
 
-Set-FirstMatch (Join-Path $root 'Cargo.toml') `
-    '(^version\s*=\s*")([^"]+)(")' "`${1}$Version`${3}"
-Set-FirstMatch (Join-Path $root 'Cargo.lock') `
-    '(\[\[package\]\]\s+name = "rappct"\s+version = ")([^"]+)(")' "`${1}$Version`${3}"
-$changelogPath = Join-Path $root 'CHANGELOG.md'
-$changelog = Get-Content -Raw -LiteralPath $changelogPath
-$updated = Get-PromotedChangelog -Content $changelog -Baseline $baseline
+if ([version]$Version -gt [version]$current) {
+    Set-FirstMatch (Join-Path $root 'Cargo.toml') `
+        '(^version\s*=\s*")([^"]+)(")' "`${1}$Version`${3}"
+    Set-FirstMatch (Join-Path $root 'Cargo.lock') `
+        '(\[\[package\]\]\s+name = "rappct"\s+version = ")([^"]+)(")' "`${1}$Version`${3}"
+}
 [System.IO.File]::WriteAllText($changelogPath, $updated, [System.Text.UTF8Encoding]::new($false))
-Write-Host 'Prepared Cargo.toml, Cargo.lock, and CHANGELOG.md. Review and commit on a topic branch.'
+Write-Host 'Prepared release metadata. Review and commit on a topic branch.'
