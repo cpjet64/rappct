@@ -37,9 +37,22 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 foreach ($crate in $crates) {
-    $hash = Get-FileHash -LiteralPath $crate.FullName -Algorithm SHA256
+    $stream = [System.IO.File]::OpenRead($crate.FullName)
+    try {
+        $sha256 = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            $hashBytes = $sha256.ComputeHash($stream)
+        }
+        finally {
+            $sha256.Dispose()
+        }
+    }
+    finally {
+        $stream.Dispose()
+    }
+    $hash = [System.BitConverter]::ToString($hashBytes).Replace('-', '').ToLowerInvariant()
     $checksumPath = "$($crate.FullName).sha256"
-    $line = "{0}  {1}" -f $hash.Hash.ToLowerInvariant(), $crate.Name
+    $line = "{0}  {1}" -f $hash, $crate.Name
     [System.IO.File]::WriteAllText(
         $checksumPath,
         $line + [System.Environment]::NewLine,
