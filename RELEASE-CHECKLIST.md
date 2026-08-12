@@ -5,7 +5,9 @@ Goal: maintain a clean, deterministic, GitLab tag-driven crates.io and dual-prov
 ## Current target
 - Crate: `rappct`
 - Planned version: `0.14.0`
-- Target status: the manifest and lockfile are aligned at the unreleased `0.14.0` candidate; release remains blocked on the settings and exact-SHA evidence below.
+- Target status: the manifest, lockfile, and changelog are aligned at the
+  release-ready `0.14.0` candidate; release remains blocked on protected
+  credential confirmation and exact-SHA hosted evidence below.
 
 ## Crates.io baseline
 - Refresh immediately before tagging with `just release-version-check`.
@@ -28,21 +30,30 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 
 - [x] Confirm local `Cargo.toml`/`Cargo.lock` versions are synchronized for the release candidate.
 - [x] Confirm `scripts/verify-version-surfaces.cjs` validates all version surfaces and tag alignment.
-- [ ] Run `just prepare-release-dry-run 0.14.0` and confirm `rappct-v0.13.3` is selected.
+- [x] Run `just prepare-release-dry-run 0.14.0` and confirm `rappct-v0.13.3` is selected.
 - [x] Run `just api-compat` and confirm only the reviewed 0.14.0 migration set is reported.
-- [ ] Run `just release-surface` and confirm no production test hooks are packaged.
-- [ ] Run `just prepare-release 0.14.0` on a topic branch; review, validate, and merge the three-file change.
+- [x] Run `just release-surface` and confirm no production test hooks are packaged.
+- [x] Run `just prepare-release 0.14.0`; because the manifest and lockfile were
+  already at 0.14.0, review and commit the changelog-only candidate finalization.
 - [ ] From synchronized clean `main`, run `just create-release-tag 0.14.0`, review the local tag, then push it explicitly.
 - [x] Confirm local manifest uses explicit include policy for publish scope.
 - [x] Run `just package-list` and confirm tarball output is limited to include policy paths.
 - [x] Run `just publish-dry-run` and confirm lockfile + packaging checks remain green.
-- [ ] Run `just release-version-check` after version bump and record the observed crates.io baseline.
-- [ ] Run `just package-list-clean` (requires clean working tree).
-- [ ] Run `cargo package --locked` and `just package-release-evidence`; attach `target/package/*.crate.sha256` and `target/package/cargo-metadata.json`.
-- [ ] Run `just publish-dry-run-clean` (requires clean working tree).
-- [ ] Run `just release-gate` after clean-tree gates are runnable.
-- [ ] Run `just release-gate-log` on clean workspace and record transcript path.
-- [ ] Run `just release` with explicit user confirmation `PUBLISH`.
+- [x] Run `just release-version-check` after version bump; observed crates.io baseline: `0.13.3`.
+- [x] Run `just package-list-clean` (requires clean working tree).
+- [x] Run `cargo package --locked` and `just package-release-evidence`;
+  generated `rappct-0.14.0.crate` with SHA-256
+  `bbe244b32836547bb86cc19f78e17e2d6c077562578cdfb20dc5b8da69571141`,
+  Cargo metadata, and CycloneDX SBOM.
+- [x] Run `just publish-dry-run-clean` (requires clean working tree).
+- [x] Run `just release-gate` after clean-tree gates are runnable.
+- [x] Run `just release-gate-log`; transcript:
+  `output/release-gate/release-gate-2026-08-12_14-25-53.log`.
+- [x] Run the mandatory `scripts/ci-local.ps1` stable and MSRV 1.88.0-1.95.0
+  feature matrix on commit `6630f6fdcffa122bc7ec158c2f2240fc8ca7ca76`.
+- [ ] Push the protected tag and let GitLab's `publish_crates_io` job publish.
+  `just release` is an emergency local fallback and is intentionally not run
+  during the normal protected tag flow.
 
 ## Audit notes
 - GitHub-hosted automation has been retired; GitLab owns CI/CD execution and
