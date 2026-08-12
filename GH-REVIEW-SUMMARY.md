@@ -1,5 +1,9 @@
 # GH Review Summary
 
+> **Historical GitHub Actions review (2026-02-26).** GitLab is now the sole
+> CI/CD execution provider. This report is retained only as provenance and must
+> not be used as current CI, release, or repository-status evidence.
+
 - Timestamp: 2026-02-26 11:40:10
 - Repository: cpjet64/rappct
 - Branch: agent-s-autonomous-gh-review-and-fixer-2026-02-27

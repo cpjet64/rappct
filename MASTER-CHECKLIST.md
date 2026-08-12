@@ -1,6 +1,12 @@
 # rappct Master Completion Checklist
-**Generated:** 2026-02-24  
-**Single source of truth:** EXECUTION-PLAN.md  
+
+> **Historical completion snapshot (2026-02-24).** This checklist is retained
+> for provenance and is no longer a source of current status. Use `AGENTS.md`,
+> `RELEASE-CHECKLIST.md`, the live repository state, and exact-SHA pipeline
+> evidence for current work.
+
+**Generated:** 2026-02-24
+**Execution plan at capture time:** EXECUTION-PLAN.md
 **Agent instruction:** Verify every item against the live codebase. Do not pre-mark anything.
 
 ## Milestone 1 – First Functional Library (Core AppContainer Features)

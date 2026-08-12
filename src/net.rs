@@ -125,6 +125,10 @@ impl LoopbackExemptionGuard {
     }
 
     /// Removes the exemption immediately and disables the drop cleanup path.
+    ///
+    /// Use this explicit close path when cleanup failure must be observed. If
+    /// removal fails, the error is returned and `Drop` makes one final
+    /// best-effort removal attempt while unwinding this method.
     pub fn close(mut self) -> Result<()> {
         if self.active {
             remove_loopback_exemption(&self.sid)?;
@@ -143,6 +147,8 @@ impl LoopbackExemptionGuard {
 impl Drop for LoopbackExemptionGuard {
     fn drop(&mut self) {
         if self.active {
+            // Drop cannot return an error. Callers that require cleanup proof
+            // must call `close`; this remains a final best-effort safeguard.
             let _ = remove_loopback_exemption(&self.sid);
         }
     }

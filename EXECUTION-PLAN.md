@@ -1,7 +1,13 @@
 # rappct Execution Plan
 
+> **Historical planning snapshot (2026-02-25).** This file is retained for
+> provenance and is not the current execution authority. Use `AGENTS.md`,
+> `RELEASE-CHECKLIST.md`, the live repository state, and exact-SHA pipeline
+> evidence for current work.
+
 Last updated: 2026-02-25 19:08:24 -05:00
-Single source of truth for execution order; status checkboxes live in `MASTER-CHECKLIST.md`.
+At the time of capture, this was the execution plan and its status checkboxes
+lived in `MASTER-CHECKLIST.md`.
 
 ## Current repository reality (preflight baseline)
 - Root planning docs were previously archived to `legacy/docs/root` and are now restored at root.

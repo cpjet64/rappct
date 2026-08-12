@@ -11,7 +11,7 @@ use windows::Win32::Foundation::HANDLE;
 #[cfg(windows)]
 use windows::Win32::Security::Authorization::{
     ConvertSecurityDescriptorToStringSecurityDescriptorW, GetNamedSecurityInfoW, GetSecurityInfo,
-    SDDL_REVISION_1, SE_FILE_OBJECT, SE_REGISTRY_KEY, SetNamedSecurityInfoW,
+    SDDL_REVISION_1, SE_FILE_OBJECT, SE_REGISTRY_KEY, SetNamedSecurityInfoW, SetSecurityInfo,
 };
 #[cfg(windows)]
 use windows::Win32::Security::{ACL, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR};
@@ -19,9 +19,9 @@ use windows::Win32::Security::{ACL, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIP
 use windows::Win32::Storage::FileSystem::GetDiskFreeSpaceExW;
 #[cfg(windows)]
 use windows::Win32::System::Registry::{
-    HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_ALL_ACCESS, KEY_READ, KEY_WRITE,
-    REG_CREATE_KEY_DISPOSITION, REG_CREATED_NEW_KEY, REG_OPENED_EXISTING_KEY,
-    REG_OPTION_NON_VOLATILE, RegCloseKey, RegCreateKeyExW, RegDeleteTreeW, RegOpenKeyExW,
+    HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WRITE, REG_CREATE_KEY_DISPOSITION,
+    REG_CREATED_NEW_KEY, REG_OPENED_EXISTING_KEY, REG_OPTION_NON_VOLATILE, REG_SAM_FLAGS,
+    RegCloseKey, RegCreateKeyExW, RegDeleteTreeW, RegOpenKeyExW,
 };
 #[cfg(windows)]
 use windows::core::PCWSTR;
@@ -34,6 +34,9 @@ use crate::windows_test_utils::{LocalAlloc, LocalWideString};
 
 #[cfg(windows)]
 const DEFAULT_TEST_MINIMUM_FREE_BYTES: u64 = 5 * 1024 * 1024 * 1024;
+#[cfg(windows)]
+const REGISTRY_DACL_TEST_RIGHTS: REG_SAM_FLAGS =
+    REG_SAM_FLAGS(KEY_READ.0 | KEY_WRITE.0 | 0x0002_0000 | 0x0004_0000);
 
 #[cfg(windows)]
 fn test_minimum_free_bytes() -> u64 {
@@ -314,7 +317,7 @@ fn grant_to_package_updates_registry_dacl() {
             None,
             None,
             REG_OPTION_NON_VOLATILE,
-            KEY_ALL_ACCESS,
+            REGISTRY_DACL_TEST_RIGHTS,
             None,
             &mut hkey,
             Some(&mut disposition),
@@ -349,6 +352,67 @@ fn grant_to_package_updates_registry_dacl() {
 
     unsafe {
         let _ = RegDeleteTreeW(HKEY_CURRENT_USER, PCWSTR(w.as_ptr()));
+    }
+}
+
+#[cfg(windows)]
+fn grant_preserves_existing_null_registry_dacl() {
+    use std::ffi::OsStr;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system clock")
+        .as_nanos();
+    let subkey = format!(r"Software\rappct-acl-null-{}-{nonce}", std::process::id());
+    let wide: Vec<u16> = OsStr::new(&subkey)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let mut hkey = HKEY::default();
+    unsafe {
+        RegCreateKeyExW(
+            HKEY_CURRENT_USER,
+            PCWSTR(wide.as_ptr()),
+            None,
+            None,
+            REG_OPTION_NON_VOLATILE,
+            REGISTRY_DACL_TEST_RIGHTS,
+            None,
+            &mut hkey,
+            None,
+        )
+        .ok()
+        .expect("create registry null-DACL fixture");
+        SetSecurityInfo(
+            HANDLE(hkey.0),
+            SE_REGISTRY_KEY,
+            DACL_SECURITY_INFORMATION,
+            None,
+            None,
+            None,
+            None,
+        )
+        .ok()
+        .expect("set registry null DACL");
+        let _ = RegCloseKey(hkey);
+    }
+
+    let full_spec = format!("HKCU\\{subkey}");
+    let sid = derive_sid_from_name("rappct.test.acl.registry.null").expect("derive package SID");
+    acl::grant_to_package(
+        ResourcePath::RegistryKey(full_spec.clone()),
+        &sid,
+        AccessMask(0x20019),
+    )
+    .expect("null registry DACL already grants requested access");
+    assert!(
+        security_sddl_for_registry(&full_spec).contains("NO_ACCESS_CONTROL"),
+        "grant replaced the registry null DACL"
+    );
+
+    unsafe {
+        let _ = RegDeleteTreeW(HKEY_CURRENT_USER, PCWSTR(wide.as_ptr()));
     }
 }
 
@@ -416,6 +480,7 @@ fn grant_to_package_updates_directory_default_inheritance_dacl() {
 #[test]
 fn acl_grant_contracts() {
     grant_to_package_updates_registry_dacl();
+    grant_preserves_existing_null_registry_dacl();
     grant_to_package_updates_file_dacl();
     grant_preserves_existing_null_file_dacl();
     grant_to_package_updates_directory_custom_dacl();

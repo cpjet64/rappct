@@ -1,5 +1,10 @@
 # Documentation Progress
 
+> **Historical documentation-generation snapshot (2026-02-26).** This file is
+> retained for provenance and is not current completion evidence. The active
+> documentation and release gates are defined by `Justfile`,
+> `RELEASE-CHECKLIST.md`, and exact-SHA pipeline results.
+
 Date: 2026-02-26
 Skill: `autonomous-codebase-documenter`
 

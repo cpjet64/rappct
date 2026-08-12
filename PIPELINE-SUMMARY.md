@@ -1,5 +1,9 @@
 # Pipeline Summary
 
+> **Historical branch-pipeline snapshot (2026-02-26).** This report is retained
+> for provenance and does not establish the status of `main`, a release tag, or
+> any current GitLab pipeline. Use exact-SHA live evidence instead.
+
 Date: 2026-02-26
 Branch: `agent/full-pipeline-2026-02-26`
 
