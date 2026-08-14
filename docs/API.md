@@ -35,6 +35,19 @@ On Windows crate root also re-exports:
 use rappct::{LaunchedIo, launch_in_container_with_io};
 ```
 
+## Errors and Panic Behavior
+
+Public fallible APIs return `rappct::Result<T>`, whose error type is
+`AcError`. `AcError` is marked `#[non_exhaustive]`; downstream code must
+include a wildcard arm when matching it so future releases can add variants.
+Use `UnsupportedPlatform` to handle APIs that are unavailable off Windows.
+
+On Windows, `LaunchOptions::with_handle_list(...)` and
+`LaunchOptions::with_stdio_inherit(...)` panic if Windows cannot duplicate a
+borrowed handle. Prefer `try_with_handle_list(...)` and
+`try_with_stdio_inherit(...)` when duplication failure must be handled as an
+`AcError` instead.
+
 ## Module: `profile`
 
 Public items:
@@ -110,10 +123,10 @@ Public items:
 - `StdioConfig` (`Inherit`, `Null`, `Pipe`)
 - `JobLimits { memory_bytes, cpu_rate_percent, kill_on_job_close }`
 - `LaunchOptions { exe, cmdline, cwd, env, stdio, suspended, join_job, startup_timeout, .. }`
-- `Launched { pid }`
+- `Launched` PID-only launch result (`pid` is public)
 - `launch_in_container(&SecurityCapabilities, &LaunchOptions)`
 - `merge_parent_env(Vec<(OsString, OsString)>)`
-- `LaunchOptions::try_with_handle_list(...)` / `try_with_stdio_inherit(...)` duplicate borrowed handles for child inheritance and return errors on duplication failure.
+- `LaunchOptions::with_handle_list(...)` / `with_stdio_inherit(...)` panic on handle-duplication failure; their `try_*` counterparts return `AcError` instead.
 - `launch_in_container_with_io(...)` (available from module on all platforms; returns unsupported on non-Windows)
 - `LaunchedIo::wait(timeout)` and `JobGuard::as_handle()` (Windows)
 - `JobObjectDropGuard` (Windows)
@@ -121,12 +134,14 @@ Public items:
 Typical launch with pipes:
 
 ```rust,no_run
-use rappct::{
-    AppContainerProfile, KnownCapability, LaunchOptions,
-    SecurityCapabilitiesBuilder, StdioConfig, launch_in_container, Result,
-};
+#[cfg(windows)]
+fn main() -> rappct::Result<()> {
+    use rappct::{
+        AppContainerProfile, KnownCapability, LaunchOptions, Result,
+        SecurityCapabilitiesBuilder, StdioConfig,
+    };
+    use rappct::launch::launch_in_container_with_io;
 
-fn main() -> Result<()> {
     let profile = AppContainerProfile::ensure("rappct.launch", "launch", None)?;
     let sec = SecurityCapabilitiesBuilder::new(&profile.sid)
         .with_known(&[KnownCapability::InternetClient])
@@ -139,12 +154,17 @@ fn main() -> Result<()> {
         ..Default::default()
     };
 
-    let child = launch_in_container(&sec, &opts)?;
-    let _pid = child.pid;
+    let mut child = launch_in_container_with_io(&sec, &opts)?;
+    let capture = child.capture_output();
+    let _exit_code = child.wait(None)?;
+    let _output = capture.finish()?;
 
     profile.delete()?;
     Ok(())
 }
+
+#[cfg(not(windows))]
+fn main() {}
 ```
 
 Environment merge helper sequence:

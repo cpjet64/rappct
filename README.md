@@ -13,6 +13,9 @@ This repository uses a GitLab tag-driven release flow. Publish payload is contro
 - `LICENSE`
 - `README.md`
 - `Cargo.toml`
+- `CHANGELOG.md`
+- `SECURITY.md`
+- `docs/releases/0.14.0-migration.md`
 - `src/**`
 - `examples/**`
 - `tests/**`

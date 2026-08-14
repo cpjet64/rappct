@@ -2,6 +2,8 @@
 
 - [Documentation Index](index.md)
 - [Documentation Overview](overview.md)
+- [API Reference](API.md)
+- [0.14.0 Migration Guide](releases/0.14.0-migration.md)
 - [Tooling and Regeneration](TOOLING.md)
 - [Module Index](modules/index.md)
   - [Profile Module](modules/profile.md)

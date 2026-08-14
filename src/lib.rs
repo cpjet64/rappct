@@ -20,12 +20,13 @@
 //! Quick example: launch with pipes and job limits
 //!
 //! ```no_run
+//! #[cfg(windows)]
+//! fn main() -> rappct::Result<()> {
 //! use rappct::{
 //!     AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder,
-//!     launch::LaunchOptions, launch::StdioConfig, launch::JobLimits,
-//!     launch_in_container,
+//!     launch::{launch_in_container_with_io, JobLimits, LaunchOptions, StdioConfig},
 //! };
-//! # fn main() -> rappct::Result<()> {
+//!
 //! let profile = AppContainerProfile::ensure("rappct.sample", "rappct", Some("demo"))?;
 //! let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
 //!     .with_known(&[KnownCapability::InternetClient])
@@ -37,8 +38,15 @@
 //!     join_job: Some(JobLimits { memory_bytes: Some(32 * 1024 * 1024), cpu_rate_percent: None, kill_on_job_close: true }),
 //!     ..Default::default()
 //! };
-//! let child = launch_in_container(&caps, &opts)?;
-//! # let _ = child.pid; profile.delete()?; Ok(()) }
+//! let mut child = launch_in_container_with_io(&caps, &opts)?;
+//! let capture = child.capture_output();
+//! let _exit_code = child.wait(None)?;
+//! let _output = capture.finish()?;
+//! profile.delete()?;
+//! Ok(())
+//! }
+//! # #[cfg(not(windows))]
+//! # fn main() {}
 //! ```
 //!
 //! Refer to `CONTRIBUTING.md` for engineering conventions and contribution guidance.
