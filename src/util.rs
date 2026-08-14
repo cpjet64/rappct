@@ -58,4 +58,13 @@ mod tests {
         let wide = super::to_utf16_os(OsStr::new("abc"));
         assert_eq!(wide, vec![97, 98, 99, 0]);
     }
+
+    #[test]
+    fn to_utf16_preserves_non_ascii_code_units() {
+        let value = "Straße 😀";
+        let expected: Vec<u16> = value.encode_utf16().chain(std::iter::once(0)).collect();
+
+        assert_eq!(super::to_utf16(value), expected);
+        assert_eq!(super::to_utf16_os(OsStr::new(value)), expected);
+    }
 }

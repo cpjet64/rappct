@@ -1,21 +1,20 @@
-#![cfg(windows)]
-
 use std::mem::size_of;
 
 use rappct::sid::AppContainerSid;
 use rappct::{
-    AppContainerProfile, JobLimits, KnownCapability, LaunchOptions, Launched, LaunchedIo, Result,
-    SecurityCapabilities, SecurityCapabilitiesBuilder, StdioConfig, WELL_KNOWN_CAPABILITY_NAMES,
-    launch_in_container, launch_in_container_with_io,
+    AcError, AppContainerProfile, JobLimits, KnownCapability, LaunchOptions, Launched, Result,
+    SecurityCapabilities, SecurityCapabilitiesBuilder, StdioConfig, UseCase,
+    WELL_KNOWN_CAPABILITY_NAMES, launch_in_container,
 };
 
 #[test]
-fn api_reexports_are_accessible() {
+fn core_public_api_is_accessible_on_every_platform() {
     fn assert_send_sync<T: Send + Sync>() {}
+    fn assert_error<T: std::error::Error + Send + Sync>() {}
 
-    // Ensure core types are Sized and reachable from the crate root.
     let _ = size_of::<LaunchOptions>();
     assert_send_sync::<LaunchOptions>();
+    assert_error::<AcError>();
     let _ = size_of::<JobLimits>();
     let _ = size_of::<SecurityCapabilities>();
     let _ = StdioConfig::Inherit;
@@ -25,21 +24,20 @@ fn api_reexports_are_accessible() {
     let _ = KnownCapability::from_name("internetClient");
     assert!(!WELL_KNOWN_CAPABILITY_NAMES.is_empty());
     let _ = launch_in_container as fn(&SecurityCapabilities, &LaunchOptions) -> Result<Launched>;
-    let _ = launch_in_container_with_io
-        as fn(&SecurityCapabilities, &LaunchOptions) -> Result<LaunchedIo>;
+    let _ = rappct::launch::launch_in_container_with_io
+        as fn(&SecurityCapabilities, &LaunchOptions) -> Result<rappct::launch::LaunchedIo>;
 
-    // Builders should be constructible without hitting Windows APIs (empty capability list).
     let sid = AppContainerSid::from_sddl("S-1-15-2-1");
-    let builder = SecurityCapabilitiesBuilder::new(&sid);
-    let caps = builder
-        .with_named(&[])
-        .build()
-        .expect("build empty capability set");
+    let builder = SecurityCapabilitiesBuilder::new(&sid)
+        .with_known(&[KnownCapability::InternetClient])
+        .lpac(false);
+    let _ = SecurityCapabilitiesBuilder::from_use_case(UseCase::Custom).with_profile_sid(&sid);
+    let _ = builder;
     let opts = LaunchOptions::default();
-    let _ = (&caps, &opts);
+    let _ = (&sid, &opts);
 
-    // AppContainerProfile is reachable; avoid invoking OS APIs by only referencing associated items.
     let _ = AppContainerProfile::delete as fn(AppContainerProfile) -> Result<()>;
+    let _ = AppContainerProfile::open as fn(&str) -> Result<AppContainerProfile>;
 
     #[cfg(feature = "introspection")]
     {
@@ -56,4 +54,31 @@ fn api_reexports_are_accessible() {
         let _ = add_loopback_exemption as fn(LoopbackAdd) -> Result<()>;
         let _ = LoopbackAdd::new(sid);
     }
+}
+
+#[cfg(not(windows))]
+#[test]
+fn platform_specific_launch_apis_fail_closed() {
+    let caps = SecurityCapabilities {
+        package: AppContainerSid::from_sddl("S-1-15-2-1"),
+        caps: Vec::new(),
+        lpac: false,
+    };
+    let options = LaunchOptions::default();
+
+    assert!(matches!(
+        launch_in_container(&caps, &options),
+        Err(AcError::UnsupportedPlatform)
+    ));
+    assert!(matches!(
+        rappct::launch::launch_in_container_with_io(&caps, &options),
+        Err(AcError::UnsupportedPlatform)
+    ));
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_root_io_reexports_are_accessible() {
+    let _ = rappct::launch_in_container_with_io
+        as fn(&SecurityCapabilities, &LaunchOptions) -> Result<rappct::LaunchedIo>;
 }
