@@ -3,8 +3,22 @@
 use crate::sid::AppContainerSid;
 use crate::{AcError, Result};
 
+#[cfg(test)]
+use std::sync::Mutex;
+#[cfg(test)]
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
 #[cfg(all(windows, feature = "net"))]
 mod windows_impl;
+
+#[cfg(test)]
+static TEST_REMOVE_LOCK: Mutex<()> = Mutex::new(());
+#[cfg(test)]
+static TEST_REMOVE_MODE: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+static TEST_REMOVE_FAILURES: AtomicUsize = AtomicUsize::new(0);
+#[cfg(test)]
+static TEST_REMOVE_CALLS: AtomicUsize = AtomicUsize::new(0);
 
 /// Lists all registered AppContainer profiles and their display names from the firewall config.
 pub fn list_appcontainers() -> Result<Vec<(AppContainerSid, String)>> {
@@ -76,6 +90,11 @@ pub fn add_loopback_exemption(req: LoopbackAdd) -> Result<()> {
 
 /// Removes any loopback exemption previously granted to the provided AppContainer SID.
 pub fn remove_loopback_exemption(sid: &AppContainerSid) -> Result<()> {
+    #[cfg(test)]
+    if let Some(result) = test_remove_loopback_exemption() {
+        return result;
+    }
+
     let _ = sid;
     #[cfg(all(windows, feature = "net"))]
     {
@@ -89,6 +108,24 @@ pub fn remove_loopback_exemption(sid: &AppContainerSid) -> Result<()> {
     {
         Err(AcError::UnsupportedPlatform)
     }
+}
+
+#[cfg(test)]
+fn test_remove_loopback_exemption() -> Option<Result<()>> {
+    if !TEST_REMOVE_MODE.load(Ordering::SeqCst) {
+        return None;
+    }
+
+    TEST_REMOVE_CALLS.fetch_add(1, Ordering::SeqCst);
+    let failures = TEST_REMOVE_FAILURES.load(Ordering::SeqCst);
+    if failures == 0 {
+        return Some(Ok(()));
+    }
+
+    TEST_REMOVE_FAILURES.fetch_sub(1, Ordering::SeqCst);
+    Some(Err(AcError::Win32(
+        "test-only loopback removal failure".into(),
+    )))
 }
 
 /// RAII guard that applies a loopback exemption on construction and
@@ -122,6 +159,11 @@ impl LoopbackExemptionGuard {
         let sid = req.sid.clone();
         super::net::add_loopback_exemption(req)?;
         Ok(Self { sid, active: true })
+    }
+
+    #[cfg(test)]
+    fn active_for_test(sid: AppContainerSid) -> Self {
+        Self { sid, active: true }
     }
 
     /// Removes the exemption immediately and disables the drop cleanup path.
@@ -187,5 +229,32 @@ impl LoopbackAdd {
     pub fn confirm_debug_only(mut self) -> Self {
         self.confirmed = true;
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn close_failure_keeps_cleanup_active_for_drop_retry() {
+        let _lock = TEST_REMOVE_LOCK.lock().expect("test removal lock");
+        TEST_REMOVE_CALLS.store(0, Ordering::SeqCst);
+        TEST_REMOVE_FAILURES.store(1, Ordering::SeqCst);
+        TEST_REMOVE_MODE.store(true, Ordering::SeqCst);
+
+        let sid = AppContainerSid::from_sddl("S-1-15-2-1");
+        let result = LoopbackExemptionGuard::active_for_test(sid).close();
+
+        TEST_REMOVE_MODE.store(false, Ordering::SeqCst);
+        assert!(
+            result.is_err(),
+            "the explicit cleanup should report failure"
+        );
+        assert_eq!(
+            TEST_REMOVE_CALLS.load(Ordering::SeqCst),
+            2,
+            "Drop should retry cleanup after close fails"
+        );
     }
 }
