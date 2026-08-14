@@ -43,14 +43,17 @@ Publish tarball scope is now controlled by manifest `include` allow-list:
 - [x] Run `just package-list-clean` (requires clean working tree).
 - [x] Run `cargo package --locked` and `just package-release-evidence`;
   generated `rappct-0.14.0.crate` with SHA-256
-  `bbe244b32836547bb86cc19f78e17e2d6c077562578cdfb20dc5b8da69571141`,
-  Cargo metadata, and CycloneDX SBOM.
+  `296f0ebf40e32d0ae95044ac303397f372042553ed71fe1aef7f4374989e87fa`
+  from package-bearing source commit
+  `25d753ad9b8b7c72b2f5078f9b85f5b9d963efbe`, plus Cargo metadata and a
+  validated CycloneDX SBOM.
 - [x] Run `just publish-dry-run-clean` (requires clean working tree).
 - [x] Run `just release-gate` after clean-tree gates are runnable.
 - [x] Run `just release-gate-log`; transcript:
   `output/release-gate/release-gate-2026-08-12_14-25-53.log`.
 - [x] Run the mandatory `scripts/ci-local.ps1` stable and MSRV 1.88.0-1.95.0
-  feature matrix on commit `6630f6fdcffa122bc7ec158c2f2240fc8ca7ca76`.
+  feature matrix against the complete source state through
+  `25d753ad9b8b7c72b2f5078f9b85f5b9d963efbe`.
 - [ ] Push the protected tag and let GitLab's `publish_crates_io` job publish.
   `just release` is an emergency local fallback and is intentionally not run
   during the normal protected tag flow.
