@@ -12,6 +12,8 @@ use crate::ffi::handles::{self, Handle as FHandle};
 use crate::ffi::wstr::WideString;
 use crate::{AcError, Result};
 use core::ffi::c_void;
+#[cfg(test)]
+use std::cell::{Cell, RefCell};
 use windows::Win32::Foundation::{CloseHandle, WAIT_OBJECT_0};
 use windows::Win32::System::Threading::{
     CREATE_SUSPENDED, CREATE_UNICODE_ENVIRONMENT, CreateProcessW, EXTENDED_STARTUPINFO_PRESENT,
@@ -30,6 +32,12 @@ struct ProcessInputs {
 struct ChildHandles {
     thread: Option<FHandle>,
     process: FHandle,
+}
+
+#[cfg(test)]
+std::thread_local! {
+    static FAIL_NEXT_POST_SPAWN_SETUP: Cell<bool> = const { Cell::new(false) };
+    static POST_SPAWN_REAP_WITNESS: RefCell<Option<FHandle>> = const { RefCell::new(None) };
 }
 
 pub(super) fn launch_impl(sec: &SecurityCapabilities, opts: &LaunchOptions) -> Result<LaunchedIo> {
@@ -238,9 +246,41 @@ fn launched_io(
 }
 
 fn prepare_child(opts: &LaunchOptions, child: &ChildHandles) -> Result<Option<job::JobGuard>> {
+    #[cfg(test)]
+    fail_post_spawn_setup_for_test(child)?;
     let guard = job::create_job_guard(opts.join_job.as_ref(), child.process.as_win32())?;
     startup::wait_for_startup(opts, child.process.as_win32())?;
     Ok(guard)
+}
+
+#[cfg(test)]
+pub(super) fn fail_next_post_spawn_setup_for_test() {
+    FAIL_NEXT_POST_SPAWN_SETUP.with(|armed| {
+        assert!(
+            !armed.replace(true),
+            "post-spawn failure injection is already armed"
+        );
+    });
+    POST_SPAWN_REAP_WITNESS.with(|witness| *witness.borrow_mut() = None);
+}
+
+#[cfg(test)]
+pub(super) fn take_post_spawn_reap_witness_for_test() -> Option<FHandle> {
+    POST_SPAWN_REAP_WITNESS.with(|witness| witness.borrow_mut().take())
+}
+
+#[cfg(test)]
+fn fail_post_spawn_setup_for_test(child: &ChildHandles) -> Result<()> {
+    if !FAIL_NEXT_POST_SPAWN_SETUP.with(|armed| armed.replace(false)) {
+        return Ok(());
+    }
+    let witness = handles::duplicate_handle(child.process.as_borrowed(), false)?;
+    POST_SPAWN_REAP_WITNESS.with(|slot| *slot.borrow_mut() = Some(witness));
+    Err(AcError::LaunchFailed {
+        stage: "test_post_spawn_setup",
+        hint: "inject post-spawn setup failure",
+        source: Box::new(std::io::Error::other("deterministic test failure")),
+    })
 }
 
 pub(super) fn terminate_and_reap(process: &FHandle) -> Result<()> {

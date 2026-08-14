@@ -1,4 +1,7 @@
-use super::{JobObjectDropGuard, LaunchOptions, LaunchedIo, make_cmd_args, merge_parent_env};
+use super::{
+    JobObjectDropGuard, LaunchOptions, LaunchedIo, StdioConfig, make_cmd_args, merge_parent_env,
+};
+use crate::{AppContainerProfile, KnownCapability, SecurityCapabilitiesBuilder};
 use std::ffi::OsString;
 use std::os::windows::io::{AsRawHandle, BorrowedHandle};
 use std::time::Duration;
@@ -225,6 +228,47 @@ fn post_spawn_cleanup_failure_does_not_wait_on_non_process_handle() {
             ..
         }
     ));
+}
+
+#[test]
+fn injected_post_spawn_setup_failure_terminates_and_reaps_real_child() {
+    use windows::Win32::Foundation::WAIT_OBJECT_0;
+    use windows::Win32::System::Threading::WaitForSingleObject;
+
+    let name = format!("rappct.test.post-spawn.{}", std::process::id());
+    let profile = AppContainerProfile::ensure(&name, &name, Some("rappct test"))
+        .expect("ensure AppContainer profile");
+    let caps = SecurityCapabilitiesBuilder::new(&profile.sid)
+        .with_known(&[KnownCapability::InternetClient])
+        .build()
+        .expect("build capabilities");
+    let opts = LaunchOptions {
+        exe: "C:\\Windows\\System32\\cmd.exe".into(),
+        cmdline: Some(" /D /C timeout /T 30 /NOBREAK >NUL".into()),
+        stdio: StdioConfig::Null,
+        ..Default::default()
+    };
+
+    super::spawn::fail_next_post_spawn_setup_for_test();
+    let error = super::spawn::launch_impl(&caps, &opts)
+        .expect_err("injected post-spawn setup failure must be returned");
+    let witness = super::spawn::take_post_spawn_reap_witness_for_test()
+        .expect("injection must retain a process witness");
+    let cleanup = profile.delete();
+
+    assert!(matches!(
+        error,
+        crate::AcError::LaunchFailed {
+            stage: "test_post_spawn_setup",
+            ..
+        }
+    ));
+    assert_eq!(
+        // SAFETY: The witness duplicates the spawned process handle and is owned by this test.
+        unsafe { WaitForSingleObject(witness.as_win32(), 0) },
+        WAIT_OBJECT_0
+    );
+    cleanup.expect("delete AppContainer profile after child cleanup");
 }
 
 #[test]
