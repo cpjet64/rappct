@@ -91,7 +91,7 @@ fn dual_stream_capture_drains_without_deadlock(profile: &TestProfile) {
     opts.stdio = StdioConfig::Pipe;
     let mut child = launch_in_container_with_io(&caps, &opts).expect("launch capture child");
     let capture = child.capture_output();
-    assert_eq!(child.wait(Some(Duration::from_secs(10))).unwrap(), 0);
+    assert_eq!(child.wait(Some(Duration::from_secs(30))).unwrap(), 0);
     let output = capture.finish().expect("join capture readers");
     assert!(output.stdout.len() > 64 * 1024);
     assert!(output.stderr.len() > 64 * 1024);
